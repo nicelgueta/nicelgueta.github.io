@@ -1,0 +1,447 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Event Listeners &amp; Scheduler - CDKTR Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">CDKTR Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="event-listeners--scheduler"><a class="header" href="#event-listeners--scheduler">Event Listeners &amp; Scheduler</a></h1>
+<p>cdktr is fundamentally an <strong>event-driven system</strong>. Unlike traditional workflow engines that might poll databases or rely on fixed schedules alone, cdktr treats everything—including scheduled executions—as events. Workflows are triggered by events, whether those events are time-based (cron schedules), user-initiated (CLI commands), or custom external triggers (webhooks, file changes, message queues, etc.).</p>
+<p>This event-driven architecture provides tremendous flexibility. The same workflow can be triggered by a cron schedule during regular business hours and also triggered on-demand when a webhook receives a deployment notification. There's no special configuration needed—workflows simply respond to whatever events you send their way.</p>
+<h2 id="the-event-driven-philosophy"><a class="header" href="#the-event-driven-philosophy">The Event-Driven Philosophy</a></h2>
+<p>In cdktr, an <strong>event</strong> is anything that says "run this workflow now." Events flow into the principal via its ZeroMQ API, and the principal's response is always the same: add the requested workflow to the task queue. The event source doesn't need to know or care about agents, task execution, or DAGs—it simply says "please run workflow X" and the system handles the rest.</p>
+<p>This decoupling is powerful. Your event sources can be simple Python scripts, complex monitoring systems, CI/CD pipelines, or even other workflow engines. As long as they can send a ZeroMQ message, they can trigger cdktr workflows.</p>
+<h2 id="the-scheduler-an-event-listener-implementation"><a class="header" href="#the-scheduler-an-event-listener-implementation">The Scheduler: An Event Listener Implementation</a></h2>
+<p>The integrated scheduler is cdktr's canonical example of an event listener. It monitors cron expressions defined in workflow YAML files and triggers those workflows at the appointed times. But here's the key insight: <strong>the scheduler is itself just an implementation of cdktr's event listener interface</strong>.</p>
+<p>The scheduler doesn't get special treatment from the principal. It communicates through the same ZeroMQ API that external event listeners use. When a workflow's scheduled time arrives, the scheduler sends a workflow execution request to the principal, just like any other event source would.</p>
+<h3 id="how-the-scheduler-works"><a class="header" href="#how-the-scheduler-works">How the Scheduler Works</a></h3>
+<p>On startup, the scheduler:</p>
+<ol>
+<li>Queries the principal for all workflows via the ZeroMQ API</li>
+<li>Filters to only those with valid cron expressions</li>
+<li>Calculates the next execution time for each scheduled workflow</li>
+<li>Builds a priority queue ordered by next execution time</li>
+</ol>
+<p>The scheduler then enters its event loop:</p>
+<ol>
+<li>Checks if the next workflow in the priority queue is ready to run (current time &gt;= scheduled time)</li>
+<li>If not ready, sleeps for 500 milliseconds and checks again</li>
+<li>When a workflow is ready, sends a workflow execution request to the principal</li>
+<li>Calculates when that workflow should run next and re-adds it to the priority queue</li>
+<li>Repeats indefinitely</li>
+</ol>
+<p>The scheduler runs a background refresh loop that queries the principal every 60 seconds for workflow definitions. If new workflows appear or existing ones change, the scheduler updates its internal priority queue accordingly. This means you can deploy new scheduled workflows without restarting the principal—they'll be picked up automatically within a minute.</p>
+<h3 id="graceful-degradation"><a class="header" href="#graceful-degradation">Graceful Degradation</a></h3>
+<p>If no workflows have cron schedules defined, the scheduler simply doesn't start. The principal continues operating normally, handling manual workflow triggers and external events. The scheduler is truly optional.</p>
+<h2 id="creating-custom-event-listeners"><a class="header" href="#creating-custom-event-listeners">Creating Custom Event Listeners</a></h2>
+<p>The real power of cdktr's event-driven architecture emerges when you create custom event listeners tailored to your specific needs. cdktr provides two primary ways to build event listeners: native implementations in Rust, and external implementations in Python (or any language that can speak ZeroMQ).</p>
+<h3 id="event-listeners-in-rust"><a class="header" href="#event-listeners-in-rust">Event Listeners in Rust</a></h3>
+<p>For high-performance, tightly-integrated event listeners, you can implement the <code>EventListener</code> trait in Rust. This trait defines a simple contract:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[async_trait]
+pub trait EventListener&lt;T&gt; {
+    async fn start_listening(&amp;mut self) -&gt; Result&lt;(), GenericError&gt;;
+    async fn run_workflow(&amp;mut self, workflow_id: &amp;str) -&gt; Result&lt;(), GenericError&gt;;
+}
+<span class="boring">}</span></code></pre></pre>
+<p>The <code>start_listening()</code> method is where your event detection logic lives. It typically runs in an infinite loop, waiting for events to occur. When an event happens that should trigger a workflow, you call <code>run_workflow()</code> with the workflow ID, and the trait provides a default implementation that sends the execution request to the principal via ZeroMQ.</p>
+<p><strong>Example: File Watcher Event Listener</strong></p>
+<p>Here's how you might implement a file watcher that triggers workflows when files change:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use async_trait::async_trait;
+use cdktr_events::EventListener;
+use notify::{Watcher, RecursiveMode, Event};
+use std::sync::mpsc;
+
+pub struct FileWatcherListener {
+    watch_path: String,
+    workflow_id: String,
+}
+
+#[async_trait]
+impl EventListener&lt;Event&gt; for FileWatcherListener {
+    async fn start_listening(&amp;mut self) -&gt; Result&lt;(), GenericError&gt; {
+        let (tx, rx) = mpsc::channel();
+        let mut watcher = notify::recommended_watcher(tx)?;
+
+        watcher.watch(Path::new(&amp;self.watch_path), RecursiveMode::Recursive)?;
+
+        loop {
+            match rx.recv() {
+                Ok(Ok(event)) =&gt; {
+                    if event.kind.is_modify() {
+                        info!("File modified: {:?}, triggering workflow", event.paths);
+                        self.run_workflow(&amp;self.workflow_id).await?;
+                    }
+                }
+                Ok(Err(e)) =&gt; error!("Watch error: {:?}", e),
+                Err(e) =&gt; error!("Channel error: {:?}", e),
+            }
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>This listener watches a directory for file changes and triggers a workflow whenever a modification occurs. The <code>run_workflow()</code> call handles all the ZeroMQ communication with the principal.</p>
+<h3 id="event-listeners-in-python-python-cdktr"><a class="header" href="#event-listeners-in-python-python-cdktr">Event Listeners in Python (python-cdktr)</a></h3>
+<p>For teams more comfortable with Python, or for rapid prototyping, cdktr provides the <code>python-cdktr</code> library. This library offers a Python interface to cdktr's ZeroMQ API, making it trivial to build event listeners without writing any Rust code.</p>
+<p><strong>Example: Webhook Event Listener</strong></p>
+<p>Here's a Python event listener that triggers workflows in response to HTTP webhooks:</p>
+<pre><code class="language-python">from cdktr import EventListener, Principal
+from flask import Flask, request
+import threading
+
+class WebhookListener(EventListener):
+    def __init__(self, principal_host="localhost", principal_port=5561):
+        self.principal = Principal(host=principal_host, port=principal_port)
+        self.app = Flask(__name__)
+        self.setup_routes()
+
+    def setup_routes(self):
+        @self.app.route('/trigger/&lt;workflow_id&gt;', methods=['POST'])
+        def trigger_workflow(workflow_id):
+            payload = request.get_json()
+            result = self.run_workflow(workflow_id)
+            if result.success:
+                return {"status": "triggered", "workflow": workflow_id}, 200
+            else:
+                return {"status": "failed", "error": result.error}, 500
+
+    def start_listening(self):
+        """Start the Flask webhook server"""
+        self.app.run(host='0.0.0.0', port=8080)
+
+if __name__ == "__main__":
+    listener = WebhookListener()
+    listener.start_listening()
+</code></pre>
+<p>This creates an HTTP endpoint at <code>/trigger/&lt;workflow_id&gt;</code> that accepts POST requests. When a request arrives, it triggers the specified workflow via the cdktr principal.</p>
+<p><strong>Example: Message Queue Event Listener</strong></p>
+<p>Here's a listener that consumes messages from RabbitMQ and triggers workflows:</p>
+<pre><code class="language-python">from cdktr import EventListener, Principal
+import pika
+import json
+
+class RabbitMQListener(EventListener):
+    def __init__(self, rabbitmq_host='localhost', queue_name='cdktr-workflows',
+                 principal_host='localhost', principal_port=5561):
+        self.principal = Principal(host=principal_host, port=principal_port)
+        self.rabbitmq_host = rabbitmq_host
+        self.queue_name = queue_name
+
+    def handle_message(self, ch, method, properties, body):
+        """Callback for each RabbitMQ message"""
+        try:
+            message = json.loads(body)
+            workflow_id = message.get('workflow_id')
+
+            if workflow_id:
+                result = self.run_workflow(workflow_id)
+                if result.success:
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        except Exception as e:
+            print(f"Error processing message: {e}")
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+
+    def start_listening(self):
+        """Start consuming from RabbitMQ"""
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=self.rabbitmq_host)
+        )
+        channel = connection.channel()
+        channel.queue_declare(queue=self.queue_name, durable=True)
+
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(
+            queue=self.queue_name,
+            on_message_callback=self.handle_message
+        )
+
+        print(f"Listening for workflow triggers on queue: {self.queue_name}")
+        channel.start_consuming()
+
+if __name__ == "__main__":
+    listener = RabbitMQListener()
+    listener.start_listening()
+</code></pre>
+<p><strong>Example: Database Change Listener</strong></p>
+<p>Monitor a PostgreSQL database for changes and trigger workflows:</p>
+<pre><code class="language-python">from cdktr import EventListener, Principal
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import select
+import time
+
+class DatabaseChangeListener(EventListener):
+    def __init__(self, db_connection_string, channel_name='workflow_triggers',
+                 principal_host='localhost', principal_port=5561):
+        self.principal = Principal(host=principal_host, port=principal_port)
+        self.db_connection_string = db_connection_string
+        self.channel_name = channel_name
+
+    def start_listening(self):
+        """Listen for PostgreSQL NOTIFY events"""
+        conn = psycopg2.connect(self.db_connection_string)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+
+        cursor = conn.cursor()
+        cursor.execute(f"LISTEN {self.channel_name};")
+
+        print(f"Listening for notifications on channel: {self.channel_name}")
+
+        while True:
+            if select.select([conn], [], [], 5) == ([], [], []):
+                continue
+            else:
+                conn.poll()
+                while conn.notifies:
+                    notify = conn.notifies.pop(0)
+                    workflow_id = notify.payload
+                    print(f"Received notification: {workflow_id}")
+                    self.run_workflow(workflow_id)
+
+if __name__ == "__main__":
+    listener = DatabaseChangeListener(
+        db_connection_string="postgresql://user:pass@localhost/mydb"
+    )
+    listener.start_listening()
+</code></pre>
+<h3 id="the-eventlistener-base-class"><a class="header" href="#the-eventlistener-base-class">The EventListener Base Class</a></h3>
+<p>The <code>python-cdktr</code> library provides an <code>EventListener</code> base class that handles the ZeroMQ communication for you:</p>
+<pre><code class="language-python">from cdktr import EventListener
+
+class MyCustomListener(EventListener):
+    def run_workflow(self, workflow_id: str) -&gt; Result:
+        """
+        Trigger a workflow on the cdktr principal.
+        Returns a Result object with .success and .error attributes.
+        """
+        # Implemented by the base class - just call it!
+        return super().run_workflow(workflow_id)
+
+    def start_listening(self):
+        """
+        Your event detection logic goes here.
+        Call self.run_workflow(workflow_id) whenever an event occurs.
+        """
+        raise NotImplementedError("Subclasses must implement start_listening()")
+</code></pre>
+<h2 id="real-world-event-listener-scenarios"><a class="header" href="#real-world-event-listener-scenarios">Real-World Event Listener Scenarios</a></h2>
+<p>Event listeners enable powerful workflow orchestration patterns:</p>
+<p><strong>CI/CD Integration</strong>: Deploy code, send a webhook to trigger a cdktr workflow that runs tests, migrations, and health checks.</p>
+<p><strong>Data Pipeline Triggers</strong>: When new data lands in S3, trigger a workflow that processes, validates, and loads it into your warehouse.</p>
+<p><strong>Monitoring and Alerting</strong>: When your monitoring system detects an anomaly, trigger a remediation workflow that attempts automatic fixes and notifies the team.</p>
+<p><strong>User Actions</strong>: When a user performs a specific action in your application, trigger a workflow that sends emails, updates analytics, and logs to your data warehouse.</p>
+<p><strong>Cross-System Orchestration</strong>: Use event listeners to bridge different systems—when System A completes a task, trigger a cdktr workflow that kicks off related work in System B.</p>
+<h2 id="configuration-and-deployment"><a class="header" href="#configuration-and-deployment">Configuration and Deployment</a></h2>
+<p>Event listeners are separate processes from the principal and agents. You deploy them alongside your cdktr infrastructure:</p>
+<p><strong>Development</strong>: Run event listeners in the same terminal or IDE where you're running the principal, useful for testing and debugging.</p>
+<p><strong>Production</strong>: Deploy event listeners as systemd services, Docker containers, or Kubernetes pods, ensuring they have network connectivity to the principal's ZeroMQ port.</p>
+<p>Event listeners should be treated as first-class components of your workflow infrastructure, with proper monitoring, logging, and error handling.</p>
+<h2 id="the-power-of-events"><a class="header" href="#the-power-of-events">The Power of Events</a></h2>
+<p>By treating everything as events, cdktr provides a unified model for workflow triggering. Whether a workflow runs at 3 AM every day via the scheduler, gets triggered by a deployment webhook, or responds to a file change, the execution path is identical. This consistency makes cdktr predictable and easy to reason about, while the extensibility of the event listener interface ensures you're never locked into a predefined set of trigger types.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../architecture/agents.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../architecture/workflows-tasks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../architecture/agents.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../architecture/workflows-tasks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

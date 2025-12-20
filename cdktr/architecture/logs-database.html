@@ -1,0 +1,296 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Logs &amp; Database - CDKTR Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">CDKTR Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="logs--database"><a class="header" href="#logs--database">Logs &amp; Database</a></h1>
+<p>The logging and data persistence system in cdktr is designed to provide comprehensive visibility into workflow execution while maintaining performance and reliability. This architecture enables both real-time monitoring and historical analysis through a combination of streaming and storage mechanisms.</p>
+<h2 id="log-streaming-architecture"><a class="header" href="#log-streaming-architecture">Log Streaming Architecture</a></h2>
+<p>At the heart of cdktr's observability is a publish-subscribe logging system built on ZeroMQ. This architecture creates a real-time stream of execution information that flows from agents executing tasks, through the principal coordinator, and out to any interested consumers.</p>
+<h3 id="how-agents-publish-logs"><a class="header" href="#how-agents-publish-logs">How Agents Publish Logs</a></h3>
+<p>When an agent executes tasks, it doesn't write logs to local files or directly to a database. Instead, each agent maintains a log publisher that sends messages to the principal over a dedicated ZeroMQ connection. This publisher uses a PUSH socket that connects to the principal's log manager, which listens on a PULL socket.</p>
+<p>Every log message contains rich context about the execution:</p>
+<ul>
+<li>The workflow identifier and name</li>
+<li>The specific workflow instance being executed</li>
+<li>The task name and its unique execution identifier</li>
+<li>A timestamp marking when the event occurred</li>
+<li>The log level (INFO, WARN, ERROR, etc.)</li>
+<li>The actual log payload containing the message</li>
+</ul>
+<p>This structured approach ensures that every log line can be traced back to its exact origin in the execution tree. When you're troubleshooting a failed task, you can immediately see which workflow instance it belonged to and when it occurred.</p>
+<h3 id="the-principals-log-manager"><a class="header" href="#the-principals-log-manager">The Principal's Log Manager</a></h3>
+<p>The principal runs a dedicated log manager service that acts as a central hub for all logging activity. This service receives log messages from all agents via its PULL socket and immediately republishes them through a PUB socket. This publish-subscribe pattern creates a broadcast mechanism where multiple consumers can receive the same log stream simultaneously.</p>
+<p>The log manager doesn't process or filter the messages—it simply ensures they flow from agents to subscribers. This design keeps the critical path lightweight and fast. The manager operates on two ports configured via environment variables: one for receiving logs from agents (<code>CDKTR_LOGS_LISTENING_PORT</code>) and another for publishing to subscribers (<code>CDKTR_LOGS_PUBLISHING_PORT</code>).</p>
+<h3 id="real-time-log-consumption"><a class="header" href="#real-time-log-consumption">Real-Time Log Consumption</a></h3>
+<p>Any component can subscribe to the log stream by connecting to the principal's publishing port. The Terminal User Interface (TUI), for example, leverages this exact mechanism to provide live log tailing. When you select a workflow in the TUI and watch its logs scroll by, you're seeing the same messages that agents are publishing in real-time.</p>
+<p>Subscribers can filter logs by workflow ID, allowing them to see only the logs relevant to specific workflows. This topic-based subscription means you're not overwhelmed with logs from every workflow running in your system—you see exactly what you choose to monitor.</p>
+<p>The streaming nature of this system provides immediate feedback during execution. There's no delay waiting for logs to be written to disk, no polling interval to wait for—you see task output as it happens.</p>
+<h2 id="log-persistence-with-duckdb"><a class="header" href="#log-persistence-with-duckdb">Log Persistence with DuckDB</a></h2>
+<p>While streaming provides real-time visibility, you also need the ability to query historical execution data. This is where DuckDB enters the picture, providing a lightweight yet powerful analytical database for storing all workflow execution information.</p>
+<h3 id="why-duckdb"><a class="header" href="#why-duckdb">Why DuckDB?</a></h3>
+<p>DuckDB is an embedded analytical database—think of it as SQLite but optimized for analytical queries rather than transactional workloads. For cdktr's use case, this is ideal. You get the simplicity of an embedded database (no separate server to manage) combined with excellent performance for querying large volumes of log data.</p>
+<p>The database can run in-memory for development and testing, or persist to disk for production deployments. This flexibility allows you to choose the appropriate storage strategy for your environment.</p>
+<p>DuckDB is just great! Given your cdktr DB is just a single file, you can even open it directly with DuckDB's CLI or connect to it from Python or R for custom analysis.</p>
+<h3 id="the-log-persistence-pipeline"><a class="header" href="#the-log-persistence-pipeline">The Log Persistence Pipeline</a></h3>
+<p>The principal runs a dedicated log persister service that subscribes to the same log stream as other consumers. This service receives logs from the pub/sub system and batches them for efficient database insertion. Rather than writing each log individually, the persister accumulates messages in an asynchronous queue and flushes them to the database every 30 seconds.</p>
+<p>This batching strategy significantly improves write performance. Database insertions are one of the more expensive operations, and batching reduces the overhead by consolidating many individual writes into a single efficient bulk operation.</p>
+<p>If a database write fails—perhaps due to disk space issues or connection problems—the persister retains the failed batch in its queue and attempts to write it again on the next interval. This resilience ensures logs aren't lost even when the database experiences temporary issues.</p>
+<h3 id="the-logstore-schema"><a class="header" href="#the-logstore-schema">The Logstore Schema</a></h3>
+<p>All log messages are stored in the <code>logstore</code> table with a straightforward schema that mirrors the log message structure:</p>
+<ul>
+<li><strong>workflow_id</strong>: The identifier for the workflow definition</li>
+<li><strong>workflow_name</strong>: The human-readable workflow name</li>
+<li><strong>workflow_instance_id</strong>: The unique identifier for this execution instance</li>
+<li><strong>task_name</strong>: The name of the task that generated the log</li>
+<li><strong>task_instance_id</strong>: The unique identifier for this task execution</li>
+<li><strong>timestamp_ms</strong>: Milliseconds since epoch for precise time ordering</li>
+<li><strong>level</strong>: The log level (INFO, WARN, ERROR, etc.)</li>
+<li><strong>payload</strong>: The actual log message content</li>
+</ul>
+<p>This schema enables powerful queries. You can retrieve all logs for a specific workflow instance, find all ERROR-level logs across all executions, or analyze task performance by examining timestamp patterns. The database provides a <code>QueryLogs</code> API that accepts time ranges, workflow filters, and instance filters to retrieve exactly the logs you need.</p>
+<h2 id="workflow-execution-state"><a class="header" href="#workflow-execution-state">Workflow Execution State</a></h2>
+<p>Beyond just log messages, cdktr persists all workflow execution state in the database. This creates a complete audit trail of everything that happens in your system.</p>
+<h3 id="insert-only-architecture"><a class="header" href="#insert-only-architecture">Insert-Only Architecture</a></h3>
+<p>A critical design decision is that all execution state is stored in insert-only tables. Nothing is ever updated or deleted. When a workflow starts, a record is inserted. When it completes, another record is inserted with a new timestamp. The same applies to individual tasks—each status change creates a new row.</p>
+<p>This approach provides several advantages:</p>
+<ol>
+<li><strong>Complete History</strong>: You can reconstruct the entire timeline of any workflow execution by querying its status records chronologically</li>
+<li><strong>Audit Trail</strong>: Nothing is ever lost or overwritten, providing perfect auditability</li>
+<li><strong>Performance</strong>: Append-only operations are faster than updates, especially in analytical databases like DuckDB</li>
+<li><strong>Simplicity</strong>: No need for complex update logic or handling concurrent updates</li>
+</ol>
+<h3 id="workflow-run-status"><a class="header" href="#workflow-run-status">Workflow Run Status</a></h3>
+<p>The <code>workflow_run_status</code> table tracks workflow-level state changes:</p>
+<ul>
+<li><strong>workflow_id</strong>: The workflow definition identifier</li>
+<li><strong>workflow_instance_id</strong>: The unique instance identifier</li>
+<li><strong>status</strong>: One of PENDING, RUNNING, WAITING, COMPLETED, FAILED, or CRASHED</li>
+<li><strong>timestamp_ms</strong>: When this status change occurred</li>
+</ul>
+<p>When an agent starts executing a workflow, it inserts a RUNNING status record. When the workflow completes (successfully or not), another record is inserted with the appropriate final status. By querying the most recent status for a workflow instance, you can determine its current state. By querying all statuses, you can see its complete execution timeline.</p>
+<h3 id="task-run-status"><a class="header" href="#task-run-status">Task Run Status</a></h3>
+<p>Similarly, the <code>task_run_status</code> table maintains the execution history for individual tasks:</p>
+<ul>
+<li><strong>task_id</strong>: The task identifier from the workflow definition</li>
+<li><strong>task_instance_id</strong>: The unique identifier for this task execution</li>
+<li><strong>workflow_instance_id</strong>: The workflow instance this task belongs to</li>
+<li><strong>status</strong>: The task's status (PENDING, RUNNING, COMPLETED, FAILED, etc.)</li>
+<li><strong>timestamp_ms</strong>: When this status change occurred</li>
+</ul>
+<p>This granular tracking means you can analyze task-level behavior. Which tasks fail most often? How long does a particular task typically run? Which tasks are bottlenecks? All these questions can be answered by querying the task status history.</p>
+<h3 id="querying-execution-history"><a class="header" href="#querying-execution-history">Querying Execution History</a></h3>
+<p>The principal provides API endpoints for querying this execution data. You can retrieve recent workflow statuses to see what's currently running or recently completed. The log query endpoint allows time-based and filter-based retrieval of both logs and status records.</p>
+<p>The TUI and CLI tools leverage these APIs to present execution information to users. When you see a workflow's status in the TUI or query logs with the CLI, you're seeing data pulled directly from these DuckDB tables.</p>
+<h2 id="benefits-of-this-architecture"><a class="header" href="#benefits-of-this-architecture">Benefits of This Architecture</a></h2>
+<p>The combination of real-time streaming and persistent storage provides the best of both worlds:</p>
+<p><strong>Immediate Visibility</strong>: The pub/sub streaming means you see what's happening right now, with no delay. This is essential for monitoring long-running workflows and troubleshooting issues as they occur.</p>
+<p><strong>Historical Analysis</strong>: The DuckDB storage enables sophisticated queries over historical data. You can identify patterns, generate reports, and understand long-term trends in your workflow execution.</p>
+<p><strong>Decoupled Consumers</strong>: Because logging uses pub/sub, new consumers can be added without impacting agents or the principal. Want to send logs to an external monitoring system? Just add a new subscriber.</p>
+<p><strong>Resilience</strong>: Agents buffer logs locally if they can't reach the principal, the persister retries failed database writes, and the streaming continues even if persistence fails. The system is designed to preserve observability even when components experience issues.</p>
+<p><strong>Scalability</strong>: The streaming architecture scales horizontally—more agents just means more log publishers, and subscribers receive all messages regardless of how many agents are active. The database scales vertically with DuckDB's efficient analytical engine handling large query workloads.</p>
+<p>This logging and persistence architecture ensures you always have the information you need to understand, monitor, and troubleshoot your distributed workflow executions.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../architecture/workflow-examples.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../tui.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../architecture/workflow-examples.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../tui.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

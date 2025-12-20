@@ -1,0 +1,1876 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>CDKTR Documentation</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">CDKTR Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>CDKTR (con-duck-tor) is a workflow automation and orchestration system written in pure Rust that is designed to take the complexity out of managing and executing tasks across a distributed system. It is designed to be simple to use, and easy to extend.</p>
+<h2 id="why-cdktr"><a class="header" href="#why-cdktr">Why CDKTR?</a></h2>
+<p>The community is awash with different workflow automation and data orchestration tools and platforms, so why was there the need to embark on the (quite frankly) ambitious task to create another one?</p>
+<p>CDKTR was designed to solve a problem faced at many businesses which is that a fully centralised workflow automation system is not always the best solution. In many cases, some technical teams only need to automate a few critical jobs, and the overhead of setting up a full-blown workflow automation system is not worth the effort. This is often achieved by using a combination of cron jobs, scripts, and other ad-hoc solutions or running open-source tools like Airflow or Prefect.</p>
+<p>Another main driver behind CDKTR's development is the nature of many on-prem and cloud environments which are behind corporate firewalls and have strict security policies. This can make it difficult to use cloud platforms that abstract the server and UI away from the user. Another downside is that these services can come with a fairly hefty price tags which leave teams with little choice but to stand up their own instances of open-source tools which then come with a large maintenance overhead.</p>
+<p>To this end CDKTR is and will remain completely open-source and free to use. It designed to work efficiently in a variety of environments from a single node setup to a multi-node cluster.</p>
+<p>CDKTR is packaged in a single, small, completely self-contained binary that can be run on any machine even without Rust installed or any other dependencies. This makes it easy to deploy and run in a variety of environments.</p>
+<h2 id="what-makes-it-special"><a class="header" href="#what-makes-it-special">What makes it special?</a></h2>
+<h3 id="tui"><a class="header" href="#tui">TUI</a></h3>
+<p>CDKTR is designed to be fairly low-level in terms of implementation, but high-level in terms of the abstractions it provides. This means that it is easy to extend and modify to suit your needs, but also provides a simple interface for users to interact with. This interface is in the form of a Terminal User Interface (TUI) built with <a href="https://ratatui.rs/">Ratatui</a> which provides a simple way to interact with the system directly from the terminal without having to use or maintain a web interface or other similar tool. This allows teams that usually ssh into their infrastructure to manage and monitor their tasks without having to leave the terminal.</p>
+<h3 id="zeromq"><a class="header" href="#zeromq">ZeroMQ</a></h3>
+<p>CDKTR uses <a href="https://zeromq.org/">ZeroMQ</a> (a lightning-fast, no-frills messaging library orginally written in C++) as the messaging layer between the different components of the system. This allows for a high degree of flexibility in terms of how the system is deployed and how the different components communicate with each other. It also allows for a high degree of fault tolerance and scalability without sacrificing performance. It also provides its main API in the form of ZeroMQ sockets which allows for easy integration with other systems developed in completely different languages and frameworks.</p>
+<h3 id="rust"><a class="header" href="#rust">Rust</a></h3>
+<p>CDKTR is written in Rust which provides a much higher degree of safety and performance that is often not found in other (most commonly Python-based) workflow automation tools. It allows for managing tasks at rely on low-latency and instantaneous execution times.</p>
+<h2 id="who-is-it-for"><a class="header" href="#who-is-it-for">Who is it for?</a></h2>
+<p>CDKTR is for developers and technical teams that want a simple, lightweight and scalable way to set up and manage workflow orchestration. I hope you enjoy using it as much as I have enjoyed building it!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
+<p>This section will guide you through installing cdktr, understanding the basic commands, and creating your first workflow. By the end of this section, you'll have a working cdktr setup and understand the fundamentals of workflow orchestration with cdktr.</p>
+<h2 id="what-youll-learn"><a class="header" href="#what-youll-learn">What You'll Learn</a></h2>
+<ul>
+<li>How to install cdktr on your system</li>
+<li>Basic CLI commands for managing principals and agents</li>
+<li>How to create and run your first workflow</li>
+<li>How to use the TUI to monitor your workflows</li>
+</ul>
+<p>Let's get started!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>cdktr is distributed as a single, self-contained binary with no external dependencies required. This makes installation straightforward on any platform.</p>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<p>None! cdktr is completely self-contained and doesn't require Rust or any other runtime to be installed.</p>
+<h2 id="installation-methods"><a class="header" href="#installation-methods">Installation Methods</a></h2>
+<h3 id="from-pre-built-binaries"><a class="header" href="#from-pre-built-binaries">From Pre-built Binaries</a></h3>
+<p>Pre-built binaries for Linux, macOS, and Windows are available from the <a href="https://github.com/nicelgueta/cdktr/releases">GitHub Releases</a> page.</p>
+<p>Download the appropriate binary for your platform and add it to your PATH:</p>
+<pre><code class="language-bash"># Example for Linux/macOS
+chmod +x cdktr
+sudo mv cdktr /usr/local/bin/
+</code></pre>
+<h3 id="from-source-recommended-for-development"><a class="header" href="#from-source-recommended-for-development">From Source (Recommended for Development)</a></h3>
+<p>If you have Rust installed, you can build cdktr from source:</p>
+<pre><code class="language-bash">git clone https://github.com/nicelgueta/cdktr.git
+cd cdktr
+cargo build --release
+</code></pre>
+<p>The compiled binary will be available at <code>target/release/cdktr</code>.</p>
+<h3 id="verify-installation"><a class="header" href="#verify-installation">Verify Installation</a></h3>
+<p>Verify that cdktr is installed correctly:</p>
+<pre><code class="language-bash">cdktr --version
+</code></pre>
+<p>You should see the version number displayed.</p>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you have cdktr installed, let's explore the <a href="getting-started/./quickstart.html">Quick Start Guide</a> to get your first workflow running!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="quick-start-guide"><a class="header" href="#quick-start-guide">Quick Start Guide</a></h1>
+<p>This guide will walk you through setting up a basic cdktr system with a principal and agent, and running your first workflow.</p>
+<h2 id="step-1-initialise-a-project"><a class="header" href="#step-1-initialise-a-project">Step 1: Initialise a Project</a></h2>
+<p>Create a new directory for your cdktr project:</p>
+<pre><code class="language-bash">mkdir my-cdktr-project
+cd my-cdktr-project
+cdktr init
+</code></pre>
+<p>This creates a basic project structure with an example workflow in the <code>workflows/</code> directory.</p>
+<h2 id="step-2-start-a-principal"><a class="header" href="#step-2-start-a-principal">Step 2: Start a Principal</a></h2>
+<p>The principal is the central coordinator that manages workflow scheduling and task distribution. Start it in one terminal:</p>
+<pre><code class="language-bash">cdktr start principal
+</code></pre>
+<p>By default, the principal starts on port 5561. You can specify a different port:</p>
+<pre><code class="language-bash">cdktr start principal -p 5570
+</code></pre>
+<p>For light, single-machine setups you can invoke an agent process from the main principal process:</p>
+<pre><code class="language-bash">cdktr start principal --with-agent
+</code></pre>
+<p>You should see logs indicating that the principal has started successfully:</p>
+<pre><code>[INFO] Principal server started on 127.0.0.1:5555
+[INFO] Scheduler found X workflows with active schedules
+</code></pre>
+<h2 id="step-3-start-an-agent"><a class="header" href="#step-3-start-an-agent">Step 3: Start an Agent</a></h2>
+<p>Agents execute the actual workflow tasks. To start an agent in a new ternminal, run:</p>
+<pre><code class="language-bash">cdktr start agent
+</code></pre>
+<p>The agent will automatically connect to the principal running on the default port. If your principal is on a different port or host:</p>
+<pre><code class="language-bash">CDKTR_PRINCIPAL_HOST=127.0.0.1 CDKTR_PRINCIPAL_PORT=5570 cdktr start agent
+</code></pre>
+<p>You can specify the maximum number of concurrent workflows an agent can handle:</p>
+<pre><code class="language-bash">cdktr start agent --max-concurrent 5
+</code></pre>
+<h2 id="step-4-open-the-tui"><a class="header" href="#step-4-open-the-tui">Step 4: Open the TUI</a></h2>
+<p>Now that you have a principal and agent running, open the TUI to monitor and manage workflows. The TUI provides a user-friendly interface to interact with your cdktr setup and can be started with:</p>
+<pre><code class="language-bash">cdktr ui
+</code></pre>
+<p>The TUI will connect to your principal and display:</p>
+<ul>
+<li>Available workflows</li>
+<li>Workflow execution status</li>
+<li>Registered agents</li>
+<li>Recent activity</li>
+</ul>
+<h2 id="whats-next"><a class="header" href="#whats-next">What's Next?</a></h2>
+<p>You now have a basic cdktr setup running! Here's what to explore next:</p>
+<ul>
+<li>Learn about <a href="getting-started/./cli-basics.html">Basic CLI Commands</a> for managing your setup</li>
+<li>Create <a href="getting-started/./first-workflow.html">Your First Workflow</a> from scratch</li>
+<li>Understand the <a href="getting-started/../architecture.html">Architecture &amp; Core Concepts</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
+<p>cdktr uses an environment-based configuration system. You can set configuration options via environment variables, a <code>.env</code> file, or in some cases command-line arguments.
+All configuration options can be listed using:</p>
+<pre><code class="language-bash">cdktr config list
+</code></pre>
+<h2 id="configuration-options"><a class="header" href="#configuration-options">Configuration Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Environment Variable</th><th>Description</th><th>Default Value</th></tr></thead><tbody>
+<tr><td><code>CDKTR_LOG_LEVEL</code></td><td>Default log level</td><td><code>INFO</code></td></tr>
+<tr><td><code>CDKTR_AGENT_MAX_CONCURRENCY</code></td><td>Maximum number of concurrent workflows an agent can handle</td><td><code>5</code></td></tr>
+<tr><td><code>CDKTR_RETRY_ATTEMPTS</code></td><td>Number of times to re-attempt a ZMQ request</td><td><code>20</code></td></tr>
+<tr><td><code>CDKTR_DEFAULT_ZMQ_TIMEOUT_MS</code></td><td>Default timeout for a ZMQ request (milliseconds)</td><td><code>3000</code></td></tr>
+<tr><td><code>CDKTR_PRINCIPAL_HOST</code></td><td>Hostname of the principal instance</td><td><code>0.0.0.0</code></td></tr>
+<tr><td><code>CDKTR_PRINCIPAL_PORT</code></td><td>Default port of the principal instance</td><td><code>5561</code></td></tr>
+<tr><td><code>CDKTR_LOGS_LISTENING_PORT</code></td><td>Listening port for the principal log manager</td><td><code>5562</code></td></tr>
+<tr><td><code>CDKTR_LOGS_PUBLISHING_PORT</code></td><td>Publishing port for the principal log manager</td><td><code>5563</code></td></tr>
+<tr><td><code>CDKTR_WORKFLOW_DIR</code></td><td>Default workflow directory</td><td><code>workflows</code></td></tr>
+<tr><td><code>CDKTR_WORKFLOW_DIR_REFRESH_FREQUENCY_S</code></td><td>Interval to refresh the workflow directory (seconds)</td><td><code>60</code></td></tr>
+<tr><td><code>CDKTR_SCHEDULER_START_POLL_FREQUENCY_MS</code></td><td>Interval at which the scheduler checks if a workflow is ready to start (milliseconds)</td><td><code>500</code></td></tr>
+<tr><td><code>CDKTR_Q_PERSISTENCE_INTERVAL_MS</code></td><td>Task queue persistence interval for principal recovery (milliseconds)</td><td><code>1000</code></td></tr>
+<tr><td><code>CDKTR_APP_DATA_DIRECTORY</code></td><td>App data directory for cdktr instances</td><td><code>$HOME/.cdktr</code></td></tr>
+<tr><td><code>CDKTR_DB_PATH</code></td><td>Path to the main database for the principal instance</td><td><code>$HOME/.cdktr/app.db</code></td></tr>
+<tr><td><code>CDKTR_TUI_STATUS_REFRESH_INTERVAL_MS</code></td><td>TUI refresh interval for principal status checks (milliseconds)</td><td><code>1000</code></td></tr>
+<tr><td><code>CDKTR_AGENT_HEARTBEAT_TIMEOUT_MS</code></td><td>Agent heartbeat timeout - workflows marked as CRASHED if no heartbeat within this duration (milliseconds)</td><td><code>30000</code></td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="architecture--core-concepts"><a class="header" href="#architecture--core-concepts">Architecture &amp; Core Concepts</a></h1>
+<p>This chapter explains the fundamental architecture of cdktr and the core concepts you need to understand to effectively use the system.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>cdktr is a distributed workflow orchestration system built on a principal-agent architecture. It is designed to be completely stateless, using source-controllable yaml files for workflow definitions, ZeroMQ for fast, reliable communication between components and stores logs, workflow and task history in a DuckDB database for fast analytics and querying.</p>
+<p>The key concepts covered in this section are:</p>
+<ul>
+<li><strong>System Architecture</strong>: How the various components fit together</li>
+<li><strong>Principals vs Agents</strong>: The distributed computing model</li>
+<li><strong>Workflows &amp; Tasks</strong>: How work is defined and executed</li>
+<li><strong>ZeroMQ Communication</strong>: The messaging layer that powers cdktr</li>
+</ul>
+<h2 id="key-design-principles"><a class="header" href="#key-design-principles">Key Design Principles</a></h2>
+<ol>
+<li><strong>Simplicity</strong>: Single binary deployment with no external dependencies</li>
+<li><strong>Performance</strong>: Built in Rust for speed and safety</li>
+<li><strong>Distributed</strong>: Scale horizontally by adding more agents</li>
+<li><strong>Observable</strong>: TUI for real-time monitoring without a web UI</li>
+<li><strong>Flexible</strong>: ZeroMQ API allows integration with any language</li>
+</ol>
+<p>Let's dive into each concept in detail.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="system-overview"><a class="header" href="#system-overview">System Overview</a></h1>
+<p>cdktr is built on a distributed architecture where a central <strong>principal</strong> process coordinates work across multiple <strong>agents</strong> that execute workflows. This design provides both simplicity and scalability—you can run everything on a single machine for development, or distribute agents across multiple machines for production workloads. Workflows are defined in simple YAML files that the principal automatically discovers and loads from the filesystem.</p>
+<p>The architecture follows a pull-based model: the principal maintains a queue of workflows ready for execution, and agents poll this queue for work when they have available capacity. This self-regulating design means you can scale horizontally simply by launching more agent processes, without complex load balancing or work distribution logic.</p>
+<p>cdktr is completely event-driven. Workflows can be triggered by cron schedules, manual requests via the CLI or TUI, or external event listeners that respond to webhooks, file changes, or any other stimulus you can program. All interactions flow through cdktr's ZeroMQ-based API, which provides a lightweight, high-performance communication layer.</p>
+<h2 id="high-level-architecture"><a class="header" href="#high-level-architecture">High-Level Architecture</a></h2>
+<pre class="mermaid">graph TB
+    TUI[Terminal UI] --&gt; Principal
+    CLI[CLI] --&gt; Principal
+    Principal[Principal Server] --&gt; Agent1[Agent 1]
+    Principal --&gt; Agent2[Agent 2]
+    Principal --&gt; Agent3[Agent N]
+    Principal --&gt; DB[(DuckDB)]
+    EventListener[Event Listener] --&gt; Principal
+    Scheduler[Scheduler] --&gt; EventListener
+
+    Agent1 --&gt; TaskManager1[TaskManager]
+    TaskManager1 --&gt; Executor1[Executor 1]
+    TaskManager1 --&gt; Executor2[Executor 2]
+
+    style Principal fill:#1b590e,stroke:#333,stroke-width:4px
+    style Agent1 fill:#0e9296,stroke:#333,stroke-width:2px
+    style Agent2 fill:#0e9296,stroke:#333,stroke-width:2px
+    style Agent3 fill:#0e9296,stroke:#333,stroke-width:2px
+</pre>
+<h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
+<p>The system comprises several key components that work together to provide distributed workflow orchestration:</p>
+<h3 id="principal"><a class="header" href="#principal">Principal</a></h3>
+<p>The principal is the system's central coordinator and single source of truth. It manages workflow definitions loaded from YAML files, maintains the global queue of workflows awaiting execution, and tracks the health and status of all registered agents.</p>
+<p>The principal runs several background services: a scheduler that triggers workflows based on cron expressions, a log aggregation system that collects and persists execution logs to DuckDB, and a heartbeat monitor that detects failed agents. It also provides the ZeroMQ API server that handles all external communication from the TUI, CLI, agents, and event listeners.</p>
+<p>When a workflow needs to execute—whether triggered by schedule, manual request, or external event—the principal adds it to the task queue. Agents poll this queue for work, and the principal assigns workflows on a first-come, first-served basis.</p>
+<h3 id="agents"><a class="header" href="#agents">Agents</a></h3>
+<p>Agents are autonomous worker processes that execute workflows. Each agent runs independently and can be deployed on the same machine as the principal or on different machines across a network. On startup, an agent registers with the principal and begins polling for available work.</p>
+<p>When an agent receives a workflow assignment, its internal task manager analyzes the workflow's dependency graph (DAG) and executes tasks in the correct order. The task manager enables parallel execution of independent tasks, maximizing throughput. As execution progresses, the agent sends continuous status updates back to the principal and streams task output logs.</p>
+<p>Agents are self-regulating—they only request work when they have available capacity based on their configured concurrency limits. This design means scaling is as simple as launching additional agent processes.</p>
+<h3 id="scheduler"><a class="header" href="#scheduler">Scheduler</a></h3>
+<p>The integrated scheduler monitors cron expressions defined in workflow files and automatically triggers workflows at their scheduled times. It maintains a priority queue of upcoming executions and checks every 500 milliseconds whether any workflow is due to run.</p>
+<p>The scheduler periodically refreshes its view of available workflows (every 60 seconds by default), allowing you to deploy new scheduled workflows without restarting the principal. When a workflow's time arrives, the scheduler triggers it by adding it to the principal's workflow queue, where it awaits assignment to an available agent.</p>
+<h3 id="event-listeners"><a class="header" href="#event-listeners">Event Listeners</a></h3>
+<p>Event listeners provide the mechanism for external systems to trigger workflow executions. They monitor external events—such as webhooks, file changes, message queues, or any custom trigger—and send workflow execution requests to the principal via the ZeroMQ API.</p>
+<p>cdktr doesn't include specific event listener implementations out of the box; instead, it provides the API infrastructure for you to build custom listeners tailored to your needs. Any process that can communicate via ZeroMQ can trigger workflows.</p>
+<h3 id="database"><a class="header" href="#database">Database</a></h3>
+<p>cdktr uses DuckDB, an embedded analytical database, to persist all execution history. Every workflow run, task execution, and log line gets stored in DuckDB, providing a complete audit trail queryable through both the CLI and TUI.</p>
+<p>The database schema tracks workflow instances, task executions, status transitions, and detailed logs with timestamps. This persistent history enables debugging failed workflows, generating execution reports, and monitoring system performance over time.</p>
+<h2 id="communication-flow"><a class="header" href="#communication-flow">Communication Flow</a></h2>
+<h3 id="workflow-execution-flow"><a class="header" href="#workflow-execution-flow">Workflow Execution Flow</a></h3>
+<p>A typical workflow execution follows this sequence:</p>
+<ol>
+<li><strong>Trigger</strong>: A workflow is triggered by its cron schedule, manual CLI/TUI request, or external event listener</li>
+<li><strong>Queue</strong>: The principal adds the workflow to its global task queue</li>
+<li><strong>Poll</strong>: An agent with available capacity polls the principal for work</li>
+<li><strong>Assign</strong>: The principal removes the workflow from the queue and sends it to the requesting agent</li>
+<li><strong>Execute</strong>: The agent's task manager executes workflow tasks according to their dependencies, launching executors for each task</li>
+<li><strong>Stream Logs</strong>: As tasks run, the agent streams stdout/stderr logs to the principal's log manager</li>
+<li><strong>Report Status</strong>: The agent sends status updates (PENDING, RUNNING, COMPLETED, FAILED) for each task and the overall workflow</li>
+<li><strong>Persist</strong>: The principal stores all status updates and logs in DuckDB for later querying</li>
+</ol>
+<h3 id="zeromq-communication-pattern"><a class="header" href="#zeromq-communication-pattern">ZeroMQ Communication Pattern</a></h3>
+<p>All components communicate using ZeroMQ's REQ/REP (request/reply) pattern, which provides reliable synchronous messaging:</p>
+<pre><code>Client (Agent/TUI/CLI)     Principal Server
+        |                          |
+        |-------- REQUEST --------&gt;|
+        |                          |
+        |&lt;------- RESPONSE --------|
+        |                          |
+</code></pre>
+<p>This synchronous pattern ensures every request gets a response and provides natural backpressure—if the principal is overloaded, clients wait for a response rather than overwhelming the system with requests.</p>
+<p>Logs use a separate PUB/SUB channel where agents publish log messages and the principal subscribes to receive them, enabling high-throughput, non-blocking log streaming.</p>
+<h2 id="scalability-model"><a class="header" href="#scalability-model">Scalability Model</a></h2>
+<p>cdktr's architecture enables scaling in multiple dimensions:</p>
+<h3 id="horizontal-scaling"><a class="header" href="#horizontal-scaling">Horizontal Scaling</a></h3>
+<p>Add more agent processes to increase total workflow throughput. Agents can run on the same machine or distributed across multiple machines. Each agent independently polls the principal for work, and the self-regulating design ensures work flows naturally to available capacity.</p>
+<p>Since agents only request work when they're ready, there's no need for complex load balancing—agents that finish their workflows quickly will automatically pick up more work.</p>
+<h3 id="vertical-scaling"><a class="header" href="#vertical-scaling">Vertical Scaling</a></h3>
+<p>Increase the <code>max_concurrent_workflows</code> setting on agents to run more workflows simultaneously on powerful machines. Within each workflow, the task manager can execute independent tasks in parallel, making efficient use of multi-core systems.</p>
+<p>You can also run the principal on a more powerful machine if you have thousands of workflows or very high throughput requirements, though in practice, the principal is lightweight and can handle substantial load on modest hardware.</p>
+<h3 id="workflow-parallelism"><a class="header" href="#workflow-parallelism">Workflow Parallelism</a></h3>
+<p>Within a single workflow, the task manager's DAG-based execution model automatically executes independent tasks in parallel. If your workflow has multiple tasks that don't depend on each other, they'll run simultaneously without any special configuration required.</p>
+<h2 id="resilience-and-fault-tolerance"><a class="header" href="#resilience-and-fault-tolerance">Resilience and Fault Tolerance</a></h2>
+<p>cdktr is designed to handle the realities of distributed systems:</p>
+<p><strong>Agent Heartbeats</strong>: Agents send heartbeats to the principal every 5 seconds. If an agent stops responding (crashed, network partition, machine failure), the principal detects this within 30 seconds and marks any workflows running on that agent as CRASHED.</p>
+<p><strong>Buffered Logs</strong>: When agents lose connection to the principal, they buffer logs locally and continue executing workflows. When the connection restores, buffered logs are sent to the principal. This prevents log loss during temporary network issues.</p>
+<p><strong>Task Queue Persistence</strong>: The principal periodically persists its workflow queue to disk. If the principal crashes and restarts, it reloads queued workflows and resumes processing.</p>
+<p><strong>Graceful Degradation</strong>: If the database becomes unavailable, the principal continues coordinating workflow execution—status updates and logs accumulate in memory until the database recovers.</p>
+<p><strong>Workflow Recovery</strong>: Failed workflows can be re-triggered manually via the CLI or TUI. The complete execution history in DuckDB helps diagnose what went wrong before retrying.</p>
+<h2 id="next-steps-1"><a class="header" href="#next-steps-1">Next Steps</a></h2>
+<p>Now that you understand the overall architecture, dive deeper into specific components:</p>
+<ul>
+<li><a href="architecture/./principal.html">Principal</a> - The central coordinator in detail</li>
+<li><a href="architecture/./agents.html">Agents</a> - How workflow execution works</li>
+<li><a href="architecture/./workflows-tasks.html">Workflows &amp; Tasks</a> - Defining and structuring work</li>
+<li><a href="architecture/./zeromq.html">ZeroMQ Communication</a> - The messaging layer</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="principal-1"><a class="header" href="#principal-1">Principal</a></h1>
+<p>The principal is the brain of the cdktr system. While agents handle the physical execution of workflows, the principal coordinates everything—managing workflow definitions, scheduling executions, tracking agent health, and providing the central API for all system interactions. It's the single source of truth for the state of your distributed workflow system.</p>
+<h2 id="what-does-the-principal-do"><a class="header" href="#what-does-the-principal-do">What Does the Principal Do?</a></h2>
+<p>The principal serves as the central orchestrator with several critical responsibilities:</p>
+<ol>
+<li>
+<p><strong>Workflow Management</strong>: The principal continuously monitors the workflow directory on the filesystem, loading and parsing YAML workflow definitions. It maintains an in-memory workflow store that gets periodically refreshed (by default, every 60 seconds) to pick up new or modified workflow definitions without requiring a restart. This hot-reload capability makes it trivial to deploy new workflows in CI/CD environments.</p>
+</li>
+<li>
+<p><strong>Intelligent Scheduling</strong>: For workflows with cron schedules defined, the principal runs an integrated scheduler that monitors these schedules and automatically triggers workflows at their appointed times. The scheduler uses a priority queue internally to efficiently determine which workflow should execute next, checking every 500 milliseconds whether it's time to launch a workflow.</p>
+</li>
+<li>
+<p><strong>Work Distribution</strong>: At its core, the principal maintains a global task queue of workflows ready for execution. When workflows are triggered (either by schedule, manual request, or external event), they're added to this queue. Agents continuously poll the principal for work, and when they request a workflow, the principal pops one from the queue and assigns it to that agent.</p>
+</li>
+<li>
+<p><strong>Agent Lifecycle Management</strong>: The principal tracks all registered agents and their health status. When an agent starts up, it registers with the principal and begins sending heartbeats every 5 seconds. The principal runs a dedicated heartbeat monitor that checks for agents that haven't checked in within the timeout period (default: 30 seconds). If an agent times out, the principal automatically marks all workflows running on that agent as CRASHED, preventing them from being stuck in a RUNNING state indefinitely.</p>
+</li>
+<li>
+<p><strong>Persistent State Management</strong>: All workflow execution history, task status updates, and logs flow through the principal and get persisted to DuckDB. The principal also periodically persists its task queue to disk (every second by default) so that if the principal crashes and restarts, it can resume processing workflows without losing queued work.</p>
+</li>
+<li>
+<p><strong>API Gateway</strong>: The principal exposes a ZeroMQ-based API that serves as the primary interface for the entire system. The TUI, CLI, external event listeners, and agents all communicate with the principal through this API. It handles requests for listing workflows, triggering executions, querying logs, and checking system status.</p>
+</li>
+</ol>
+<h2 id="the-workflow-lifecycle-from-the-principals-perspective"><a class="header" href="#the-workflow-lifecycle-from-the-principals-perspective">The Workflow Lifecycle from the Principal's Perspective</a></h2>
+<p>Understanding how the principal orchestrates workflow execution helps clarify its role in the system:</p>
+<h3 id="1-workflow-discovery-and-loading"><a class="header" href="#1-workflow-discovery-and-loading">1. Workflow Discovery and Loading</a></h3>
+<p>On startup and periodically thereafter, the principal scans the configured workflow directory (default: <code>workflows/</code>) and loads all YAML files it finds. Each workflow is parsed, validated, and converted into an internal representation including its DAG structure. Invalid workflows are logged but don't prevent the system from starting.</p>
+<h3 id="2-scheduling-and-triggering"><a class="header" href="#2-scheduling-and-triggering">2. Scheduling and Triggering</a></h3>
+<p>For workflows with cron schedules, the scheduler component calculates the next execution time and maintains a priority queue ordered by next run time. When the time arrives, the scheduler triggers the workflow by sending it to the principal's workflow queue. Workflows can also be triggered manually via the CLI or TUI, or by external event listeners.</p>
+<h3 id="3-queue-management"><a class="header" href="#3-queue-management">3. Queue Management</a></h3>
+<p>When a workflow is triggered, it enters the principal's global task queue. This queue is the central coordination point—agents don't know what work exists until they ask for it. The principal simply maintains the queue and serves workflows first-come, first-served to agents that request work.</p>
+<h3 id="4-agent-assignment"><a class="header" href="#4-agent-assignment">4. Agent Assignment</a></h3>
+<p>When an agent polls for work and has available capacity, the principal removes a workflow from the queue and sends it to that agent. The principal records which agent is running which workflow instance, allowing it to track distributed execution across the cluster.</p>
+<h3 id="5-status-tracking"><a class="header" href="#5-status-tracking">5. Status Tracking</a></h3>
+<p>As the agent executes the workflow, it sends status updates back to the principal:</p>
+<ul>
+<li>Workflow started (RUNNING)</li>
+<li>Individual tasks started (PENDING → RUNNING)</li>
+<li>Task completions (COMPLETED or FAILED)</li>
+<li>Final workflow status (COMPLETED, FAILED, or CRASHED)</li>
+</ul>
+<p>The principal stores all these updates in DuckDB, building a complete audit trail of execution.</p>
+<h3 id="6-log-aggregation"><a class="header" href="#6-log-aggregation">6. Log Aggregation</a></h3>
+<p>Task logs generated by agents flow back to the principal via a dedicated ZeroMQ PUB/SUB channel. The principal's log manager receives these messages and queues them for batch insertion into DuckDB every 30 seconds. This approach balances real-time log capture with database write efficiency.</p>
+<h2 id="background-services"><a class="header" href="#background-services">Background Services</a></h2>
+<p>The principal runs several background services concurrently:</p>
+<h3 id="admin-refresh-loop"><a class="header" href="#admin-refresh-loop">Admin Refresh Loop</a></h3>
+<p>Runs continuously to refresh workflow definitions from disk and persist the task queue state. This ensures that new workflow files are discovered without manual intervention and that the queue survives principal restarts.</p>
+<h3 id="log-manager"><a class="header" href="#log-manager">Log Manager</a></h3>
+<p>Operates two components: a listener that subscribes to log messages from agents via ZeroMQ, and a persistence loop that batches log messages and writes them to DuckDB every 30 seconds. This architecture decouples log collection from database writes, preventing slow database operations from blocking log reception.</p>
+<h3 id="heartbeat-monitor"><a class="header" href="#heartbeat-monitor">Heartbeat Monitor</a></h3>
+<p>Continuously scans registered agents, checking when each last sent a heartbeat. If an agent hasn't checked in within the configured timeout, the monitor marks all its running workflows as CRASHED and removes them from the active workflow tracking map.</p>
+<h3 id="scheduler-optional"><a class="header" href="#scheduler-optional">Scheduler (Optional)</a></h3>
+<p>When enabled, the scheduler maintains its own workflow refresh loop and continuously monitors cron schedules to trigger workflows at the right time. The scheduler can be disabled via the <code>--no-scheduler</code> flag for testing or when you want pure manual/event-driven workflow execution.</p>
+<h3 id="api-server"><a class="header" href="#api-server">API Server</a></h3>
+<p>The ZeroMQ request/reply server runs continuously, handling incoming API requests from agents, the TUI, CLI, and external systems. All requests are processed synchronously—the server receives a request, processes it, sends a response, then waits for the next request.</p>
+<h2 id="high-availability-and-recovery"><a class="header" href="#high-availability-and-recovery">High Availability and Recovery</a></h2>
+<p>The principal is designed with resilience in mind:</p>
+<p><strong>Task Queue Persistence</strong>: Every second, the principal serializes its current task queue to disk. If the principal crashes or is restarted, it reloads this state on startup, allowing queued workflows to continue processing without being lost.</p>
+<p><strong>Agent Self-Healing</strong>: When an agent loses connection to the principal (perhaps due to network issues), it doesn't immediately fail. Instead, it completes any workflows already in progress, buffering logs locally until the principal becomes reachable again. This resilient design prevents cascading failures.</p>
+<p><strong>Graceful Degradation</strong>: If the database becomes temporarily unavailable, the principal continues operating—workflow execution proceeds, but status updates and logs queue up in memory until the database recovers. This prevents database issues from halting the entire system.</p>
+<p><strong>Workflow Refresh</strong>: Because workflows are reloaded from disk every minute, you can deploy new workflow definitions while the principal is running. Simply drop new YAML files into the workflow directory, and within a minute, they'll be available for scheduling or manual execution.</p>
+<h2 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h2>
+<p>The principal is configured through environment variables:</p>
+<ul>
+<li><code>CDKTR_PRINCIPAL_HOST</code>: Bind address for the API server (default: <code>0.0.0.0</code>)</li>
+<li><code>CDKTR_PRINCIPAL_PORT</code>: API server port (default: <code>5561</code>)</li>
+<li><code>CDKTR_WORKFLOW_DIR</code>: Directory to scan for workflow YAML files (default: <code>workflows</code>)</li>
+<li><code>CDKTR_DB_PATH</code>: Path to DuckDB database file (default: <code>$HOME/.cdktr/app.db</code>)</li>
+<li><code>CDKTR_AGENT_HEARTBEAT_TIMEOUT_MS</code>: How long to wait before marking an agent as timed out (default: <code>30000</code>)</li>
+</ul>
+<p>See the <a href="architecture/../getting-started/configuration.html">Configuration</a> section for a complete list of configuration options.</p>
+<h2 id="the-principal-is-not-a-single-point-of-failure"><a class="header" href="#the-principal-is-not-a-single-point-of-failure">The Principal is Not a Single Point of Failure</a></h2>
+<p>While the principal is the central coordinator, it's designed to minimize the impact of failures. Agents can survive temporary principal outages by completing in-flight work and buffering status updates. When the principal returns, agents re-register and resume normal operation. For production deployments requiring higher availability, you can implement active-passive failover by running a standby principal that takes over if the primary fails, using shared storage for the DuckDB database and task queue persistence files.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="agents-1"><a class="header" href="#agents-1">Agents</a></h1>
+<p>Agents are the workhorses of the cdktr system. While the principal coordinates and schedules workflows, agents are responsible for the actual execution of work. Each agent is an autonomous process that can run on the same machine as the principal or on entirely different machines across a network, providing true distributed workflow execution.</p>
+<h2 id="what-does-an-agent-do"><a class="header" href="#what-does-an-agent-do">What Does an Agent Do?</a></h2>
+<p>At its core, an agent performs three primary functions:</p>
+<ol>
+<li>
+<p><strong>Work Acquisition</strong>: Agents continuously poll the principal for available workflows using the <code>FetchWorkflow</code> API. When a workflow is available in the principal's task queue, an agent receives it and begins execution. This pull-based model ensures that agents only take on work when they have capacity to handle it.</p>
+</li>
+<li>
+<p><strong>Workflow Execution</strong>: Once assigned a workflow, the agent executes its tasks according to their dependency graph. The agent manages all aspects of task execution including launching executors, collecting output streams (stdout and stderr), and enforcing concurrency limits.</p>
+</li>
+<li>
+<p><strong>Status Reporting</strong>: Throughout the workflow lifecycle, agents send regular updates back to the principal about workflow and task states (PENDING, RUNNING, COMPLETED, FAILED, etc.). This keeps the principal's view of the system synchronized with reality.</p>
+</li>
+</ol>
+<p>Additionally, agents send periodic heartbeats to the principal every 5 seconds to signal they are still alive and ready for work. This heartbeat mechanism allows the principal to detect crashed agents and mark currently running workflows as CRASHED if connections to the agent are lost.</p>
+<h2 id="the-internal-task-manager"><a class="header" href="#the-internal-task-manager">The Internal Task Manager</a></h2>
+<p>The heart of every agent is its <code>TaskManager</code> component, which orchestrates the parallel execution of workflow tasks. When an agent receives a workflow from the principal, the TaskManager performs several sophisticated operations to execute it efficiently.</p>
+<h3 id="dag-construction-and-topological-ordering"><a class="header" href="#dag-construction-and-topological-ordering">DAG Construction and Topological Ordering</a></h3>
+<p>Workflows in cdktr are represented internally as a <strong>Directed Acyclic Graph (DAG)</strong>. Each workflow is converted into a DAG structure that maps task dependencies into graph nodes and edges. The DAG construction validates that there are no circular dependencies that would create deadlocks.</p>
+<p>The key innovation here is that the DAG is <strong>topologically sorted</strong> when loaded into the agent's task tracker component. This topological sort identifies which tasks have no dependencies and can execute immediately—these become the "first tasks" loaded into a ready queue.</p>
+<h3 id="parallel-task-execution"><a class="header" href="#parallel-task-execution">Parallel Task Execution</a></h3>
+<p>The task manager maintains a ready queue of tasks that have had all their dependencies satisfied and are ready to execute. The aim of this design is that <strong>tasks without dependencies on each other can execute in parallel</strong>. When a task completes successfully, the task tracker:</p>
+<ol>
+<li>Marks the task as successful</li>
+<li>Examines its dependents in the DAG</li>
+<li>Adds those dependents to the ready queue</li>
+<li>Allows the next iteration of the execution loop to pull from the queue</li>
+</ol>
+<p>This means if you have a workflow with three independent data ingestion tasks followed by a merge task, all three ingestion tasks will execute simultaneously, and only when all three complete will the merge task begin.</p>
+<p>The agent respects its configured <code>max_concurrent_workflows</code> setting, ensuring it never attempts to run more workflows than it has resources for. Within each workflow, the same concurrency limits apply to individual task execution.</p>
+<h3 id="failure-handling-and-cascading-skips"><a class="header" href="#failure-handling-and-cascading-skips">Failure Handling and Cascading Skips</a></h3>
+<p>The task tracker implements intelligent failure handling. When a task fails:</p>
+<ol>
+<li>The task is marked as failed</li>
+<li>The tracker traverses the DAG to find all tasks that depend (directly or transitively) on the failed task</li>
+<li>Those dependent tasks are automatically skipped and will not execute</li>
+<li>Tasks with no dependency path to the failed task continue executing normally</li>
+</ol>
+<p>This prevents wasted computation on tasks that cannot possibly succeed due to upstream failures, while still allowing independent branches of the workflow DAG to complete successfully.</p>
+<h2 id="resilience-and-log-handling"><a class="header" href="#resilience-and-log-handling">Resilience and Log Handling</a></h2>
+<p>One of cdktr's most robust features is its resilience to temporary network failures or principal unavailability. This is particularly critical for log handling, as tasks may generate significant output that needs to be captured even when the principal is unreachable.</p>
+<h3 id="buffered-log-publishing"><a class="header" href="#buffered-log-publishing">Buffered Log Publishing</a></h3>
+<p>Agents publish task logs using a log publisher component that implements a <strong>local buffering queue</strong>. When a task generates log output:</p>
+<ol>
+<li>The log message is sent to the principal's log listener via ZeroMQ PUB socket</li>
+<li>If the send fails (principal unreachable, network partition, etc.), the message is <strong>automatically queued in a local buffer</strong> within the agent</li>
+<li>On the next log message, the publisher attempts to clear the buffered messages first</li>
+<li>If the connection has been restored, buffered messages are sent before new ones</li>
+</ol>
+<p>This ensures that <strong>no log data is lost</strong> even during temporary connection issues. Tasks continue executing and their output is preserved locally until the principal becomes reachable again.</p>
+<h3 id="graceful-degradation"><a class="header" href="#graceful-degradation">Graceful Degradation</a></h3>
+<p>When an agent loses connection to the principal during workflow execution, it doesn't immediately crash. Instead:</p>
+<ol>
+<li>The workflow execution loop continues running any in-progress workflows</li>
+<li>Status updates fail to send but the workflow continues executing</li>
+<li>The agent waits for all running workflows to complete their execution</li>
+<li>Only after all workflows have finished does the agent exit with an error</li>
+</ol>
+<p>This "complete what you started" philosophy means that temporary principal failures don't cause unnecessary work loss. If a long-running data pipeline is 90% complete when the principal goes down, the agent will finish that last 10% rather than abandoning all progress.</p>
+<h3 id="reconnection-logic"><a class="header" href="#reconnection-logic">Reconnection Logic</a></h3>
+<p>The log publisher includes reconnection logic that recreates ZeroMQ socket connections when they fail. Combined with the local buffering, this means agents can ride out principal restarts or network blips without manual intervention.</p>
+<h2 id="agent-lifecycle"><a class="header" href="#agent-lifecycle">Agent Lifecycle</a></h2>
+<p>A typical agent lifecycle looks like this:</p>
+<ol>
+<li><strong>Startup</strong>: Agent creates its task manager with a unique instance ID</li>
+<li><strong>Registration</strong>: Agent registers with the principal</li>
+<li><strong>Heartbeat</strong>: Background task spawns to send heartbeats every 5 seconds</li>
+<li><strong>Work Loop</strong>: Agent enters its main workflow execution loop, continuously polling for work</li>
+<li><strong>Workflow Acquisition</strong>: When work is available, agent receives a workflow</li>
+<li><strong>Execution</strong>: Workflow tasks execute in parallel according to DAG dependencies</li>
+<li><strong>Completion</strong>: Final workflow status sent to principal, workflow counter decremented</li>
+<li><strong>Repeat</strong>: Agent returns to polling for more work</li>
+</ol>
+<p>This continues indefinitely until the agent is explicitly shut down or loses connection to the principal in an unrecoverable way.</p>
+<h2 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h2>
+<p>Agents are configured primarily through the <code>CDKTR_AGENT_MAX_CONCURRENCY</code> environment variable (default: 5), which controls how many workflows an agent can execute simultaneously. Higher values allow more parallelism but consume more system resources.</p>
+<p>Agents also respect the general ZeroMQ configuration settings like <code>CDKTR_RETRY_ATTEMPTS</code> and <code>CDKTR_DEFAULT_ZMQ_TIMEOUT_MS</code> when communicating with the principal.</p>
+<h2 id="horizontal-scaling-1"><a class="header" href="#horizontal-scaling-1">Horizontal Scaling</a></h2>
+<p>The beauty of cdktr's agent architecture is how trivially it scales horizontally. To handle more workflow throughput:</p>
+<ol>
+<li>Launch additional agent processes on the same or different machines</li>
+<li>Point them at the same principal using <code>CDKTR_PRINCIPAL_HOST</code> and <code>CDKTR_PRINCIPAL_PORT</code></li>
+<li>Each agent automatically registers and begins polling for work</li>
+</ol>
+<p>Agents only request work from the principal when they have available capacity (i.e., they haven't hit their concurrency limits). This self-regulating behavior means work naturally flows to available agents without requiring complex load balancing logic in the principal.</p>
+<p>This means you can scale from a single-machine development setup to a distributed production cluster without changing a single line of configuration—just launch more agents.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="event-listeners--scheduler"><a class="header" href="#event-listeners--scheduler">Event Listeners &amp; Scheduler</a></h1>
+<p>cdktr is fundamentally an <strong>event-driven system</strong>. Unlike traditional workflow engines that might poll databases or rely on fixed schedules alone, cdktr treats everything—including scheduled executions—as events. Workflows are triggered by events, whether those events are time-based (cron schedules), user-initiated (CLI commands), or custom external triggers (webhooks, file changes, message queues, etc.).</p>
+<p>This event-driven architecture provides tremendous flexibility. The same workflow can be triggered by a cron schedule during regular business hours and also triggered on-demand when a webhook receives a deployment notification. There's no special configuration needed—workflows simply respond to whatever events you send their way.</p>
+<h2 id="the-event-driven-philosophy"><a class="header" href="#the-event-driven-philosophy">The Event-Driven Philosophy</a></h2>
+<p>In cdktr, an <strong>event</strong> is anything that says "run this workflow now." Events flow into the principal via its ZeroMQ API, and the principal's response is always the same: add the requested workflow to the task queue. The event source doesn't need to know or care about agents, task execution, or DAGs—it simply says "please run workflow X" and the system handles the rest.</p>
+<p>This decoupling is powerful. Your event sources can be simple Python scripts, complex monitoring systems, CI/CD pipelines, or even other workflow engines. As long as they can send a ZeroMQ message, they can trigger cdktr workflows.</p>
+<h2 id="the-scheduler-an-event-listener-implementation"><a class="header" href="#the-scheduler-an-event-listener-implementation">The Scheduler: An Event Listener Implementation</a></h2>
+<p>The integrated scheduler is cdktr's canonical example of an event listener. It monitors cron expressions defined in workflow YAML files and triggers those workflows at the appointed times. But here's the key insight: <strong>the scheduler is itself just an implementation of cdktr's event listener interface</strong>.</p>
+<p>The scheduler doesn't get special treatment from the principal. It communicates through the same ZeroMQ API that external event listeners use. When a workflow's scheduled time arrives, the scheduler sends a workflow execution request to the principal, just like any other event source would.</p>
+<h3 id="how-the-scheduler-works"><a class="header" href="#how-the-scheduler-works">How the Scheduler Works</a></h3>
+<p>On startup, the scheduler:</p>
+<ol>
+<li>Queries the principal for all workflows via the ZeroMQ API</li>
+<li>Filters to only those with valid cron expressions</li>
+<li>Calculates the next execution time for each scheduled workflow</li>
+<li>Builds a priority queue ordered by next execution time</li>
+</ol>
+<p>The scheduler then enters its event loop:</p>
+<ol>
+<li>Checks if the next workflow in the priority queue is ready to run (current time &gt;= scheduled time)</li>
+<li>If not ready, sleeps for 500 milliseconds and checks again</li>
+<li>When a workflow is ready, sends a workflow execution request to the principal</li>
+<li>Calculates when that workflow should run next and re-adds it to the priority queue</li>
+<li>Repeats indefinitely</li>
+</ol>
+<p>The scheduler runs a background refresh loop that queries the principal every 60 seconds for workflow definitions. If new workflows appear or existing ones change, the scheduler updates its internal priority queue accordingly. This means you can deploy new scheduled workflows without restarting the principal—they'll be picked up automatically within a minute.</p>
+<h3 id="graceful-degradation-1"><a class="header" href="#graceful-degradation-1">Graceful Degradation</a></h3>
+<p>If no workflows have cron schedules defined, the scheduler simply doesn't start. The principal continues operating normally, handling manual workflow triggers and external events. The scheduler is truly optional.</p>
+<h2 id="creating-custom-event-listeners"><a class="header" href="#creating-custom-event-listeners">Creating Custom Event Listeners</a></h2>
+<p>The real power of cdktr's event-driven architecture emerges when you create custom event listeners tailored to your specific needs. cdktr provides two primary ways to build event listeners: native implementations in Rust, and external implementations in Python (or any language that can speak ZeroMQ).</p>
+<h3 id="event-listeners-in-rust"><a class="header" href="#event-listeners-in-rust">Event Listeners in Rust</a></h3>
+<p>For high-performance, tightly-integrated event listeners, you can implement the <code>EventListener</code> trait in Rust. This trait defines a simple contract:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[async_trait]
+pub trait EventListener&lt;T&gt; {
+    async fn start_listening(&amp;mut self) -&gt; Result&lt;(), GenericError&gt;;
+    async fn run_workflow(&amp;mut self, workflow_id: &amp;str) -&gt; Result&lt;(), GenericError&gt;;
+}
+<span class="boring">}</span></code></pre></pre>
+<p>The <code>start_listening()</code> method is where your event detection logic lives. It typically runs in an infinite loop, waiting for events to occur. When an event happens that should trigger a workflow, you call <code>run_workflow()</code> with the workflow ID, and the trait provides a default implementation that sends the execution request to the principal via ZeroMQ.</p>
+<p><strong>Example: File Watcher Event Listener</strong></p>
+<p>Here's how you might implement a file watcher that triggers workflows when files change:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use async_trait::async_trait;
+use cdktr_events::EventListener;
+use notify::{Watcher, RecursiveMode, Event};
+use std::sync::mpsc;
+
+pub struct FileWatcherListener {
+    watch_path: String,
+    workflow_id: String,
+}
+
+#[async_trait]
+impl EventListener&lt;Event&gt; for FileWatcherListener {
+    async fn start_listening(&amp;mut self) -&gt; Result&lt;(), GenericError&gt; {
+        let (tx, rx) = mpsc::channel();
+        let mut watcher = notify::recommended_watcher(tx)?;
+
+        watcher.watch(Path::new(&amp;self.watch_path), RecursiveMode::Recursive)?;
+
+        loop {
+            match rx.recv() {
+                Ok(Ok(event)) =&gt; {
+                    if event.kind.is_modify() {
+                        info!("File modified: {:?}, triggering workflow", event.paths);
+                        self.run_workflow(&amp;self.workflow_id).await?;
+                    }
+                }
+                Ok(Err(e)) =&gt; error!("Watch error: {:?}", e),
+                Err(e) =&gt; error!("Channel error: {:?}", e),
+            }
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>This listener watches a directory for file changes and triggers a workflow whenever a modification occurs. The <code>run_workflow()</code> call handles all the ZeroMQ communication with the principal.</p>
+<h3 id="event-listeners-in-python-python-cdktr"><a class="header" href="#event-listeners-in-python-python-cdktr">Event Listeners in Python (python-cdktr)</a></h3>
+<p>For teams more comfortable with Python, or for rapid prototyping, cdktr provides the <code>python-cdktr</code> library. This library offers a Python interface to cdktr's ZeroMQ API, making it trivial to build event listeners without writing any Rust code.</p>
+<p><strong>Example: Webhook Event Listener</strong></p>
+<p>Here's a Python event listener that triggers workflows in response to HTTP webhooks:</p>
+<pre><code class="language-python">from cdktr import EventListener, Principal
+from flask import Flask, request
+import threading
+
+class WebhookListener(EventListener):
+    def __init__(self, principal_host="localhost", principal_port=5561):
+        self.principal = Principal(host=principal_host, port=principal_port)
+        self.app = Flask(__name__)
+        self.setup_routes()
+
+    def setup_routes(self):
+        @self.app.route('/trigger/&lt;workflow_id&gt;', methods=['POST'])
+        def trigger_workflow(workflow_id):
+            payload = request.get_json()
+            result = self.run_workflow(workflow_id)
+            if result.success:
+                return {"status": "triggered", "workflow": workflow_id}, 200
+            else:
+                return {"status": "failed", "error": result.error}, 500
+
+    def start_listening(self):
+        """Start the Flask webhook server"""
+        self.app.run(host='0.0.0.0', port=8080)
+
+if __name__ == "__main__":
+    listener = WebhookListener()
+    listener.start_listening()
+</code></pre>
+<p>This creates an HTTP endpoint at <code>/trigger/&lt;workflow_id&gt;</code> that accepts POST requests. When a request arrives, it triggers the specified workflow via the cdktr principal.</p>
+<p><strong>Example: Message Queue Event Listener</strong></p>
+<p>Here's a listener that consumes messages from RabbitMQ and triggers workflows:</p>
+<pre><code class="language-python">from cdktr import EventListener, Principal
+import pika
+import json
+
+class RabbitMQListener(EventListener):
+    def __init__(self, rabbitmq_host='localhost', queue_name='cdktr-workflows',
+                 principal_host='localhost', principal_port=5561):
+        self.principal = Principal(host=principal_host, port=principal_port)
+        self.rabbitmq_host = rabbitmq_host
+        self.queue_name = queue_name
+
+    def handle_message(self, ch, method, properties, body):
+        """Callback for each RabbitMQ message"""
+        try:
+            message = json.loads(body)
+            workflow_id = message.get('workflow_id')
+
+            if workflow_id:
+                result = self.run_workflow(workflow_id)
+                if result.success:
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        except Exception as e:
+            print(f"Error processing message: {e}")
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+
+    def start_listening(self):
+        """Start consuming from RabbitMQ"""
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=self.rabbitmq_host)
+        )
+        channel = connection.channel()
+        channel.queue_declare(queue=self.queue_name, durable=True)
+
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(
+            queue=self.queue_name,
+            on_message_callback=self.handle_message
+        )
+
+        print(f"Listening for workflow triggers on queue: {self.queue_name}")
+        channel.start_consuming()
+
+if __name__ == "__main__":
+    listener = RabbitMQListener()
+    listener.start_listening()
+</code></pre>
+<p><strong>Example: Database Change Listener</strong></p>
+<p>Monitor a PostgreSQL database for changes and trigger workflows:</p>
+<pre><code class="language-python">from cdktr import EventListener, Principal
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import select
+import time
+
+class DatabaseChangeListener(EventListener):
+    def __init__(self, db_connection_string, channel_name='workflow_triggers',
+                 principal_host='localhost', principal_port=5561):
+        self.principal = Principal(host=principal_host, port=principal_port)
+        self.db_connection_string = db_connection_string
+        self.channel_name = channel_name
+
+    def start_listening(self):
+        """Listen for PostgreSQL NOTIFY events"""
+        conn = psycopg2.connect(self.db_connection_string)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+
+        cursor = conn.cursor()
+        cursor.execute(f"LISTEN {self.channel_name};")
+
+        print(f"Listening for notifications on channel: {self.channel_name}")
+
+        while True:
+            if select.select([conn], [], [], 5) == ([], [], []):
+                continue
+            else:
+                conn.poll()
+                while conn.notifies:
+                    notify = conn.notifies.pop(0)
+                    workflow_id = notify.payload
+                    print(f"Received notification: {workflow_id}")
+                    self.run_workflow(workflow_id)
+
+if __name__ == "__main__":
+    listener = DatabaseChangeListener(
+        db_connection_string="postgresql://user:pass@localhost/mydb"
+    )
+    listener.start_listening()
+</code></pre>
+<h3 id="the-eventlistener-base-class"><a class="header" href="#the-eventlistener-base-class">The EventListener Base Class</a></h3>
+<p>The <code>python-cdktr</code> library provides an <code>EventListener</code> base class that handles the ZeroMQ communication for you:</p>
+<pre><code class="language-python">from cdktr import EventListener
+
+class MyCustomListener(EventListener):
+    def run_workflow(self, workflow_id: str) -&gt; Result:
+        """
+        Trigger a workflow on the cdktr principal.
+        Returns a Result object with .success and .error attributes.
+        """
+        # Implemented by the base class - just call it!
+        return super().run_workflow(workflow_id)
+
+    def start_listening(self):
+        """
+        Your event detection logic goes here.
+        Call self.run_workflow(workflow_id) whenever an event occurs.
+        """
+        raise NotImplementedError("Subclasses must implement start_listening()")
+</code></pre>
+<h2 id="real-world-event-listener-scenarios"><a class="header" href="#real-world-event-listener-scenarios">Real-World Event Listener Scenarios</a></h2>
+<p>Event listeners enable powerful workflow orchestration patterns:</p>
+<p><strong>CI/CD Integration</strong>: Deploy code, send a webhook to trigger a cdktr workflow that runs tests, migrations, and health checks.</p>
+<p><strong>Data Pipeline Triggers</strong>: When new data lands in S3, trigger a workflow that processes, validates, and loads it into your warehouse.</p>
+<p><strong>Monitoring and Alerting</strong>: When your monitoring system detects an anomaly, trigger a remediation workflow that attempts automatic fixes and notifies the team.</p>
+<p><strong>User Actions</strong>: When a user performs a specific action in your application, trigger a workflow that sends emails, updates analytics, and logs to your data warehouse.</p>
+<p><strong>Cross-System Orchestration</strong>: Use event listeners to bridge different systems—when System A completes a task, trigger a cdktr workflow that kicks off related work in System B.</p>
+<h2 id="configuration-and-deployment"><a class="header" href="#configuration-and-deployment">Configuration and Deployment</a></h2>
+<p>Event listeners are separate processes from the principal and agents. You deploy them alongside your cdktr infrastructure:</p>
+<p><strong>Development</strong>: Run event listeners in the same terminal or IDE where you're running the principal, useful for testing and debugging.</p>
+<p><strong>Production</strong>: Deploy event listeners as systemd services, Docker containers, or Kubernetes pods, ensuring they have network connectivity to the principal's ZeroMQ port.</p>
+<p>Event listeners should be treated as first-class components of your workflow infrastructure, with proper monitoring, logging, and error handling.</p>
+<h2 id="the-power-of-events"><a class="header" href="#the-power-of-events">The Power of Events</a></h2>
+<p>By treating everything as events, cdktr provides a unified model for workflow triggering. Whether a workflow runs at 3 AM every day via the scheduler, gets triggered by a deployment webhook, or responds to a file change, the execution path is identical. This consistency makes cdktr predictable and easy to reason about, while the extensibility of the event listener interface ensures you're never locked into a predefined set of trigger types.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="workflows--tasks"><a class="header" href="#workflows--tasks">Workflows &amp; Tasks</a></h1>
+<p>Workflows and tasks are the fundamental building blocks of automation in cdktr. A <strong>workflow</strong> is a collection of related <strong>tasks</strong> that execute together as a coordinated unit, with tasks running in an order determined by their dependencies.</p>
+<h2 id="what-is-a-workflow"><a class="header" href="#what-is-a-workflow">What is a Workflow?</a></h2>
+<p>A workflow represents a complete automation process—a series of steps that together accomplish a specific goal. Think of it as a recipe: it has a name, a description of what it does, and a list of steps (tasks) to execute. Workflows can run on a schedule, be triggered manually, or respond to external events.</p>
+<p>Workflows are defined in YAML files stored in the workflow directory (default: <code>workflows/</code>). This file-based approach provides powerful benefits:</p>
+<p><strong>Source Control</strong>: YAML files live alongside your code in Git or other version control systems. You track changes, review pull requests for workflow modifications, and maintain a complete history of your automation evolution.</p>
+<p><strong>GitOps Workflows</strong>: Deploy workflow changes through your CI/CD pipeline. When you merge a pull request that modifies a workflow YAML file, the changes automatically take effect without manual intervention.</p>
+<p><strong>Hot Reload</strong>: The principal refreshes workflows from disk every 60 seconds (configurable via <code>CDKTR_WORKFLOW_DIR_REFRESH_FREQUENCY_S</code>). Drop a new YAML file into the workflows directory, and within a minute it's loaded and available for scheduling or manual execution—no restarts required. This makes cdktr particularly well-suited for dynamic environments where workflows are frequently added or modified.</p>
+<p><strong>Declarative Configuration</strong>: YAML's human-readable format makes workflows self-documenting. Anyone can read a workflow file and understand what it does, when it runs, and how tasks depend on each other.</p>
+<h3 id="workflow-structure"><a class="header" href="#workflow-structure">Workflow Structure</a></h3>
+<p>Here's a complete workflow example:</p>
+<pre><code class="language-yaml">name: Data Pipeline
+description: Extract, transform, and load customer data
+cron: "0 0 2 * * *"  # Run daily at 2 AM
+start_time: 2025-01-20T02:00:00+00:00  # Optional: delayed first run
+
+tasks:
+  extract:
+    name: Extract Customer Data
+    description: Pull data from production database
+    config:
+      !Subprocess
+      cmd: python
+      args: ["scripts/extract.py", "--table", "customers"]
+
+  transform:
+    name: Transform Data
+    description: Clean and normalize extracted data
+    depends: ["extract"]
+    config:
+      !UvPython
+      script_path: scripts/transform.py
+      packages:
+        - pandas&gt;=2.3.1
+        - numpy&gt;=1.26.0
+
+  load:
+    name: Load to Warehouse
+    description: Upload transformed data to data warehouse
+    depends: ["transform"]
+    config:
+      !Subprocess
+      cmd: bash
+      args: ["scripts/load.sh", "/tmp/transformed_data.csv"]
+</code></pre>
+<h3 id="workflow-properties"><a class="header" href="#workflow-properties">Workflow Properties</a></h3>
+<p><strong>name</strong> (required): A human-readable name for the workflow. Displayed in the TUI and CLI.</p>
+<p><strong>description</strong> (optional): Explains what the workflow does and why it exists. Good descriptions make workflows self-documenting.</p>
+<p><strong>cron</strong> (optional): A cron expression defining when the workflow should run automatically. Uses standard cron syntax with seconds precision (<code>seconds minutes hours day month weekday</code>). Omit this field for workflows that should only be triggered manually or by external events.</p>
+<p><strong>start_time</strong> (optional): An ISO 8601 timestamp indicating when the workflow should first become active. If specified with a cron schedule, the workflow won't trigger before this time even if the cron expression matches. Useful for staging workflows that shouldn't run until a specific deployment date.</p>
+<p><strong>tasks</strong> (required): A map of task definitions. Each key is a unique task identifier used for dependency declarations.</p>
+<h2 id="what-is-a-task"><a class="header" href="#what-is-a-task">What is a Task?</a></h2>
+<p>A task is a single unit of executable work. While workflows coordinate multiple steps, tasks represent individual actions: run a Python script, execute a database query, make an HTTP request, or trigger an external system.</p>
+<p>Tasks are where the actual work happens. When an agent receives a workflow, it executes tasks one by one (or in parallel when dependencies allow), streaming logs back to the principal and reporting status as each task completes.</p>
+<h3 id="task-structure"><a class="header" href="#task-structure">Task Structure</a></h3>
+<pre><code class="language-yaml">task_identifier:
+  name: Human Readable Task Name
+  description: What this task does
+  depends: ["other_task", "another_task"]  # Optional
+  config:
+    !Subprocess  # or !UvPython
+    cmd: command
+    args: ["arg1", "arg2"]
+</code></pre>
+<h3 id="task-properties"><a class="header" href="#task-properties">Task Properties</a></h3>
+<p><strong>name</strong> (required): A descriptive name for the task, shown in logs and the TUI.</p>
+<p><strong>description</strong> (optional): Documents the task's purpose and behavior.</p>
+<p><strong>depends</strong> (optional): A list of task identifiers that must complete successfully before this task runs. This field defines the workflow's dependency graph.</p>
+<p><strong>config</strong> (required): The executable configuration specifying what to run and how to run it.</p>
+<h2 id="task-types"><a class="header" href="#task-types">Task Types</a></h2>
+<p>cdktr provides two task types optimized for different use cases:</p>
+<h3 id="subprocess-tasks"><a class="header" href="#subprocess-tasks">Subprocess Tasks</a></h3>
+<p>Subprocess tasks execute any command as a separate process. This is the most flexible task type—anything you can run in a terminal, you can run as a Subprocess task.</p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: &lt;executable&gt;     # Command name in PATH or absolute path
+  args:                 # Optional: command arguments as list
+    - &lt;arg1&gt;
+    - &lt;arg2&gt;
+</code></pre>
+<p><strong>Common Examples:</strong></p>
+<p><strong>Shell Scripts</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: bash
+  args: ["./deploy.sh", "production"]
+</code></pre>
+<p><strong>Python Scripts</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: python
+  args: ["analysis.py", "--date", "2025-01-20"]
+</code></pre>
+<p><strong>Database Operations</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: psql
+  args: ["-h", "localhost", "-c", "VACUUM ANALYZE;"]
+</code></pre>
+<p><strong>HTTP Requests</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: curl
+  args: ["-X", "POST", "-H", "Content-Type: application/json",
+         "https://api.example.com/webhook", "-d", '{"status":"complete"}']
+</code></pre>
+<h3 id="uvpython-tasks"><a class="header" href="#uvpython-tasks">UvPython Tasks</a></h3>
+<p>UvPython tasks run Python scripts with automatic dependency management via <a href="https://docs.astral.sh/uv/">uv</a>, Astral's fast Python package manager. This task type eliminates the need to pre-install dependencies or manage virtual environments—just specify the packages your script needs, and uv handles the rest.</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: &lt;path_to_script&gt;           # Required
+  packages:                               # Optional: dependencies
+    - package&gt;=version
+  is_uv_project: &lt;true|false&gt;            # Optional: default false
+  working_directory: &lt;path&gt;              # Optional: execution directory
+  uv_path: &lt;path_to_uv&gt;                  # Optional: custom uv binary
+</code></pre>
+<p><strong>Standalone Script with Dependencies</strong></p>
+<p>Perfect for scripts that need specific packages but aren't part of a larger project:</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: ./process_data.py
+  packages:
+    - pandas&gt;=2.3.1,&lt;3.0.0
+    - requests&gt;=2.31.0
+    - scipy&gt;=1.11.0
+</code></pre>
+<p>When this task runs, uv automatically installs the specified packages in an isolated environment and executes the script.</p>
+<p><strong>uv Project</strong></p>
+<p>For scripts that are part of a uv project with a <code>pyproject.toml</code> file or inline dependencies (PEP 723):</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: ./analysis.py
+  is_uv_project: true
+  working_directory: ./data-pipeline
+</code></pre>
+<p><strong>Inline Dependencies (PEP 723)</strong></p>
+<p>Python scripts can declare dependencies inline using PEP 723 syntax:</p>
+<pre><code class="language-python"># /// script
+# dependencies = [
+#   "pandas&gt;=2.3.1",
+#   "httpx&gt;=0.25.0",
+# ]
+# ///
+
+import pandas as pd
+import httpx
+
+# Your script logic here
+</code></pre>
+<p>Use <code>is_uv_project: true</code> to leverage these inline dependencies:</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: ./fetch_and_process.py
+  is_uv_project: true
+</code></pre>
+<h2 id="task-dependencies-and-execution-order"><a class="header" href="#task-dependencies-and-execution-order">Task Dependencies and Execution Order</a></h2>
+<p>Tasks declare dependencies using the <code>depends</code> field. This creates a directed acyclic graph (DAG) that determines execution order:</p>
+<pre><code class="language-yaml">tasks:
+  fetch_data:
+    name: Fetch Raw Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py"]
+
+  validate:
+    name: Validate Data Quality
+    depends: ["fetch_data"]
+    config:
+      !UvPython
+      script_path: validate.py
+      packages: ["great-expectations&gt;=0.18.0"]
+
+  process:
+    name: Process and Transform
+    depends: ["validate"]
+    config:
+      !UvPython
+      script_path: transform.py
+      is_uv_project: true
+
+  report:
+    name: Generate Report
+    depends: ["process"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["report.py", "--output", "daily_report.pdf"]
+</code></pre>
+<p>This creates a linear pipeline: <code>fetch_data</code> → <code>validate</code> → <code>process</code> → <code>report</code>.</p>
+<h3 id="parallel-execution"><a class="header" href="#parallel-execution">Parallel Execution</a></h3>
+<p>Tasks without dependencies on each other execute in parallel:</p>
+<pre><code class="language-yaml">tasks:
+  fetch_customers:
+    name: Fetch Customer Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py", "--table", "customers"]
+
+  fetch_orders:
+    name: Fetch Order Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py", "--table", "orders"]
+
+  fetch_products:
+    name: Fetch Product Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py", "--table", "products"]
+
+  merge:
+    name: Merge All Data
+    depends: ["fetch_customers", "fetch_orders", "fetch_products"]
+    config:
+      !UvPython
+      script_path: merge.py
+      packages: ["pandas&gt;=2.3.1"]
+</code></pre>
+<p>Here, the three fetch tasks run simultaneously, and the merge task only starts after all three complete successfully.</p>
+<h3 id="failure-handling"><a class="header" href="#failure-handling">Failure Handling</a></h3>
+<p>If a task fails, cdktr automatically skips all tasks that depend on it (directly or transitively). However, tasks in independent branches of the DAG continue executing:</p>
+<pre><code class="language-yaml">tasks:
+  task_a:
+    name: Independent Task A
+    config:
+      !Subprocess
+      cmd: echo
+      args: ["Task A runs regardless"]
+
+  task_b:
+    name: Task B
+    config:
+      !Subprocess
+      cmd: false  # This will fail
+      args: []
+
+  task_c:
+    name: Depends on B
+    depends: ["task_b"]
+    config:
+      !Subprocess
+      cmd: echo
+      args: ["This gets skipped because task_b failed"]
+
+  task_d:
+    name: Independent Task D
+    config:
+      !Subprocess
+      cmd: echo
+      args: ["Task D runs regardless"]
+</code></pre>
+<p>If <code>task_b</code> fails, <code>task_c</code> is automatically skipped, but <code>task_a</code> and <code>task_d</code> execute normally.</p>
+<h2 id="workflow-deployment-and-version-control"><a class="header" href="#workflow-deployment-and-version-control">Workflow Deployment and Version Control</a></h2>
+<p>The real power of YAML-based workflows emerges when you treat them as code:</p>
+<p><strong>1. Store workflows in Git</strong> alongside your application code. Workflow changes go through the same review process as code changes.</p>
+<p><strong>2. Deploy via CI/CD</strong>: Your deployment pipeline can update workflow definitions by copying new YAML files to the workflow directory on your cdktr principal server.</p>
+<p><strong>3. Automatic updates</strong>: Within 60 seconds (configurable), the principal detects the new or modified workflows and reloads them. No service restarts, no manual intervention.</p>
+<p><strong>4. Gradual rollouts</strong>: Test new workflows in development, promote to staging, then production—all through version-controlled YAML files.</p>
+<p>This workflow-as-code approach means your automation infrastructure evolves alongside your application, with the same safety nets (code review, testing, gradual rollouts) that protect your production systems.</p>
+<h3 id="dag-construction"><a class="header" href="#dag-construction">DAG Construction</a></h3>
+<p>cdktr automatically builds a directed acyclic graph (DAG) from task dependencies:</p>
+<pre class="mermaid">graph TD
+    extract[Extract Data] --&gt; transform[Transform Data]
+    transform --&gt; load[Load Data]
+</pre>
+<h3 id="parallel-execution-1"><a class="header" href="#parallel-execution-1">Parallel Execution</a></h3>
+<p>Tasks without dependencies or with satisfied dependencies can run in parallel:</p>
+<pre><code class="language-yaml">tasks:
+  fetch_api_1:
+    name: Fetch from API 1
+    config:
+      !Subprocess
+      cmd: curl
+      args: ["https://api1.example.com/data"]
+
+  fetch_api_2:
+    name: Fetch from API 2
+    config:
+      !Subprocess
+      cmd: curl
+      args: ["https://api2.example.com/data"]
+
+  combine:
+    name: Combine Results
+    depends: ["fetch_api_1", "fetch_api_2"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["combine.py"]
+</code></pre>
+<pre class="mermaid">graph TD
+    fetch1[Fetch from API 1] --&gt; combine[Combine Results]
+    fetch2[Fetch from API 2] --&gt; combine
+
+    style fetch1 fill:#bbf
+    style fetch2 fill:#bbf
+</pre>
+<p><code>fetch_api_1</code> and <code>fetch_api_2</code> run concurrently, then <code>combine</code> runs after both complete.</p>
+<h3 id="cycle-detection"><a class="header" href="#cycle-detection">Cycle Detection</a></h3>
+<p>cdktr validates workflows at load time and rejects workflows with circular dependencies:</p>
+<pre><code class="language-yaml"># INVALID: Creates a cycle
+tasks:
+  task_a:
+    depends: ["task_b"]
+    # ...
+  task_b:
+    depends: ["task_a"]  # ERROR: Cycle!
+    # ...
+</code></pre>
+<h2 id="workflow-execution-lifecycle"><a class="header" href="#workflow-execution-lifecycle">Workflow Execution Lifecycle</a></h2>
+<h3 id="1-trigger"><a class="header" href="#1-trigger">1. Trigger</a></h3>
+<p>Workflows are triggered by:</p>
+<ul>
+<li><strong>Scheduler</strong>: Cron schedule matches current time</li>
+<li><strong>Manual</strong>: <code>cdktr task run &lt;workflow&gt;</code> command</li>
+<li><strong>API</strong>: External system calls PrincipalAPI</li>
+</ul>
+<h3 id="2-queuing"><a class="header" href="#2-queuing">2. Queuing</a></h3>
+<p>Triggered workflow is added to principal's task queue.</p>
+<h3 id="3-assignment"><a class="header" href="#3-assignment">3. Assignment</a></h3>
+<p>Agent polls principal and receives workflow:</p>
+<ul>
+<li>Agent has available executor slots</li>
+<li>Workflow assigned to requesting agent</li>
+<li>Agent ID and workflow instance ID recorded</li>
+</ul>
+<h3 id="4-execution"><a class="header" href="#4-execution">4. Execution</a></h3>
+<p>TaskManager executes workflow:</p>
+<ol>
+<li>Parse workflow DAG</li>
+<li>Identify root tasks (no dependencies)</li>
+<li>Execute tasks in topological order</li>
+<li>Wait for dependencies before starting each task</li>
+<li>Run independent tasks in parallel</li>
+</ol>
+<h3 id="5-status-tracking-1"><a class="header" href="#5-status-tracking-1">5. Status Tracking</a></h3>
+<p>Agent reports status updates:</p>
+<ul>
+<li><strong>PENDING</strong>: Workflow received, not started</li>
+<li><strong>RUNNING</strong>: Workflow execution in progress</li>
+<li><strong>COMPLETED</strong>: All tasks succeeded</li>
+<li><strong>FAILED</strong>: One or more tasks failed</li>
+<li><strong>CRASHED</strong>: Agent failed during execution</li>
+</ul>
+<h3 id="6-completion"><a class="header" href="#6-completion">6. Completion</a></h3>
+<p>Final status and logs written to database.</p>
+<h2 id="workflow-discovery"><a class="header" href="#workflow-discovery">Workflow Discovery</a></h2>
+<p>Workflows are discovered from the filesystem:</p>
+<ol>
+<li>Principal reads <code>CDKTR_WORKFLOW_DIR</code> (default: <code>./workflows</code>)</li>
+<li>All <code>.yml</code> and <code>.yaml</code> files are parsed</li>
+<li>Nested directories supported (creates namespaced workflow IDs)</li>
+<li>Invalid workflows logged but don't prevent startup</li>
+<li>Workflows refreshed periodically (every 60 seconds)</li>
+</ol>
+<h3 id="workflow-id-generation"><a class="header" href="#workflow-id-generation">Workflow ID Generation</a></h3>
+<p>Workflow IDs are derived from file paths:</p>
+<pre><code>workflows/
+  example.yml          → ID: "example"
+  etl/
+    daily.yml          → ID: "etl.daily"
+    hourly.yml         → ID: "etl.hourly"
+  data/
+    ingestion/
+      api.yml          → ID: "data.ingestion.api"
+</code></pre>
+<h2 id="task-execution-context"><a class="header" href="#task-execution-context">Task Execution Context</a></h2>
+<h3 id="working-directory"><a class="header" href="#working-directory">Working Directory</a></h3>
+<p>Tasks execute in the agent's current working directory.</p>
+<h3 id="environment-variables"><a class="header" href="#environment-variables">Environment Variables</a></h3>
+<p>Tasks inherit the agent's environment variables.</p>
+<h3 id="standard-outputerror"><a class="header" href="#standard-outputerror">Standard Output/Error</a></h3>
+<p>Task stdout and stderr are captured and stored in the database for later querying.</p>
+<h3 id="exit-codes"><a class="header" href="#exit-codes">Exit Codes</a></h3>
+<ul>
+<li><strong>0</strong>: Task succeeded</li>
+<li><strong>Non-zero</strong>: Task failed</li>
+</ul>
+<p>Task failure causes the workflow to fail, and dependent tasks are not executed.</p>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ol>
+<li><strong>Keep Tasks Atomic</strong>: Each task should do one thing well</li>
+<li><strong>Use Dependencies Wisely</strong>: Only declare necessary dependencies</li>
+<li><strong>Enable Parallelism</strong>: Structure tasks to maximize parallel execution</li>
+<li><strong>Handle Failures</strong>: Design workflows to be idempotent and retry-friendly</li>
+<li><strong>Namespace Workflows</strong>: Use directories to organize related workflows</li>
+</ol>
+<h2 id="next-steps-2"><a class="header" href="#next-steps-2">Next Steps</a></h2>
+<ul>
+<li>Learn about <a href="architecture/./zeromq.html">ZeroMQ Communication</a></li>
+<li>Explore <a href="architecture/../workflows.html">Workflow Definition</a> in detail</li>
+<li>See <a href="architecture/../workflows/examples.html">Workflow Examples</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="workflow-examples"><a class="header" href="#workflow-examples">Workflow Examples</a></h1>
+<h2 id="scheduled-task"><a class="header" href="#scheduled-task">Scheduled Task</a></h2>
+<p>Cron-based execution.</p>
+<pre><code class="language-yaml">name: Database Backup
+cron: "0 0 2 * * *"  # Daily at 2 AM
+tasks:
+  backup:
+    name: Backup DB
+    config:
+      !Subprocess
+      cmd: pg_dump
+      args: ["-h", "db.example.com", "-f", "/backups/db.sql"]
+</code></pre>
+<h2 id="linear-pipeline"><a class="header" href="#linear-pipeline">Linear Pipeline</a></h2>
+<p>Sequential task execution.</p>
+<pre><code class="language-yaml">name: ETL Pipeline
+tasks:
+  extract:
+    name: Extract
+    config:
+      !Subprocess
+      cmd: python
+      args: ["extract.py"]
+
+  transform:
+    name: Transform
+    depends: ["extract"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["transform.py"]
+
+  load:
+    name: Load
+    depends: ["transform"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["load.py"]
+</code></pre>
+<h2 id="parallel-tasks"><a class="header" href="#parallel-tasks">Parallel Tasks</a></h2>
+<p>Multiple independent tasks.</p>
+<pre><code class="language-yaml">name: Multi-Source Scraper
+tasks:
+  scrape_a:
+    name: Scrape Source A
+    config:
+      !Subprocess
+      cmd: python
+      args: ["scrape_a.py"]
+
+  scrape_b:
+    name: Scrape Source B
+    config:
+      !Subprocess
+      cmd: python
+      args: ["scrape_b.py"]
+
+  combine:
+    name: Combine Results
+    depends: ["scrape_a", "scrape_b"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["combine.py"]
+</code></pre>
+<h2 id="uvpython-with-dependencies"><a class="header" href="#uvpython-with-dependencies">UvPython with Dependencies</a></h2>
+<p>Managed Python execution with automatic dependency installation.</p>
+<pre><code class="language-yaml">name: Data Analysis
+tasks:
+  analyze:
+    name: Analyze Data
+    config:
+      !UvPython
+      script_path: ./analyze.py
+      packages:
+        - pandas&gt;=2.3.1,&lt;3.0.0
+        - matplotlib&gt;=3.8.0
+      working_directory: ./scripts
+</code></pre>
+<h2 id="uvpython-project"><a class="header" href="#uvpython-project">UvPython Project</a></h2>
+<p>For scripts with inline dependencies (PEP 723).</p>
+<pre><code class="language-yaml">name: Report Generator
+tasks:
+  generate:
+    name: Generate Report
+    config:
+      !UvPython
+      script_path: ./generate_report.py
+      is_uv_project: true
+</code></pre>
+<h2 id="http-webhook"><a class="header" href="#http-webhook">HTTP Webhook</a></h2>
+<p>Trigger external services.</p>
+<pre><code class="language-yaml">name: Notify Slack
+tasks:
+  notify:
+    name: Send Notification
+    config:
+      !Subprocess
+      cmd: curl
+      args:
+        - -X
+        - POST
+        - https://hooks.slack.com/services/XXX
+        - -d
+        - '{"text":"Pipeline complete"}'
+
+  validate_customers:
+    name: Validate Customer Data
+    depends: ["extract_customers"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/validate.py
+        - --input
+        - /data/customers.csv
+
+  transform:
+    name: Transform and Join
+    depends: ["validate_sales", "validate_customers"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/transform.py
+
+  load_warehouse:
+    name: Load to Data Warehouse
+    depends: ["transform"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/load_warehouse.py
+
+  update_reports:
+    name: Update BI Reports
+    depends: ["load_warehouse"]
+    config:
+      !Subprocess
+      cmd: curl
+      args:
+        - -X
+        - POST
+        - https://bi.example.com/api/refresh
+</code></pre>
+<h2 id="example-3-web-scraping"><a class="header" href="#example-3-web-scraping">Example 3: Web Scraping</a></h2>
+<p>Multi-source web scraping with error handling.</p>
+<pre><code class="language-yaml">name: News Scraper
+description: Scrapes news from multiple sources
+cron: "0 0 */6 * * *"  # Every 6 hours
+
+tasks:
+  scrape_source_1:
+    name: Scrape TechCrunch
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scrapers/techcrunch.py
+
+  scrape_source_2:
+    name: Scrape Hacker News
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scrapers/hackernews.py
+
+  scrape_source_3:
+    name: Scrape Reddit
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scrapers/reddit.py
+
+  deduplicate:
+    name: Remove Duplicates
+    depends: ["scrape_source_1", "scrape_source_2", "scrape_source_3"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/deduplicate.py
+
+  analyze_sentiment:
+    name: Analyze Sentiment
+    depends: ["deduplicate"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/sentiment.py
+
+  generate_digest:
+    name: Generate Daily Digest
+    depends: ["analyze_sentiment"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/generate_digest.py
+
+  send_email:
+    name: Send Digest Email
+    depends: ["generate_digest"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/send_email.py
+</code></pre>
+<h2 id="example-4-machine-learning-pipeline"><a class="header" href="#example-4-machine-learning-pipeline">Example 4: Machine Learning Pipeline</a></h2>
+<p>Model training and deployment workflow.</p>
+<pre><code class="language-yaml">name: ML Model Training
+description: Train and deploy ML model
+cron: "0 0 1 * * 0"  # Weekly on Sunday at 1 AM
+
+tasks:
+  fetch_training_data:
+    name: Fetch Training Data
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - ml/fetch_data.py
+        - --days
+        - "7"
+
+  preprocess:
+    name: Preprocess Data
+    depends: ["fetch_training_data"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - ml/preprocess.py
+
+  train_model:
+    name: Train Model
+    depends: ["preprocess"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - ml/train.py
+        - --epochs
+        - "100"
+
+  evaluate:
+    name: Evaluate Model
+    depends: ["train_model"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - ml/evaluate.py
+
+  deploy:
+    name: Deploy to Production
+    depends: ["evaluate"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - ml/deploy.py
+        - --environment
+        - production
+</code></pre>
+<h2 id="example-5-monitoring-and-alerting"><a class="header" href="#example-5-monitoring-and-alerting">Example 5: Monitoring and Alerting</a></h2>
+<p>System health check workflow.</p>
+<pre><code class="language-yaml">name: Health Check
+description: Check system health and alert on issues
+cron: "0 */5 * * * *"  # Every 5 minutes
+
+tasks:
+  check_api:
+    name: Check API Health
+    config:
+      !Subprocess
+      cmd: curl
+      args:
+        - -f
+        - https://api.example.com/health
+
+  check_database:
+    name: Check Database Connection
+    config:
+      !Subprocess
+      cmd: psql
+      args:
+        - -h
+        - db.example.com
+        - -U
+        - monitor
+        - -c
+        - SELECT 1;
+
+  check_disk_space:
+    name: Check Disk Space
+    config:
+      !Subprocess
+      cmd: bash
+      args:
+        - -c
+        - df -h / | awk 'NR==2 {if ($5+0 &gt; 80) exit 1}'
+
+  alert:
+    name: Send Alert if Any Failed
+    depends: ["check_api", "check_database", "check_disk_space"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - scripts/send_alert.py
+</code></pre>
+<h2 id="example-6-report-generation"><a class="header" href="#example-6-report-generation">Example 6: Report Generation</a></h2>
+<p>Generate and distribute reports.</p>
+<pre><code class="language-yaml">name: Weekly Sales Report
+description: Generate weekly sales report
+cron: "0 0 9 * * 1"  # Monday at 9 AM
+
+tasks:
+  query_data:
+    name: Query Sales Data
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - reports/query_sales.py
+        - --period
+        - last_week
+
+  generate_charts:
+    name: Generate Charts
+    depends: ["query_data"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - reports/generate_charts.py
+
+  create_pdf:
+    name: Create PDF Report
+    depends: ["generate_charts"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - reports/create_pdf.py
+
+  email_report:
+    name: Email Report to Team
+    depends: ["create_pdf"]
+    config:
+      !Subprocess
+      cmd: python
+      args:
+        - reports/email_report.py
+        - --recipients
+        - team@example.com
+</code></pre>
+<h2 id="next-steps-3"><a class="header" href="#next-steps-3">Next Steps</a></h2>
+<ul>
+<li>Review <a href="architecture/./yaml-structure.html">YAML Structure</a> for details</li>
+<li>Learn about <a href="architecture/./task-config.html">Task Configuration</a></li>
+<li>Explore <a href="architecture/./scheduling.html">Scheduling</a> options</li>
+<li>Understand <a href="architecture/./dependencies.html">Task Dependencies</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="logs--database"><a class="header" href="#logs--database">Logs &amp; Database</a></h1>
+<p>The logging and data persistence system in cdktr is designed to provide comprehensive visibility into workflow execution while maintaining performance and reliability. This architecture enables both real-time monitoring and historical analysis through a combination of streaming and storage mechanisms.</p>
+<h2 id="log-streaming-architecture"><a class="header" href="#log-streaming-architecture">Log Streaming Architecture</a></h2>
+<p>At the heart of cdktr's observability is a publish-subscribe logging system built on ZeroMQ. This architecture creates a real-time stream of execution information that flows from agents executing tasks, through the principal coordinator, and out to any interested consumers.</p>
+<h3 id="how-agents-publish-logs"><a class="header" href="#how-agents-publish-logs">How Agents Publish Logs</a></h3>
+<p>When an agent executes tasks, it doesn't write logs to local files or directly to a database. Instead, each agent maintains a log publisher that sends messages to the principal over a dedicated ZeroMQ connection. This publisher uses a PUSH socket that connects to the principal's log manager, which listens on a PULL socket.</p>
+<p>Every log message contains rich context about the execution:</p>
+<ul>
+<li>The workflow identifier and name</li>
+<li>The specific workflow instance being executed</li>
+<li>The task name and its unique execution identifier</li>
+<li>A timestamp marking when the event occurred</li>
+<li>The log level (INFO, WARN, ERROR, etc.)</li>
+<li>The actual log payload containing the message</li>
+</ul>
+<p>This structured approach ensures that every log line can be traced back to its exact origin in the execution tree. When you're troubleshooting a failed task, you can immediately see which workflow instance it belonged to and when it occurred.</p>
+<h3 id="the-principals-log-manager"><a class="header" href="#the-principals-log-manager">The Principal's Log Manager</a></h3>
+<p>The principal runs a dedicated log manager service that acts as a central hub for all logging activity. This service receives log messages from all agents via its PULL socket and immediately republishes them through a PUB socket. This publish-subscribe pattern creates a broadcast mechanism where multiple consumers can receive the same log stream simultaneously.</p>
+<p>The log manager doesn't process or filter the messages—it simply ensures they flow from agents to subscribers. This design keeps the critical path lightweight and fast. The manager operates on two ports configured via environment variables: one for receiving logs from agents (<code>CDKTR_LOGS_LISTENING_PORT</code>) and another for publishing to subscribers (<code>CDKTR_LOGS_PUBLISHING_PORT</code>).</p>
+<h3 id="real-time-log-consumption"><a class="header" href="#real-time-log-consumption">Real-Time Log Consumption</a></h3>
+<p>Any component can subscribe to the log stream by connecting to the principal's publishing port. The Terminal User Interface (TUI), for example, leverages this exact mechanism to provide live log tailing. When you select a workflow in the TUI and watch its logs scroll by, you're seeing the same messages that agents are publishing in real-time.</p>
+<p>Subscribers can filter logs by workflow ID, allowing them to see only the logs relevant to specific workflows. This topic-based subscription means you're not overwhelmed with logs from every workflow running in your system—you see exactly what you choose to monitor.</p>
+<p>The streaming nature of this system provides immediate feedback during execution. There's no delay waiting for logs to be written to disk, no polling interval to wait for—you see task output as it happens.</p>
+<h2 id="log-persistence-with-duckdb"><a class="header" href="#log-persistence-with-duckdb">Log Persistence with DuckDB</a></h2>
+<p>While streaming provides real-time visibility, you also need the ability to query historical execution data. This is where DuckDB enters the picture, providing a lightweight yet powerful analytical database for storing all workflow execution information.</p>
+<h3 id="why-duckdb"><a class="header" href="#why-duckdb">Why DuckDB?</a></h3>
+<p>DuckDB is an embedded analytical database—think of it as SQLite but optimized for analytical queries rather than transactional workloads. For cdktr's use case, this is ideal. You get the simplicity of an embedded database (no separate server to manage) combined with excellent performance for querying large volumes of log data.</p>
+<p>The database can run in-memory for development and testing, or persist to disk for production deployments. This flexibility allows you to choose the appropriate storage strategy for your environment.</p>
+<p>DuckDB is just great! Given your cdktr DB is just a single file, you can even open it directly with DuckDB's CLI or connect to it from Python or R for custom analysis.</p>
+<h3 id="the-log-persistence-pipeline"><a class="header" href="#the-log-persistence-pipeline">The Log Persistence Pipeline</a></h3>
+<p>The principal runs a dedicated log persister service that subscribes to the same log stream as other consumers. This service receives logs from the pub/sub system and batches them for efficient database insertion. Rather than writing each log individually, the persister accumulates messages in an asynchronous queue and flushes them to the database every 30 seconds.</p>
+<p>This batching strategy significantly improves write performance. Database insertions are one of the more expensive operations, and batching reduces the overhead by consolidating many individual writes into a single efficient bulk operation.</p>
+<p>If a database write fails—perhaps due to disk space issues or connection problems—the persister retains the failed batch in its queue and attempts to write it again on the next interval. This resilience ensures logs aren't lost even when the database experiences temporary issues.</p>
+<h3 id="the-logstore-schema"><a class="header" href="#the-logstore-schema">The Logstore Schema</a></h3>
+<p>All log messages are stored in the <code>logstore</code> table with a straightforward schema that mirrors the log message structure:</p>
+<ul>
+<li><strong>workflow_id</strong>: The identifier for the workflow definition</li>
+<li><strong>workflow_name</strong>: The human-readable workflow name</li>
+<li><strong>workflow_instance_id</strong>: The unique identifier for this execution instance</li>
+<li><strong>task_name</strong>: The name of the task that generated the log</li>
+<li><strong>task_instance_id</strong>: The unique identifier for this task execution</li>
+<li><strong>timestamp_ms</strong>: Milliseconds since epoch for precise time ordering</li>
+<li><strong>level</strong>: The log level (INFO, WARN, ERROR, etc.)</li>
+<li><strong>payload</strong>: The actual log message content</li>
+</ul>
+<p>This schema enables powerful queries. You can retrieve all logs for a specific workflow instance, find all ERROR-level logs across all executions, or analyze task performance by examining timestamp patterns. The database provides a <code>QueryLogs</code> API that accepts time ranges, workflow filters, and instance filters to retrieve exactly the logs you need.</p>
+<h2 id="workflow-execution-state"><a class="header" href="#workflow-execution-state">Workflow Execution State</a></h2>
+<p>Beyond just log messages, cdktr persists all workflow execution state in the database. This creates a complete audit trail of everything that happens in your system.</p>
+<h3 id="insert-only-architecture"><a class="header" href="#insert-only-architecture">Insert-Only Architecture</a></h3>
+<p>A critical design decision is that all execution state is stored in insert-only tables. Nothing is ever updated or deleted. When a workflow starts, a record is inserted. When it completes, another record is inserted with a new timestamp. The same applies to individual tasks—each status change creates a new row.</p>
+<p>This approach provides several advantages:</p>
+<ol>
+<li><strong>Complete History</strong>: You can reconstruct the entire timeline of any workflow execution by querying its status records chronologically</li>
+<li><strong>Audit Trail</strong>: Nothing is ever lost or overwritten, providing perfect auditability</li>
+<li><strong>Performance</strong>: Append-only operations are faster than updates, especially in analytical databases like DuckDB</li>
+<li><strong>Simplicity</strong>: No need for complex update logic or handling concurrent updates</li>
+</ol>
+<h3 id="workflow-run-status"><a class="header" href="#workflow-run-status">Workflow Run Status</a></h3>
+<p>The <code>workflow_run_status</code> table tracks workflow-level state changes:</p>
+<ul>
+<li><strong>workflow_id</strong>: The workflow definition identifier</li>
+<li><strong>workflow_instance_id</strong>: The unique instance identifier</li>
+<li><strong>status</strong>: One of PENDING, RUNNING, WAITING, COMPLETED, FAILED, or CRASHED</li>
+<li><strong>timestamp_ms</strong>: When this status change occurred</li>
+</ul>
+<p>When an agent starts executing a workflow, it inserts a RUNNING status record. When the workflow completes (successfully or not), another record is inserted with the appropriate final status. By querying the most recent status for a workflow instance, you can determine its current state. By querying all statuses, you can see its complete execution timeline.</p>
+<h3 id="task-run-status"><a class="header" href="#task-run-status">Task Run Status</a></h3>
+<p>Similarly, the <code>task_run_status</code> table maintains the execution history for individual tasks:</p>
+<ul>
+<li><strong>task_id</strong>: The task identifier from the workflow definition</li>
+<li><strong>task_instance_id</strong>: The unique identifier for this task execution</li>
+<li><strong>workflow_instance_id</strong>: The workflow instance this task belongs to</li>
+<li><strong>status</strong>: The task's status (PENDING, RUNNING, COMPLETED, FAILED, etc.)</li>
+<li><strong>timestamp_ms</strong>: When this status change occurred</li>
+</ul>
+<p>This granular tracking means you can analyze task-level behavior. Which tasks fail most often? How long does a particular task typically run? Which tasks are bottlenecks? All these questions can be answered by querying the task status history.</p>
+<h3 id="querying-execution-history"><a class="header" href="#querying-execution-history">Querying Execution History</a></h3>
+<p>The principal provides API endpoints for querying this execution data. You can retrieve recent workflow statuses to see what's currently running or recently completed. The log query endpoint allows time-based and filter-based retrieval of both logs and status records.</p>
+<p>The TUI and CLI tools leverage these APIs to present execution information to users. When you see a workflow's status in the TUI or query logs with the CLI, you're seeing data pulled directly from these DuckDB tables.</p>
+<h2 id="benefits-of-this-architecture"><a class="header" href="#benefits-of-this-architecture">Benefits of This Architecture</a></h2>
+<p>The combination of real-time streaming and persistent storage provides the best of both worlds:</p>
+<p><strong>Immediate Visibility</strong>: The pub/sub streaming means you see what's happening right now, with no delay. This is essential for monitoring long-running workflows and troubleshooting issues as they occur.</p>
+<p><strong>Historical Analysis</strong>: The DuckDB storage enables sophisticated queries over historical data. You can identify patterns, generate reports, and understand long-term trends in your workflow execution.</p>
+<p><strong>Decoupled Consumers</strong>: Because logging uses pub/sub, new consumers can be added without impacting agents or the principal. Want to send logs to an external monitoring system? Just add a new subscriber.</p>
+<p><strong>Resilience</strong>: Agents buffer logs locally if they can't reach the principal, the persister retries failed database writes, and the streaming continues even if persistence fails. The system is designed to preserve observability even when components experience issues.</p>
+<p><strong>Scalability</strong>: The streaming architecture scales horizontally—more agents just means more log publishers, and subscribers receive all messages regardless of how many agents are active. The database scales vertically with DuckDB's efficient analytical engine handling large query workloads.</p>
+<p>This logging and persistence architecture ensures you always have the information you need to understand, monitor, and troubleshoot your distributed workflow executions.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-tui-terminal-user-interface"><a class="header" href="#the-tui-terminal-user-interface">The TUI (Terminal User Interface)</a></h1>
+<p>cdktr includes a powerful Terminal User Interface (TUI) built with Ratatui, providing real-time monitoring and management of workflows without requiring a web browser.</p>
+<p><img src="assets/images/tui-main.png" alt="TUI example" /></p>
+<h2 id="features"><a class="header" href="#features">Features</a></h2>
+<ul>
+<li><strong>Workflow Management</strong>: View all workflows and their schedules</li>
+<li><strong>Real-time Monitoring</strong>: Watch workflow execution in real-time</li>
+<li><strong>Agent Status</strong>: Monitor registered agents and their health</li>
+<li><strong>Manual Triggers</strong>: Run workflows on-demand with a keypress</li>
+<li><strong>Log Viewing</strong>: Browse execution logs directly in the terminal</li>
+<li><strong>Keyboard Navigation</strong>: Efficient keyboard-driven interface</li>
+</ul>
+<h2 id="launching-the-tui"><a class="header" href="#launching-the-tui">Launching the TUI</a></h2>
+<p>To start the TUI, ensure you have a principal running that you can connect to, then run:</p>
+<pre><code class="language-bash">cdktr ui
+</code></pre>
+<h2 id="quick-navigation"><a class="header" href="#quick-navigation">Quick Navigation</a></h2>
+<ul>
+<li><code>↑↓</code> or <code>jk</code> - Navigate lists</li>
+<li><code>r</code> - Run selected workflow</li>
+<li><code>q</code> - Quit</li>
+<li><code>Tab</code> - Switch between panels</li>
+<li><code>?</code> - Show help</li>
+</ul>
+<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
+<ul>
+<li><a href="./tui/overview.html">Overview</a> - What the TUI provides</li>
+<li><a href="./tui/navigation.html">Navigation</a> - How to navigate</li>
+<li><a href="./tui/workflows.html">Workflow Management</a> - Managing workflows</li>
+<li><a href="./tui/monitoring.html">Monitoring</a> - Viewing execution status</li>
+<li><a href="./tui/agents.html">Agent Management</a> - Agent information</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="overview-1"><a class="header" href="#overview-1">Overview</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="navigation"><a class="header" href="#navigation">Navigation</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="workflow-management"><a class="header" href="#workflow-management">Workflow Management</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="monitoring"><a class="header" href="#monitoring">Monitoring</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="agent-management"><a class="header" href="#agent-management">Agent Management</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="cli-reference"><a class="header" href="#cli-reference">CLI Reference</a></h1>
+<p>The cdktr command-line interface provides commands for managing principals, agents, workflows, and logs.</p>
+<h2 id="command-structure"><a class="header" href="#command-structure">Command Structure</a></h2>
+<pre><code class="language-bash">cdktr &lt;command&gt; [subcommand] [options]
+</code></pre>
+<h2 id="available-commands"><a class="header" href="#available-commands">Available Commands</a></h2>
+<h3 id="ui"><a class="header" href="#ui">ui</a></h3>
+<p>Launch the Terminal User Interface.</p>
+<pre><code class="language-bash">cdktr ui [--principal-host HOST] [--principal-port PORT]
+</code></pre>
+<p>See <a href="./tui.html">TUI Chapter</a> for details.</p>
+<h3 id="start"><a class="header" href="#start">start</a></h3>
+<p>Start a principal or agent instance.</p>
+<pre><code class="language-bash">cdktr start &lt;principal|agent&gt; [OPTIONS]
+</code></pre>
+<p>See <a href="./cli/start.html">Start Commands</a> for details.</p>
+<h3 id="task"><a class="header" href="#task">task</a></h3>
+<p>Manage and trigger workflows.</p>
+<pre><code class="language-bash">cdktr task &lt;run|list&gt; [OPTIONS]
+</code></pre>
+<p>See <a href="./cli/task.html">Task Commands</a> for details.</p>
+<h3 id="logs"><a class="header" href="#logs">logs</a></h3>
+<p>Query execution logs.</p>
+<pre><code class="language-bash">cdktr logs query [OPTIONS]
+</code></pre>
+<p>See <a href="./cli/logs.html">Logs Commands</a> for details.</p>
+<h3 id="init"><a class="header" href="#init">init</a></h3>
+<p>Initialize a new cdktr project.</p>
+<pre><code class="language-bash">cdktr init [PATH]
+</code></pre>
+<p>See <a href="./cli/init.html">Init Command</a> for details.</p>
+<h2 id="global-options"><a class="header" href="#global-options">Global Options</a></h2>
+<h3 id="--help--h"><a class="header" href="#--help--h">--help, -h</a></h3>
+<p>Show help information.</p>
+<pre><code class="language-bash">cdktr --help
+cdktr start --help
+cdktr task run --help
+</code></pre>
+<h3 id="--version--v"><a class="header" href="#--version--v">--version, -V</a></h3>
+<p>Show version information.</p>
+<pre><code class="language-bash">cdktr --version
+</code></pre>
+<h2 id="environment-variables-1"><a class="header" href="#environment-variables-1">Environment Variables</a></h2>
+<p>Many CLI options can be set via environment variables:</p>
+<ul>
+<li><code>CDKTR_PRINCIPAL_HOST</code> - Default principal host</li>
+<li><code>CDKTR_PRINCIPAL_PORT</code> - Default principal port</li>
+<li><code>CDKTR_LOG_LEVEL</code> - Log verbosity (DEBUG, INFO, WARN, ERROR)</li>
+<li><code>CDKTR_WORKFLOW_DIR</code> - Workflow directory path</li>
+<li><code>CDKTR_DB_PATH</code> - Database file path</li>
+</ul>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="start-a-complete-setup"><a class="header" href="#start-a-complete-setup">Start a complete setup</a></h3>
+<pre><code class="language-bash"># Terminal 1: Start principal
+cdktr start principal
+
+# Terminal 2: Start agent
+cdktr start agent
+
+# Terminal 3: Open TUI
+cdktr ui
+</code></pre>
+<h3 id="trigger-a-workflow"><a class="header" href="#trigger-a-workflow">Trigger a workflow</a></h3>
+<pre><code class="language-bash">cdktr task run my-workflow
+</code></pre>
+<h3 id="query-logs"><a class="header" href="#query-logs">Query logs</a></h3>
+<pre><code class="language-bash">cdktr logs query --workflow my-workflow --status FAILED
+</code></pre>
+<h2 id="next-steps-4"><a class="header" href="#next-steps-4">Next Steps</a></h2>
+<ul>
+<li><a href="./cli/task.html">Task Commands</a></li>
+<li><a href="./cli/start.html">Start Commands</a></li>
+<li><a href="./cli/logs.html">Logs Commands</a></li>
+<li><a href="./cli/init.html">Init Command</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="task-commands"><a class="header" href="#task-commands">Task Commands</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="start-commands"><a class="header" href="#start-commands">Start Commands</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="logs-commands"><a class="header" href="#logs-commands">Logs Commands</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="init-command"><a class="header" href="#init-command">Init Command</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="advanced-topics"><a class="header" href="#advanced-topics">Advanced Topics</a></h1>
+<p>This chapter covers advanced cdktr features and deployment patterns for production use.</p>
+<h2 id="topics"><a class="header" href="#topics">Topics</a></h2>
+<h3 id="fault-tolerance"><a class="header" href="#fault-tolerance"><a href="./advanced/fault-tolerance.html">Fault Tolerance</a></a></h3>
+<p>Learn how cdktr handles failures:</p>
+<ul>
+<li>Agent crash recovery</li>
+<li>Principal restart behavior</li>
+<li>Workflow crash detection</li>
+<li>Heartbeat monitoring</li>
+</ul>
+<h3 id="concurrency-control"><a class="header" href="#concurrency-control"><a href="./advanced/concurrency.html">Concurrency Control</a></a></h3>
+<p>Optimize workflow execution:</p>
+<ul>
+<li>Agent concurrency limits</li>
+<li>Task parallelism</li>
+<li>Resource management</li>
+<li>Performance tuning</li>
+</ul>
+<h3 id="performance-tuning"><a class="header" href="#performance-tuning"><a href="./advanced/performance.html">Performance Tuning</a></a></h3>
+<p>Maximize cdktr performance:</p>
+<ul>
+<li>Optimization strategies</li>
+<li>Bottleneck identification</li>
+<li>Scalability patterns</li>
+<li>Benchmarking</li>
+</ul>
+<h3 id="security-considerations"><a class="header" href="#security-considerations"><a href="./advanced/security.html">Security Considerations</a></a></h3>
+<p>Secure your cdktr deployment:</p>
+<ul>
+<li>Network security</li>
+<li>Access control</li>
+<li>Firewall configuration</li>
+<li>Future authentication features</li>
+</ul>
+<h2 id="production-deployment"><a class="header" href="#production-deployment">Production Deployment</a></h2>
+<p>For production deployments, consider:</p>
+<ol>
+<li><strong>High Availability</strong>: Run principal with monitoring and auto-restart</li>
+<li><strong>Load Distribution</strong>: Deploy multiple agents across machines</li>
+<li><strong>Network Security</strong>: Use VPN or firewall rules</li>
+<li><strong>Monitoring</strong>: Implement external monitoring of principal and agents</li>
+<li><strong>Backup</strong>: Regular database backups</li>
+<li><strong>Logging</strong>: Centralized log collection</li>
+</ol>
+<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
+<ul>
+<li>Start with conservative concurrency limits</li>
+<li>Monitor resource usage continuously</li>
+<li>Use distributed setup for reliability</li>
+<li>Implement proper error handling in workflows</li>
+<li>Test workflows thoroughly before deploying</li>
+<li>Keep cdktr updated to latest version</li>
+</ul>
+<h2 id="next-steps-5"><a class="header" href="#next-steps-5">Next Steps</a></h2>
+<p>Explore each advanced topic for detailed information on production deployment and optimization.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="fault-tolerance-1"><a class="header" href="#fault-tolerance-1">Fault Tolerance</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="concurrency-control-1"><a class="header" href="#concurrency-control-1">Concurrency Control</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="performance-tuning-1"><a class="header" href="#performance-tuning-1">Performance Tuning</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="security-considerations-1"><a class="header" href="#security-considerations-1">Security Considerations</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting--faq"><a class="header" href="#troubleshooting--faq">Troubleshooting &amp; FAQ</a></h1>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

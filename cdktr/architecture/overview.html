@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>System Overview - CDKTR Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">CDKTR Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="system-overview"><a class="header" href="#system-overview">System Overview</a></h1>
+<p>cdktr is built on a distributed architecture where a central <strong>principal</strong> process coordinates work across multiple <strong>agents</strong> that execute workflows. This design provides both simplicity and scalability—you can run everything on a single machine for development, or distribute agents across multiple machines for production workloads. Workflows are defined in simple YAML files that the principal automatically discovers and loads from the filesystem.</p>
+<p>The architecture follows a pull-based model: the principal maintains a queue of workflows ready for execution, and agents poll this queue for work when they have available capacity. This self-regulating design means you can scale horizontally simply by launching more agent processes, without complex load balancing or work distribution logic.</p>
+<p>cdktr is completely event-driven. Workflows can be triggered by cron schedules, manual requests via the CLI or TUI, or external event listeners that respond to webhooks, file changes, or any other stimulus you can program. All interactions flow through cdktr's ZeroMQ-based API, which provides a lightweight, high-performance communication layer.</p>
+<h2 id="high-level-architecture"><a class="header" href="#high-level-architecture">High-Level Architecture</a></h2>
+<pre class="mermaid">graph TB
+    TUI[Terminal UI] --&gt; Principal
+    CLI[CLI] --&gt; Principal
+    Principal[Principal Server] --&gt; Agent1[Agent 1]
+    Principal --&gt; Agent2[Agent 2]
+    Principal --&gt; Agent3[Agent N]
+    Principal --&gt; DB[(DuckDB)]
+    EventListener[Event Listener] --&gt; Principal
+    Scheduler[Scheduler] --&gt; EventListener
+
+    Agent1 --&gt; TaskManager1[TaskManager]
+    TaskManager1 --&gt; Executor1[Executor 1]
+    TaskManager1 --&gt; Executor2[Executor 2]
+
+    style Principal fill:#1b590e,stroke:#333,stroke-width:4px
+    style Agent1 fill:#0e9296,stroke:#333,stroke-width:2px
+    style Agent2 fill:#0e9296,stroke:#333,stroke-width:2px
+    style Agent3 fill:#0e9296,stroke:#333,stroke-width:2px
+</pre>
+<h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
+<p>The system comprises several key components that work together to provide distributed workflow orchestration:</p>
+<h3 id="principal"><a class="header" href="#principal">Principal</a></h3>
+<p>The principal is the system's central coordinator and single source of truth. It manages workflow definitions loaded from YAML files, maintains the global queue of workflows awaiting execution, and tracks the health and status of all registered agents.</p>
+<p>The principal runs several background services: a scheduler that triggers workflows based on cron expressions, a log aggregation system that collects and persists execution logs to DuckDB, and a heartbeat monitor that detects failed agents. It also provides the ZeroMQ API server that handles all external communication from the TUI, CLI, agents, and event listeners.</p>
+<p>When a workflow needs to execute—whether triggered by schedule, manual request, or external event—the principal adds it to the task queue. Agents poll this queue for work, and the principal assigns workflows on a first-come, first-served basis.</p>
+<h3 id="agents"><a class="header" href="#agents">Agents</a></h3>
+<p>Agents are autonomous worker processes that execute workflows. Each agent runs independently and can be deployed on the same machine as the principal or on different machines across a network. On startup, an agent registers with the principal and begins polling for available work.</p>
+<p>When an agent receives a workflow assignment, its internal task manager analyzes the workflow's dependency graph (DAG) and executes tasks in the correct order. The task manager enables parallel execution of independent tasks, maximizing throughput. As execution progresses, the agent sends continuous status updates back to the principal and streams task output logs.</p>
+<p>Agents are self-regulating—they only request work when they have available capacity based on their configured concurrency limits. This design means scaling is as simple as launching additional agent processes.</p>
+<h3 id="scheduler"><a class="header" href="#scheduler">Scheduler</a></h3>
+<p>The integrated scheduler monitors cron expressions defined in workflow files and automatically triggers workflows at their scheduled times. It maintains a priority queue of upcoming executions and checks every 500 milliseconds whether any workflow is due to run.</p>
+<p>The scheduler periodically refreshes its view of available workflows (every 60 seconds by default), allowing you to deploy new scheduled workflows without restarting the principal. When a workflow's time arrives, the scheduler triggers it by adding it to the principal's workflow queue, where it awaits assignment to an available agent.</p>
+<h3 id="event-listeners"><a class="header" href="#event-listeners">Event Listeners</a></h3>
+<p>Event listeners provide the mechanism for external systems to trigger workflow executions. They monitor external events—such as webhooks, file changes, message queues, or any custom trigger—and send workflow execution requests to the principal via the ZeroMQ API.</p>
+<p>cdktr doesn't include specific event listener implementations out of the box; instead, it provides the API infrastructure for you to build custom listeners tailored to your needs. Any process that can communicate via ZeroMQ can trigger workflows.</p>
+<h3 id="database"><a class="header" href="#database">Database</a></h3>
+<p>cdktr uses DuckDB, an embedded analytical database, to persist all execution history. Every workflow run, task execution, and log line gets stored in DuckDB, providing a complete audit trail queryable through both the CLI and TUI.</p>
+<p>The database schema tracks workflow instances, task executions, status transitions, and detailed logs with timestamps. This persistent history enables debugging failed workflows, generating execution reports, and monitoring system performance over time.</p>
+<h2 id="communication-flow"><a class="header" href="#communication-flow">Communication Flow</a></h2>
+<h3 id="workflow-execution-flow"><a class="header" href="#workflow-execution-flow">Workflow Execution Flow</a></h3>
+<p>A typical workflow execution follows this sequence:</p>
+<ol>
+<li><strong>Trigger</strong>: A workflow is triggered by its cron schedule, manual CLI/TUI request, or external event listener</li>
+<li><strong>Queue</strong>: The principal adds the workflow to its global task queue</li>
+<li><strong>Poll</strong>: An agent with available capacity polls the principal for work</li>
+<li><strong>Assign</strong>: The principal removes the workflow from the queue and sends it to the requesting agent</li>
+<li><strong>Execute</strong>: The agent's task manager executes workflow tasks according to their dependencies, launching executors for each task</li>
+<li><strong>Stream Logs</strong>: As tasks run, the agent streams stdout/stderr logs to the principal's log manager</li>
+<li><strong>Report Status</strong>: The agent sends status updates (PENDING, RUNNING, COMPLETED, FAILED) for each task and the overall workflow</li>
+<li><strong>Persist</strong>: The principal stores all status updates and logs in DuckDB for later querying</li>
+</ol>
+<h3 id="zeromq-communication-pattern"><a class="header" href="#zeromq-communication-pattern">ZeroMQ Communication Pattern</a></h3>
+<p>All components communicate using ZeroMQ's REQ/REP (request/reply) pattern, which provides reliable synchronous messaging:</p>
+<pre><code>Client (Agent/TUI/CLI)     Principal Server
+        |                          |
+        |-------- REQUEST --------&gt;|
+        |                          |
+        |&lt;------- RESPONSE --------|
+        |                          |
+</code></pre>
+<p>This synchronous pattern ensures every request gets a response and provides natural backpressure—if the principal is overloaded, clients wait for a response rather than overwhelming the system with requests.</p>
+<p>Logs use a separate PUB/SUB channel where agents publish log messages and the principal subscribes to receive them, enabling high-throughput, non-blocking log streaming.</p>
+<h2 id="scalability-model"><a class="header" href="#scalability-model">Scalability Model</a></h2>
+<p>cdktr's architecture enables scaling in multiple dimensions:</p>
+<h3 id="horizontal-scaling"><a class="header" href="#horizontal-scaling">Horizontal Scaling</a></h3>
+<p>Add more agent processes to increase total workflow throughput. Agents can run on the same machine or distributed across multiple machines. Each agent independently polls the principal for work, and the self-regulating design ensures work flows naturally to available capacity.</p>
+<p>Since agents only request work when they're ready, there's no need for complex load balancing—agents that finish their workflows quickly will automatically pick up more work.</p>
+<h3 id="vertical-scaling"><a class="header" href="#vertical-scaling">Vertical Scaling</a></h3>
+<p>Increase the <code>max_concurrent_workflows</code> setting on agents to run more workflows simultaneously on powerful machines. Within each workflow, the task manager can execute independent tasks in parallel, making efficient use of multi-core systems.</p>
+<p>You can also run the principal on a more powerful machine if you have thousands of workflows or very high throughput requirements, though in practice, the principal is lightweight and can handle substantial load on modest hardware.</p>
+<h3 id="workflow-parallelism"><a class="header" href="#workflow-parallelism">Workflow Parallelism</a></h3>
+<p>Within a single workflow, the task manager's DAG-based execution model automatically executes independent tasks in parallel. If your workflow has multiple tasks that don't depend on each other, they'll run simultaneously without any special configuration required.</p>
+<h2 id="resilience-and-fault-tolerance"><a class="header" href="#resilience-and-fault-tolerance">Resilience and Fault Tolerance</a></h2>
+<p>cdktr is designed to handle the realities of distributed systems:</p>
+<p><strong>Agent Heartbeats</strong>: Agents send heartbeats to the principal every 5 seconds. If an agent stops responding (crashed, network partition, machine failure), the principal detects this within 30 seconds and marks any workflows running on that agent as CRASHED.</p>
+<p><strong>Buffered Logs</strong>: When agents lose connection to the principal, they buffer logs locally and continue executing workflows. When the connection restores, buffered logs are sent to the principal. This prevents log loss during temporary network issues.</p>
+<p><strong>Task Queue Persistence</strong>: The principal periodically persists its workflow queue to disk. If the principal crashes and restarts, it reloads queued workflows and resumes processing.</p>
+<p><strong>Graceful Degradation</strong>: If the database becomes unavailable, the principal continues coordinating workflow execution—status updates and logs accumulate in memory until the database recovers.</p>
+<p><strong>Workflow Recovery</strong>: Failed workflows can be re-triggered manually via the CLI or TUI. The complete execution history in DuckDB helps diagnose what went wrong before retrying.</p>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand the overall architecture, dive deeper into specific components:</p>
+<ul>
+<li><a href="./principal.html">Principal</a> - The central coordinator in detail</li>
+<li><a href="./agents.html">Agents</a> - How workflow execution works</li>
+<li><a href="./workflows-tasks.html">Workflows &amp; Tasks</a> - Defining and structuring work</li>
+<li><a href="./zeromq.html">ZeroMQ Communication</a> - The messaging layer</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../architecture.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../architecture/principal.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../architecture.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../architecture/principal.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

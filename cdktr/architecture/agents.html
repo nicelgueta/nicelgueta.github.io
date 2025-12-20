@@ -1,0 +1,296 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Agents - CDKTR Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">CDKTR Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="agents"><a class="header" href="#agents">Agents</a></h1>
+<p>Agents are the workhorses of the cdktr system. While the principal coordinates and schedules workflows, agents are responsible for the actual execution of work. Each agent is an autonomous process that can run on the same machine as the principal or on entirely different machines across a network, providing true distributed workflow execution.</p>
+<h2 id="what-does-an-agent-do"><a class="header" href="#what-does-an-agent-do">What Does an Agent Do?</a></h2>
+<p>At its core, an agent performs three primary functions:</p>
+<ol>
+<li>
+<p><strong>Work Acquisition</strong>: Agents continuously poll the principal for available workflows using the <code>FetchWorkflow</code> API. When a workflow is available in the principal's task queue, an agent receives it and begins execution. This pull-based model ensures that agents only take on work when they have capacity to handle it.</p>
+</li>
+<li>
+<p><strong>Workflow Execution</strong>: Once assigned a workflow, the agent executes its tasks according to their dependency graph. The agent manages all aspects of task execution including launching executors, collecting output streams (stdout and stderr), and enforcing concurrency limits.</p>
+</li>
+<li>
+<p><strong>Status Reporting</strong>: Throughout the workflow lifecycle, agents send regular updates back to the principal about workflow and task states (PENDING, RUNNING, COMPLETED, FAILED, etc.). This keeps the principal's view of the system synchronized with reality.</p>
+</li>
+</ol>
+<p>Additionally, agents send periodic heartbeats to the principal every 5 seconds to signal they are still alive and ready for work. This heartbeat mechanism allows the principal to detect crashed agents and mark currently running workflows as CRASHED if connections to the agent are lost.</p>
+<h2 id="the-internal-task-manager"><a class="header" href="#the-internal-task-manager">The Internal Task Manager</a></h2>
+<p>The heart of every agent is its <code>TaskManager</code> component, which orchestrates the parallel execution of workflow tasks. When an agent receives a workflow from the principal, the TaskManager performs several sophisticated operations to execute it efficiently.</p>
+<h3 id="dag-construction-and-topological-ordering"><a class="header" href="#dag-construction-and-topological-ordering">DAG Construction and Topological Ordering</a></h3>
+<p>Workflows in cdktr are represented internally as a <strong>Directed Acyclic Graph (DAG)</strong>. Each workflow is converted into a DAG structure that maps task dependencies into graph nodes and edges. The DAG construction validates that there are no circular dependencies that would create deadlocks.</p>
+<p>The key innovation here is that the DAG is <strong>topologically sorted</strong> when loaded into the agent's task tracker component. This topological sort identifies which tasks have no dependencies and can execute immediately—these become the "first tasks" loaded into a ready queue.</p>
+<h3 id="parallel-task-execution"><a class="header" href="#parallel-task-execution">Parallel Task Execution</a></h3>
+<p>The task manager maintains a ready queue of tasks that have had all their dependencies satisfied and are ready to execute. The aim of this design is that <strong>tasks without dependencies on each other can execute in parallel</strong>. When a task completes successfully, the task tracker:</p>
+<ol>
+<li>Marks the task as successful</li>
+<li>Examines its dependents in the DAG</li>
+<li>Adds those dependents to the ready queue</li>
+<li>Allows the next iteration of the execution loop to pull from the queue</li>
+</ol>
+<p>This means if you have a workflow with three independent data ingestion tasks followed by a merge task, all three ingestion tasks will execute simultaneously, and only when all three complete will the merge task begin.</p>
+<p>The agent respects its configured <code>max_concurrent_workflows</code> setting, ensuring it never attempts to run more workflows than it has resources for. Within each workflow, the same concurrency limits apply to individual task execution.</p>
+<h3 id="failure-handling-and-cascading-skips"><a class="header" href="#failure-handling-and-cascading-skips">Failure Handling and Cascading Skips</a></h3>
+<p>The task tracker implements intelligent failure handling. When a task fails:</p>
+<ol>
+<li>The task is marked as failed</li>
+<li>The tracker traverses the DAG to find all tasks that depend (directly or transitively) on the failed task</li>
+<li>Those dependent tasks are automatically skipped and will not execute</li>
+<li>Tasks with no dependency path to the failed task continue executing normally</li>
+</ol>
+<p>This prevents wasted computation on tasks that cannot possibly succeed due to upstream failures, while still allowing independent branches of the workflow DAG to complete successfully.</p>
+<h2 id="resilience-and-log-handling"><a class="header" href="#resilience-and-log-handling">Resilience and Log Handling</a></h2>
+<p>One of cdktr's most robust features is its resilience to temporary network failures or principal unavailability. This is particularly critical for log handling, as tasks may generate significant output that needs to be captured even when the principal is unreachable.</p>
+<h3 id="buffered-log-publishing"><a class="header" href="#buffered-log-publishing">Buffered Log Publishing</a></h3>
+<p>Agents publish task logs using a log publisher component that implements a <strong>local buffering queue</strong>. When a task generates log output:</p>
+<ol>
+<li>The log message is sent to the principal's log listener via ZeroMQ PUB socket</li>
+<li>If the send fails (principal unreachable, network partition, etc.), the message is <strong>automatically queued in a local buffer</strong> within the agent</li>
+<li>On the next log message, the publisher attempts to clear the buffered messages first</li>
+<li>If the connection has been restored, buffered messages are sent before new ones</li>
+</ol>
+<p>This ensures that <strong>no log data is lost</strong> even during temporary connection issues. Tasks continue executing and their output is preserved locally until the principal becomes reachable again.</p>
+<h3 id="graceful-degradation"><a class="header" href="#graceful-degradation">Graceful Degradation</a></h3>
+<p>When an agent loses connection to the principal during workflow execution, it doesn't immediately crash. Instead:</p>
+<ol>
+<li>The workflow execution loop continues running any in-progress workflows</li>
+<li>Status updates fail to send but the workflow continues executing</li>
+<li>The agent waits for all running workflows to complete their execution</li>
+<li>Only after all workflows have finished does the agent exit with an error</li>
+</ol>
+<p>This "complete what you started" philosophy means that temporary principal failures don't cause unnecessary work loss. If a long-running data pipeline is 90% complete when the principal goes down, the agent will finish that last 10% rather than abandoning all progress.</p>
+<h3 id="reconnection-logic"><a class="header" href="#reconnection-logic">Reconnection Logic</a></h3>
+<p>The log publisher includes reconnection logic that recreates ZeroMQ socket connections when they fail. Combined with the local buffering, this means agents can ride out principal restarts or network blips without manual intervention.</p>
+<h2 id="agent-lifecycle"><a class="header" href="#agent-lifecycle">Agent Lifecycle</a></h2>
+<p>A typical agent lifecycle looks like this:</p>
+<ol>
+<li><strong>Startup</strong>: Agent creates its task manager with a unique instance ID</li>
+<li><strong>Registration</strong>: Agent registers with the principal</li>
+<li><strong>Heartbeat</strong>: Background task spawns to send heartbeats every 5 seconds</li>
+<li><strong>Work Loop</strong>: Agent enters its main workflow execution loop, continuously polling for work</li>
+<li><strong>Workflow Acquisition</strong>: When work is available, agent receives a workflow</li>
+<li><strong>Execution</strong>: Workflow tasks execute in parallel according to DAG dependencies</li>
+<li><strong>Completion</strong>: Final workflow status sent to principal, workflow counter decremented</li>
+<li><strong>Repeat</strong>: Agent returns to polling for more work</li>
+</ol>
+<p>This continues indefinitely until the agent is explicitly shut down or loses connection to the principal in an unrecoverable way.</p>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>Agents are configured primarily through the <code>CDKTR_AGENT_MAX_CONCURRENCY</code> environment variable (default: 5), which controls how many workflows an agent can execute simultaneously. Higher values allow more parallelism but consume more system resources.</p>
+<p>Agents also respect the general ZeroMQ configuration settings like <code>CDKTR_RETRY_ATTEMPTS</code> and <code>CDKTR_DEFAULT_ZMQ_TIMEOUT_MS</code> when communicating with the principal.</p>
+<h2 id="horizontal-scaling"><a class="header" href="#horizontal-scaling">Horizontal Scaling</a></h2>
+<p>The beauty of cdktr's agent architecture is how trivially it scales horizontally. To handle more workflow throughput:</p>
+<ol>
+<li>Launch additional agent processes on the same or different machines</li>
+<li>Point them at the same principal using <code>CDKTR_PRINCIPAL_HOST</code> and <code>CDKTR_PRINCIPAL_PORT</code></li>
+<li>Each agent automatically registers and begins polling for work</li>
+</ol>
+<p>Agents only request work from the principal when they have available capacity (i.e., they haven't hit their concurrency limits). This self-regulating behavior means work naturally flows to available agents without requiring complex load balancing logic in the principal.</p>
+<p>This means you can scale from a single-machine development setup to a distributed production cluster without changing a single line of configuration—just launch more agents.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../architecture/principal.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../architecture/events-scheduler.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../architecture/principal.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../architecture/events-scheduler.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

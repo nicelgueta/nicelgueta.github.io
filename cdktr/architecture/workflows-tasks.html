@@ -1,0 +1,607 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Workflows &amp; Tasks - CDKTR Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">CDKTR Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="workflows--tasks"><a class="header" href="#workflows--tasks">Workflows &amp; Tasks</a></h1>
+<p>Workflows and tasks are the fundamental building blocks of automation in cdktr. A <strong>workflow</strong> is a collection of related <strong>tasks</strong> that execute together as a coordinated unit, with tasks running in an order determined by their dependencies.</p>
+<h2 id="what-is-a-workflow"><a class="header" href="#what-is-a-workflow">What is a Workflow?</a></h2>
+<p>A workflow represents a complete automation process—a series of steps that together accomplish a specific goal. Think of it as a recipe: it has a name, a description of what it does, and a list of steps (tasks) to execute. Workflows can run on a schedule, be triggered manually, or respond to external events.</p>
+<p>Workflows are defined in YAML files stored in the workflow directory (default: <code>workflows/</code>). This file-based approach provides powerful benefits:</p>
+<p><strong>Source Control</strong>: YAML files live alongside your code in Git or other version control systems. You track changes, review pull requests for workflow modifications, and maintain a complete history of your automation evolution.</p>
+<p><strong>GitOps Workflows</strong>: Deploy workflow changes through your CI/CD pipeline. When you merge a pull request that modifies a workflow YAML file, the changes automatically take effect without manual intervention.</p>
+<p><strong>Hot Reload</strong>: The principal refreshes workflows from disk every 60 seconds (configurable via <code>CDKTR_WORKFLOW_DIR_REFRESH_FREQUENCY_S</code>). Drop a new YAML file into the workflows directory, and within a minute it's loaded and available for scheduling or manual execution—no restarts required. This makes cdktr particularly well-suited for dynamic environments where workflows are frequently added or modified.</p>
+<p><strong>Declarative Configuration</strong>: YAML's human-readable format makes workflows self-documenting. Anyone can read a workflow file and understand what it does, when it runs, and how tasks depend on each other.</p>
+<h3 id="workflow-structure"><a class="header" href="#workflow-structure">Workflow Structure</a></h3>
+<p>Here's a complete workflow example:</p>
+<pre><code class="language-yaml">name: Data Pipeline
+description: Extract, transform, and load customer data
+cron: "0 0 2 * * *"  # Run daily at 2 AM
+start_time: 2025-01-20T02:00:00+00:00  # Optional: delayed first run
+
+tasks:
+  extract:
+    name: Extract Customer Data
+    description: Pull data from production database
+    config:
+      !Subprocess
+      cmd: python
+      args: ["scripts/extract.py", "--table", "customers"]
+
+  transform:
+    name: Transform Data
+    description: Clean and normalize extracted data
+    depends: ["extract"]
+    config:
+      !UvPython
+      script_path: scripts/transform.py
+      packages:
+        - pandas&gt;=2.3.1
+        - numpy&gt;=1.26.0
+
+  load:
+    name: Load to Warehouse
+    description: Upload transformed data to data warehouse
+    depends: ["transform"]
+    config:
+      !Subprocess
+      cmd: bash
+      args: ["scripts/load.sh", "/tmp/transformed_data.csv"]
+</code></pre>
+<h3 id="workflow-properties"><a class="header" href="#workflow-properties">Workflow Properties</a></h3>
+<p><strong>name</strong> (required): A human-readable name for the workflow. Displayed in the TUI and CLI.</p>
+<p><strong>description</strong> (optional): Explains what the workflow does and why it exists. Good descriptions make workflows self-documenting.</p>
+<p><strong>cron</strong> (optional): A cron expression defining when the workflow should run automatically. Uses standard cron syntax with seconds precision (<code>seconds minutes hours day month weekday</code>). Omit this field for workflows that should only be triggered manually or by external events.</p>
+<p><strong>start_time</strong> (optional): An ISO 8601 timestamp indicating when the workflow should first become active. If specified with a cron schedule, the workflow won't trigger before this time even if the cron expression matches. Useful for staging workflows that shouldn't run until a specific deployment date.</p>
+<p><strong>tasks</strong> (required): A map of task definitions. Each key is a unique task identifier used for dependency declarations.</p>
+<h2 id="what-is-a-task"><a class="header" href="#what-is-a-task">What is a Task?</a></h2>
+<p>A task is a single unit of executable work. While workflows coordinate multiple steps, tasks represent individual actions: run a Python script, execute a database query, make an HTTP request, or trigger an external system.</p>
+<p>Tasks are where the actual work happens. When an agent receives a workflow, it executes tasks one by one (or in parallel when dependencies allow), streaming logs back to the principal and reporting status as each task completes.</p>
+<h3 id="task-structure"><a class="header" href="#task-structure">Task Structure</a></h3>
+<pre><code class="language-yaml">task_identifier:
+  name: Human Readable Task Name
+  description: What this task does
+  depends: ["other_task", "another_task"]  # Optional
+  config:
+    !Subprocess  # or !UvPython
+    cmd: command
+    args: ["arg1", "arg2"]
+</code></pre>
+<h3 id="task-properties"><a class="header" href="#task-properties">Task Properties</a></h3>
+<p><strong>name</strong> (required): A descriptive name for the task, shown in logs and the TUI.</p>
+<p><strong>description</strong> (optional): Documents the task's purpose and behavior.</p>
+<p><strong>depends</strong> (optional): A list of task identifiers that must complete successfully before this task runs. This field defines the workflow's dependency graph.</p>
+<p><strong>config</strong> (required): The executable configuration specifying what to run and how to run it.</p>
+<h2 id="task-types"><a class="header" href="#task-types">Task Types</a></h2>
+<p>cdktr provides two task types optimized for different use cases:</p>
+<h3 id="subprocess-tasks"><a class="header" href="#subprocess-tasks">Subprocess Tasks</a></h3>
+<p>Subprocess tasks execute any command as a separate process. This is the most flexible task type—anything you can run in a terminal, you can run as a Subprocess task.</p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: &lt;executable&gt;     # Command name in PATH or absolute path
+  args:                 # Optional: command arguments as list
+    - &lt;arg1&gt;
+    - &lt;arg2&gt;
+</code></pre>
+<p><strong>Common Examples:</strong></p>
+<p><strong>Shell Scripts</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: bash
+  args: ["./deploy.sh", "production"]
+</code></pre>
+<p><strong>Python Scripts</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: python
+  args: ["analysis.py", "--date", "2025-01-20"]
+</code></pre>
+<p><strong>Database Operations</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: psql
+  args: ["-h", "localhost", "-c", "VACUUM ANALYZE;"]
+</code></pre>
+<p><strong>HTTP Requests</strong></p>
+<pre><code class="language-yaml">config:
+  !Subprocess
+  cmd: curl
+  args: ["-X", "POST", "-H", "Content-Type: application/json",
+         "https://api.example.com/webhook", "-d", '{"status":"complete"}']
+</code></pre>
+<h3 id="uvpython-tasks"><a class="header" href="#uvpython-tasks">UvPython Tasks</a></h3>
+<p>UvPython tasks run Python scripts with automatic dependency management via <a href="https://docs.astral.sh/uv/">uv</a>, Astral's fast Python package manager. This task type eliminates the need to pre-install dependencies or manage virtual environments—just specify the packages your script needs, and uv handles the rest.</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: &lt;path_to_script&gt;           # Required
+  packages:                               # Optional: dependencies
+    - package&gt;=version
+  is_uv_project: &lt;true|false&gt;            # Optional: default false
+  working_directory: &lt;path&gt;              # Optional: execution directory
+  uv_path: &lt;path_to_uv&gt;                  # Optional: custom uv binary
+</code></pre>
+<p><strong>Standalone Script with Dependencies</strong></p>
+<p>Perfect for scripts that need specific packages but aren't part of a larger project:</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: ./process_data.py
+  packages:
+    - pandas&gt;=2.3.1,&lt;3.0.0
+    - requests&gt;=2.31.0
+    - scipy&gt;=1.11.0
+</code></pre>
+<p>When this task runs, uv automatically installs the specified packages in an isolated environment and executes the script.</p>
+<p><strong>uv Project</strong></p>
+<p>For scripts that are part of a uv project with a <code>pyproject.toml</code> file or inline dependencies (PEP 723):</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: ./analysis.py
+  is_uv_project: true
+  working_directory: ./data-pipeline
+</code></pre>
+<p><strong>Inline Dependencies (PEP 723)</strong></p>
+<p>Python scripts can declare dependencies inline using PEP 723 syntax:</p>
+<pre><code class="language-python"># /// script
+# dependencies = [
+#   "pandas&gt;=2.3.1",
+#   "httpx&gt;=0.25.0",
+# ]
+# ///
+
+import pandas as pd
+import httpx
+
+# Your script logic here
+</code></pre>
+<p>Use <code>is_uv_project: true</code> to leverage these inline dependencies:</p>
+<pre><code class="language-yaml">config:
+  !UvPython
+  script_path: ./fetch_and_process.py
+  is_uv_project: true
+</code></pre>
+<h2 id="task-dependencies-and-execution-order"><a class="header" href="#task-dependencies-and-execution-order">Task Dependencies and Execution Order</a></h2>
+<p>Tasks declare dependencies using the <code>depends</code> field. This creates a directed acyclic graph (DAG) that determines execution order:</p>
+<pre><code class="language-yaml">tasks:
+  fetch_data:
+    name: Fetch Raw Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py"]
+
+  validate:
+    name: Validate Data Quality
+    depends: ["fetch_data"]
+    config:
+      !UvPython
+      script_path: validate.py
+      packages: ["great-expectations&gt;=0.18.0"]
+
+  process:
+    name: Process and Transform
+    depends: ["validate"]
+    config:
+      !UvPython
+      script_path: transform.py
+      is_uv_project: true
+
+  report:
+    name: Generate Report
+    depends: ["process"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["report.py", "--output", "daily_report.pdf"]
+</code></pre>
+<p>This creates a linear pipeline: <code>fetch_data</code> → <code>validate</code> → <code>process</code> → <code>report</code>.</p>
+<h3 id="parallel-execution"><a class="header" href="#parallel-execution">Parallel Execution</a></h3>
+<p>Tasks without dependencies on each other execute in parallel:</p>
+<pre><code class="language-yaml">tasks:
+  fetch_customers:
+    name: Fetch Customer Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py", "--table", "customers"]
+
+  fetch_orders:
+    name: Fetch Order Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py", "--table", "orders"]
+
+  fetch_products:
+    name: Fetch Product Data
+    config:
+      !Subprocess
+      cmd: python
+      args: ["fetch.py", "--table", "products"]
+
+  merge:
+    name: Merge All Data
+    depends: ["fetch_customers", "fetch_orders", "fetch_products"]
+    config:
+      !UvPython
+      script_path: merge.py
+      packages: ["pandas&gt;=2.3.1"]
+</code></pre>
+<p>Here, the three fetch tasks run simultaneously, and the merge task only starts after all three complete successfully.</p>
+<h3 id="failure-handling"><a class="header" href="#failure-handling">Failure Handling</a></h3>
+<p>If a task fails, cdktr automatically skips all tasks that depend on it (directly or transitively). However, tasks in independent branches of the DAG continue executing:</p>
+<pre><code class="language-yaml">tasks:
+  task_a:
+    name: Independent Task A
+    config:
+      !Subprocess
+      cmd: echo
+      args: ["Task A runs regardless"]
+
+  task_b:
+    name: Task B
+    config:
+      !Subprocess
+      cmd: false  # This will fail
+      args: []
+
+  task_c:
+    name: Depends on B
+    depends: ["task_b"]
+    config:
+      !Subprocess
+      cmd: echo
+      args: ["This gets skipped because task_b failed"]
+
+  task_d:
+    name: Independent Task D
+    config:
+      !Subprocess
+      cmd: echo
+      args: ["Task D runs regardless"]
+</code></pre>
+<p>If <code>task_b</code> fails, <code>task_c</code> is automatically skipped, but <code>task_a</code> and <code>task_d</code> execute normally.</p>
+<h2 id="workflow-deployment-and-version-control"><a class="header" href="#workflow-deployment-and-version-control">Workflow Deployment and Version Control</a></h2>
+<p>The real power of YAML-based workflows emerges when you treat them as code:</p>
+<p><strong>1. Store workflows in Git</strong> alongside your application code. Workflow changes go through the same review process as code changes.</p>
+<p><strong>2. Deploy via CI/CD</strong>: Your deployment pipeline can update workflow definitions by copying new YAML files to the workflow directory on your cdktr principal server.</p>
+<p><strong>3. Automatic updates</strong>: Within 60 seconds (configurable), the principal detects the new or modified workflows and reloads them. No service restarts, no manual intervention.</p>
+<p><strong>4. Gradual rollouts</strong>: Test new workflows in development, promote to staging, then production—all through version-controlled YAML files.</p>
+<p>This workflow-as-code approach means your automation infrastructure evolves alongside your application, with the same safety nets (code review, testing, gradual rollouts) that protect your production systems.</p>
+<h3 id="dag-construction"><a class="header" href="#dag-construction">DAG Construction</a></h3>
+<p>cdktr automatically builds a directed acyclic graph (DAG) from task dependencies:</p>
+<pre class="mermaid">graph TD
+    extract[Extract Data] --&gt; transform[Transform Data]
+    transform --&gt; load[Load Data]
+</pre>
+<h3 id="parallel-execution-1"><a class="header" href="#parallel-execution-1">Parallel Execution</a></h3>
+<p>Tasks without dependencies or with satisfied dependencies can run in parallel:</p>
+<pre><code class="language-yaml">tasks:
+  fetch_api_1:
+    name: Fetch from API 1
+    config:
+      !Subprocess
+      cmd: curl
+      args: ["https://api1.example.com/data"]
+
+  fetch_api_2:
+    name: Fetch from API 2
+    config:
+      !Subprocess
+      cmd: curl
+      args: ["https://api2.example.com/data"]
+
+  combine:
+    name: Combine Results
+    depends: ["fetch_api_1", "fetch_api_2"]
+    config:
+      !Subprocess
+      cmd: python
+      args: ["combine.py"]
+</code></pre>
+<pre class="mermaid">graph TD
+    fetch1[Fetch from API 1] --&gt; combine[Combine Results]
+    fetch2[Fetch from API 2] --&gt; combine
+
+    style fetch1 fill:#bbf
+    style fetch2 fill:#bbf
+</pre>
+<p><code>fetch_api_1</code> and <code>fetch_api_2</code> run concurrently, then <code>combine</code> runs after both complete.</p>
+<h3 id="cycle-detection"><a class="header" href="#cycle-detection">Cycle Detection</a></h3>
+<p>cdktr validates workflows at load time and rejects workflows with circular dependencies:</p>
+<pre><code class="language-yaml"># INVALID: Creates a cycle
+tasks:
+  task_a:
+    depends: ["task_b"]
+    # ...
+  task_b:
+    depends: ["task_a"]  # ERROR: Cycle!
+    # ...
+</code></pre>
+<h2 id="workflow-execution-lifecycle"><a class="header" href="#workflow-execution-lifecycle">Workflow Execution Lifecycle</a></h2>
+<h3 id="1-trigger"><a class="header" href="#1-trigger">1. Trigger</a></h3>
+<p>Workflows are triggered by:</p>
+<ul>
+<li><strong>Scheduler</strong>: Cron schedule matches current time</li>
+<li><strong>Manual</strong>: <code>cdktr task run &lt;workflow&gt;</code> command</li>
+<li><strong>API</strong>: External system calls PrincipalAPI</li>
+</ul>
+<h3 id="2-queuing"><a class="header" href="#2-queuing">2. Queuing</a></h3>
+<p>Triggered workflow is added to principal's task queue.</p>
+<h3 id="3-assignment"><a class="header" href="#3-assignment">3. Assignment</a></h3>
+<p>Agent polls principal and receives workflow:</p>
+<ul>
+<li>Agent has available executor slots</li>
+<li>Workflow assigned to requesting agent</li>
+<li>Agent ID and workflow instance ID recorded</li>
+</ul>
+<h3 id="4-execution"><a class="header" href="#4-execution">4. Execution</a></h3>
+<p>TaskManager executes workflow:</p>
+<ol>
+<li>Parse workflow DAG</li>
+<li>Identify root tasks (no dependencies)</li>
+<li>Execute tasks in topological order</li>
+<li>Wait for dependencies before starting each task</li>
+<li>Run independent tasks in parallel</li>
+</ol>
+<h3 id="5-status-tracking"><a class="header" href="#5-status-tracking">5. Status Tracking</a></h3>
+<p>Agent reports status updates:</p>
+<ul>
+<li><strong>PENDING</strong>: Workflow received, not started</li>
+<li><strong>RUNNING</strong>: Workflow execution in progress</li>
+<li><strong>COMPLETED</strong>: All tasks succeeded</li>
+<li><strong>FAILED</strong>: One or more tasks failed</li>
+<li><strong>CRASHED</strong>: Agent failed during execution</li>
+</ul>
+<h3 id="6-completion"><a class="header" href="#6-completion">6. Completion</a></h3>
+<p>Final status and logs written to database.</p>
+<h2 id="workflow-discovery"><a class="header" href="#workflow-discovery">Workflow Discovery</a></h2>
+<p>Workflows are discovered from the filesystem:</p>
+<ol>
+<li>Principal reads <code>CDKTR_WORKFLOW_DIR</code> (default: <code>./workflows</code>)</li>
+<li>All <code>.yml</code> and <code>.yaml</code> files are parsed</li>
+<li>Nested directories supported (creates namespaced workflow IDs)</li>
+<li>Invalid workflows logged but don't prevent startup</li>
+<li>Workflows refreshed periodically (every 60 seconds)</li>
+</ol>
+<h3 id="workflow-id-generation"><a class="header" href="#workflow-id-generation">Workflow ID Generation</a></h3>
+<p>Workflow IDs are derived from file paths:</p>
+<pre><code>workflows/
+  example.yml          → ID: "example"
+  etl/
+    daily.yml          → ID: "etl.daily"
+    hourly.yml         → ID: "etl.hourly"
+  data/
+    ingestion/
+      api.yml          → ID: "data.ingestion.api"
+</code></pre>
+<h2 id="task-execution-context"><a class="header" href="#task-execution-context">Task Execution Context</a></h2>
+<h3 id="working-directory"><a class="header" href="#working-directory">Working Directory</a></h3>
+<p>Tasks execute in the agent's current working directory.</p>
+<h3 id="environment-variables"><a class="header" href="#environment-variables">Environment Variables</a></h3>
+<p>Tasks inherit the agent's environment variables.</p>
+<h3 id="standard-outputerror"><a class="header" href="#standard-outputerror">Standard Output/Error</a></h3>
+<p>Task stdout and stderr are captured and stored in the database for later querying.</p>
+<h3 id="exit-codes"><a class="header" href="#exit-codes">Exit Codes</a></h3>
+<ul>
+<li><strong>0</strong>: Task succeeded</li>
+<li><strong>Non-zero</strong>: Task failed</li>
+</ul>
+<p>Task failure causes the workflow to fail, and dependent tasks are not executed.</p>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ol>
+<li><strong>Keep Tasks Atomic</strong>: Each task should do one thing well</li>
+<li><strong>Use Dependencies Wisely</strong>: Only declare necessary dependencies</li>
+<li><strong>Enable Parallelism</strong>: Structure tasks to maximize parallel execution</li>
+<li><strong>Handle Failures</strong>: Design workflows to be idempotent and retry-friendly</li>
+<li><strong>Namespace Workflows</strong>: Use directories to organize related workflows</li>
+</ol>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<ul>
+<li>Learn about <a href="./zeromq.html">ZeroMQ Communication</a></li>
+<li>Explore <a href="../workflows.html">Workflow Definition</a> in detail</li>
+<li>See <a href="../workflows/examples.html">Workflow Examples</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../architecture/events-scheduler.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../architecture/workflow-examples.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../architecture/events-scheduler.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../architecture/workflow-examples.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>
