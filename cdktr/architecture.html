@@ -156,13 +156,17 @@
                         <h1 id="architecture--core-concepts"><a class="header" href="#architecture--core-concepts">Architecture &amp; Core Concepts</a></h1>
 <p>This chapter explains the fundamental architecture of cdktr and the core concepts you need to understand to effectively use the system.</p>
 <h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
-<p>cdktr is a distributed workflow orchestration system built on a principal-agent architecture. It is designed to be completely stateless, using source-controllable yaml files for workflow definitions, ZeroMQ for fast, reliable communication between components and stores logs, workflow and task history in a DuckDB database for fast analytics and querying.</p>
-<p>The key concepts covered in this section are:</p>
+<p>cdktr is a distributed workflow orchestration system built on a principal-agent architecture. It is designed to be lightweight and scalable, using source-controllable YAML files for workflow definitions, ZeroMQ for fast, reliable communication between components, and DuckDB for storing logs and execution history with powerful query capabilities.</p>
+<h2 id="whats-covered"><a class="header" href="#whats-covered">What's Covered</a></h2>
+<p>This section explores the key components and patterns that make cdktr work:</p>
 <ul>
-<li><strong>System Architecture</strong>: How the various components fit together</li>
-<li><strong>Principals vs Agents</strong>: The distributed computing model</li>
-<li><strong>Workflows &amp; Tasks</strong>: How work is defined and executed</li>
-<li><strong>ZeroMQ Communication</strong>: The messaging layer that powers cdktr</li>
+<li><strong><a href="./architecture/overview.html">System Overview</a></strong>: The big picture—how components fit together in a distributed pull-based architecture</li>
+<li><strong><a href="./architecture/principal.html">Principal</a></strong>: The central coordinator managing workflows, scheduling, work distribution, and persistent state</li>
+<li><strong><a href="./architecture/agents.html">Agents</a></strong>: Execution nodes that run tasks in parallel using DAG-based topological sorting</li>
+<li><strong><a href="./architecture/events-scheduler.html">Event Listeners &amp; Scheduler</a></strong>: The event-driven architecture powering cron scheduling and custom event sources</li>
+<li><strong><a href="./architecture/workflows-tasks.html">Workflows &amp; Tasks</a></strong>: YAML workflow definitions, task types (Subprocess and UvPython), and dependency execution</li>
+<li><strong><a href="./architecture/logs-database.html">Logs &amp; Database</a></strong>: Real-time ZeroMQ log streaming and DuckDB persistence with insert-only audit trails</li>
+<li><strong><a href="./architecture/workflow-examples.html">Examples</a></strong>: Practical workflow examples demonstrating common patterns</li>
 </ul>
 <h2 id="key-design-principles"><a class="header" href="#key-design-principles">Key Design Principles</a></h2>
 <ol>
