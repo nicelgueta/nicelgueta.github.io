@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,67 +181,165 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="expressions"><a class="header" href="#expressions">Expressions</a></h1>
+<p>The last few chapters covered the shape of a statement: which clauses exist
+and what each one does with a table. This chapter is about what you can write
+<em>inside</em> those clauses.</p>
+<p>Everything here works in the same places. A projection, a <code>where</code> predicate,
+an <code>update</code> assignment, the right-hand side of a scalar binding: they all
+accept the same expression language, so anything you learn in one context
+carries to the others.</p>
+<h2 id="arithmetic-and-comparison"><a class="header" href="#arithmetic-and-comparison">Arithmetic and comparison</a></h2>
+<p>The arithmetic operators are <code>+</code>, <code>-</code>, <code>*</code> and <code>%</code>. As
+<a href="comments.html">Comments</a> explained, <code>%</code> is division, because <code>/</code> starts a
+comment.</p>
+<p>One wrinkle worth knowing: <code>%</code> is always true division, even when both sides
+are integers — unlike <code>+</code>, <code>-</code> and <code>*</code>, which stay integer when both operands
+are.</p>
+<pre><code class="language-qpl">qpl) 10 % 4
+</code></pre>
+<pre><code>f64: 2.5
+</code></pre>
+<p>Comparison is <code>=</code>, <code>&lt;&gt;</code> or <code>!=</code> for inequality, and <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code> as
+usual. Note that equality is a single <code>=</code>, not <code>==</code>, since there’s no
+assignment operator competing for it.</p>
+<p><code>&amp;</code> and <code>|</code> are logical and and or, which you saw combining predicates in a
+<code>where</code> clause.</p>
+<p>A leading <code>-</code> negates. On a literal it simply makes a negative number, and in
+front of a column or variable it expands to a subtraction from zero, so it
+works the same way in every context:</p>
+<pre><code class="language-qpl">select neg_mv: -price from trades
+</code></pre>
+<h2 id="conditionals"><a class="header" href="#conditionals">Conditionals</a></h2>
+<p><code>?[...]</code> is the vectorised conditional, and it’s the piece of syntax most
+worth getting comfortable with, since it does the work of SQL’s <code>CASE WHEN</code>
+in a fraction of the space. The contents are a list of condition-then-value
+pairs, with a final fallback:</p>
+<pre><code class="language-qpl">qpl) select sym, size, band: ?[size &gt;= 250; `large; size &gt;= 100; `mid; `small] from trades
+</code></pre>
+<pre><code>shape: (8, 3)
+┌──────┬──────┬───────┐
+│ sym  ┆ size ┆ band  │
+│ ---  ┆ ---  ┆ ---   │
+│ str  ┆ i64  ┆ str   │
+╞══════╪══════╪═══════╡
+│ AAPL ┆ 100  ┆ mid   │
+│ AAPL ┆ 250  ┆ large │
+│ MSFT ┆ 80   ┆ small │
+│ MSFT ┆ 300  ┆ large │
+│ GOOG ┆ 150  ┆ mid   │
+│ GOOG ┆ 90   ┆ small │
+│ AAPL ┆ 500  ┆ large │
+│ MSFT ┆ 200  ┆ mid   │
+└──────┴──────┴───────┘
+</code></pre>
+<p>Read it as: if <code>size &gt;= 250</code> then <code>`large</code>, otherwise if <code>size &gt;= 100</code>
+then <code>`mid</code>, otherwise <code>`small</code>. Conditions are tested in order and
+the first match wins, so the ordering of the pairs matters. Add as many pairs
+as you need; the final item with no condition in front of it is the else.</p>
+<p>“Vectorised” means this is evaluated once across the whole column rather than
+row by row, which is why it stays fast on large inputs. It’s an ordinary
+expression, so it also works outside a query entirely, including in a scalar
+binding or a function body.</p>
+<h2 id="pattern-matching"><a class="header" href="#pattern-matching">Pattern matching</a></h2>
+<p><code>like</code> tests text against a glob pattern, following
+<a href="https://code.kx.com/q/ref/like/">q’s rules</a>:</p>
+<pre><code class="language-qpl">qpl) select sym, price from trades where sym like "A*"
+</code></pre>
+<pre><code>shape: (3, 2)
+┌──────┬───────┐
+│ sym  ┆ price │
+│ ---  ┆ ---   │
+│ str  ┆ f64   │
+╞══════╪═══════╡
+│ AAPL ┆ 182.3 │
+│ AAPL ┆ 183.1 │
+│ AAPL ┆ 184.0 │
+└──────┴───────┘
+</code></pre>
+<p><code>*</code> matches any run of characters including none, <code>?</code> matches exactly one,
+and <code>[abc]</code>, <code>[a-z]</code> and <code>[^abc]</code> are character classes. A pattern with none
+of those characters in it is simply an exact match. Matching is
+case-sensitive.</p>
+<pre><code class="language-qpl">select sym from trades where sym like "[AM]*"        / starts with A or M
+select sym from trades where sym like "?A?L"         / four characters, A then L
+select from trades where not sym like "AAPL"         / negated with `not`
+</code></pre>
+<p>To match a literal <code>*</code>, <code>?</code>, <code>[</code> or <code>]</code>, put it in a one-character class of
+its own: <code>[*]</code>, <code>[?]</code>, <code>[[]</code>, <code>[]]</code>. Glob syntax has no backslash escape.</p>
+<h2 id="verbs-that-take-a-parameter"><a class="header" href="#verbs-that-take-a-parameter">Verbs that take a parameter</a></h2>
+<p>A family of operations needs a parameter as well as a column. In q these are
+written with the parameter on the <em>left</em>, which reads oddly for about five
+minutes and then starts to feel natural:</p>
+<pre><code class="language-qpl">qpl) select p95: 0.95 quantile price by sym from trades
+</code></pre>
+<pre><code>shape: (3, 2)
+┌──────┬─────────┐
+│ sym  ┆ p95     │
+│ ---  ┆ ---     │
+│ str  ┆ f64     │
+╞══════╪═════════╡
+│ MSFT ┆ 415.92  │
+│ AAPL ┆ 183.91  │
+│ GOOG ┆ 141.165 │
+└──────┴─────────┘
+</code></pre>
+<p>The full set:</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Kind</th><th></th></tr>
+<tr><th>Written</th><th>Does</th></tr>
 </thead>
 <tbody>
-<tr><td>arithmetic</td><td><code>+</code> <code>-</code> <code>*</code> <code>%</code> (<code>%</code> is division, q convention)</td></tr>
-<tr><td>comparison</td><td><code>=</code> <code>&lt;&gt;</code> <code>!=</code> <code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td></tr>
-<tr><td>pattern match</td><td><code>&lt;str/sym&gt; like &lt;pattern&gt;</code> — q-style glob, see below</td></tr>
-<tr><td>logical</td><td><code>&amp;</code> <code>|</code></td></tr>
-<tr><td>conditional</td><td><code>?[cond; then; cond2; then2; ...; else]</code> — vectorised, nests for else-if</td></tr>
-<tr><td>cast</td><td><code>type$expr</code> — see <a href="casts.html">Casts</a></td></tr>
-<tr><td>round</td><td><code>&lt;precision&gt; round &lt;col&gt;</code> — round a float column to N places</td></tr>
-<tr><td>dyadic verbs</td><td><code>&lt;param&gt; verb &lt;col&gt;</code> — <code>quantile</code>/<code>pctl</code>, <code>shift</code>/<code>lag</code>, <code>lead</code>, <code>diff</code>, <code>pctchange</code> (and <code>round</code>)</td></tr>
-<tr><td>window</td><td><code>&lt;expr&gt; over </code>p1<code>p2 [order </code>k1 asc <code>k2 desc] [rolling n]</code> — see <a href="window-functions.html">Window functions</a></td></tr>
+<tr><td><code>&lt;p&gt; quantile &lt;col&gt;</code></td><td>the <code>p</code>th quantile, <code>p</code> between 0 and 1 (<code>pctl</code> is an alias)</td></tr>
+<tr><td><code>&lt;n&gt; shift &lt;col&gt;</code></td><td>move values <code>n</code> rows later (<code>lag</code> is an alias)</td></tr>
+<tr><td><code>&lt;n&gt; lead &lt;col&gt;</code></td><td>move values <code>n</code> rows earlier</td></tr>
+<tr><td><code>&lt;n&gt; diff &lt;col&gt;</code></td><td>the change from <code>n</code> rows back</td></tr>
+<tr><td><code>&lt;n&gt; pctchange &lt;col&gt;</code></td><td>the fractional change from <code>n</code> rows back</td></tr>
+<tr><td><code>&lt;n&gt; round &lt;col&gt;</code></td><td>round to <code>n</code> decimal places</td></tr>
 </tbody>
 </table>
 </div>
-<p>A leading <code>-</code> negates: <code>-45.3</code> is a negative literal, <code>-col</code> / <code>-x</code> folds to
-<code>0 - …</code> (works in scalars, column expressions and filters).</p>
-<pre><code class="language-qpl">l: int$-45.3                                         / scalar: -45
-select price_bin: ?[price&gt;400;`high;price&gt;200;`mid;`low] from trades
-select neg_mv: -market_value from trades
-select mv: 2 round market_value from trades          / round to 2 dp
-select p95: 0.95 quantile price by sym from trades   / 95th percentile
-select sym, price, ret: 1 diff price by sym from trades   / row-over-row change
-</code></pre>
-<p><code>like</code> tests a string or symbol against a glob pattern, <a href="https://code.kx.com/q/ref/like/">same as q</a>:
-<code>*</code> matches any sequence (including empty), <code>?</code> matches exactly one character,
-and <code>[abc]</code> / <code>[a-z]</code> / <code>[^abc]</code> are character classes (case-sensitive; no
-pattern characters means an exact match). Escape a pattern character by
-putting it in its own one-character class — <code>[*]</code>, <code>[?]</code>, <code>[[]</code>, <code>[]]</code>:</p>
-<pre><code class="language-qpl">select sym from trades where sym like "AA*"          / starts with AA
-select sym from trades where sym like "[AM]*"        / starts with A or M
-select sym from trades where sym like "?A?L"         / exactly 4 chars, A then L
-select from trades where not sym like "AAPL"         / negate with `not`
-</code></pre>
-<p><code>round</code> and the other <strong>dyadic verbs</strong> are q-style: the left operand is a
-parameter (a literal), the right is the column. <code>&lt;p&gt; quantile &lt;col&gt;</code> takes a
-fraction in <code>[0,1]</code>; <code>&lt;n&gt; shift &lt;col&gt;</code> (alias <code>lag</code>) moves values <code>n</code> rows later,
-<code>lead</code> <code>n</code> rows earlier; <code>&lt;n&gt; diff &lt;col&gt;</code> is the difference from <code>n</code> rows back;
-<code>&lt;n&gt; pctchange &lt;col&gt;</code> the fractional change. <code>round</code>’s rounding mode is the
-session config <code>round_type</code> (<code>HALF_TO_EVEN</code> by default; see <a href="config.html">Config</a>).</p>
-<p><strong>Aggregates:</strong> <code>sum</code>, <code>avg</code>/<code>mean</code>, <code>min</code>, <code>max</code>, <code>count</code>, <code>first</code>, <code>last</code>,
-<code>std</code>/<code>dev</code>, <code>var</code>, <code>med</code>/<code>median</code>, <code>mode</code>/<code>modal</code> (modal average — most
-frequent value; ties resolve to the smallest), <code>skew</code>, <code>kurt</code>/<code>kurtosis</code>,
-<code>any</code>, <code>all</code>, <code>prod</code>/<code>product</code>, <code>argmin</code>, <code>argmax</code>, <code>nnull</code>/<code>null_count</code>,
-<code>abs</code>, <code>neg</code>, <code>not</code>, <code>string</code>, <code>distinct</code>/<code>n_unique</code>.</p>
-<p><strong>Ordered / cumulative</strong> (most useful with <code>over</code> + an <code>order</code> sub-clause, which
-sorts each partition before applying): <code>cumsum</code>, <code>cummax</code>, <code>cummin</code>, <code>cumprod</code>,
-<code>cumcount</code>, <code>ffill</code> (forward-fill nulls), <code>bfill</code> (backward-fill).</p>
+<p><code>round</code> takes its rounding mode from a session setting rather than from the
+expression, since it’s the sort of thing you’d want to fix once for a whole
+script. <a href="config.html">Config</a> covers it.</p>
+<p>The row-relative verbs in that table — <code>shift</code>, <code>lead</code>, <code>diff</code>, <code>pctchange</code> —
+raise an obvious question: relative to which ordering? On their own they use
+the table’s existing row order. To define the ordering explicitly, and to
+compute these things per group, they combine with <code>over</code>, which is
+<a href="window-functions.html">Window functions</a>.</p>
+<h2 id="aggregates"><a class="header" href="#aggregates">Aggregates</a></h2>
+<p>These collapse many values into one. You’ve already used <code>avg</code> and <code>sum</code>
+with <code>by</code>; they work the same way anywhere an aggregate makes sense.</p>
+<p><code>sum</code>, <code>avg</code> (or <code>mean</code>), <code>min</code>, <code>max</code>, <code>count</code>, <code>first</code>, <code>last</code>, <code>std</code> (or
+<code>dev</code>), <code>var</code>, <code>med</code> (or <code>median</code>), <code>mode</code> (or <code>modal</code>, the most frequent
+value, resolving ties to the smallest), <code>skew</code>, <code>kurt</code> (or <code>kurtosis</code>),
+<code>any</code>, <code>all</code>, <code>prod</code> (or <code>product</code>), <code>argmin</code>, <code>argmax</code>, <code>nnull</code> (or
+<code>null_count</code>), and <code>distinct</code> (or <code>n_unique</code>).</p>
+<p>A few more verbs transform a column without collapsing it, and are listed
+here for completeness since they appear in the same position: <code>abs</code>, <code>neg</code>,
+<code>not</code>, <code>string</code>.</p>
+<h2 id="cumulative-and-fill-verbs"><a class="header" href="#cumulative-and-fill-verbs">Cumulative and fill verbs</a></h2>
+<p>The last group produces a running result down a column, which means their
+output depends on row order:</p>
+<p><code>cumsum</code>, <code>cummax</code>, <code>cummin</code>, <code>cumprod</code>, <code>cumcount</code>, plus <code>ffill</code> and <code>bfill</code>
+for carrying values forward or backward over nulls.</p>
+<p>Like the row-relative verbs above, these are at their most useful with <code>over</code>
+and an explicit ordering, which the <a href="window-functions.html">next chapter but one</a>
+covers. On their own they run down the table in its current order.</p>
+<h2 id="casting"><a class="header" href="#casting">Casting</a></h2>
+<p>One operator is missing from this chapter deliberately: <code>$</code>, which converts
+between types. It comes up often enough to deserve its own short chapter, and
+it’s <a href="casts.html">two chapters ahead</a>.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/column-expressions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/files.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/window-functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/column-expressions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -251,11 +349,11 @@ sorts each partition before applying): <code>cumsum</code>, <code>cummax</code>,
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/column-expressions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/files.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/window-functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/column-expressions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

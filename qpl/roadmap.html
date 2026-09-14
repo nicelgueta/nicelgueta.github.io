@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,11 +180,20 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="roadmap"><a class="header" href="#roadmap">Roadmap</a></h2>
-<ul>
-<li>WASM build, so qpl can run in the browser.</li>
-<li>More of the language.</li>
-</ul>
+                        <h1 id="roadmap"><a class="header" href="#roadmap">Roadmap</a></h1>
+<p>Two directions, one concrete and one open-ended.</p>
+<p><strong>A WASM build</strong>, so that qpl can run in a browser. That would make it
+possible to try the language, and to run real queries against a modest
+dataset, without installing anything at all.</p>
+<p><strong>More of the language.</strong> The gaps that exist today are called out in the
+chapter each one belongs to rather than collected here, on the grounds that a
+missing feature is most useful to know about while you’re reading about the
+thing it’s missing from. The temporal ones in
+<a href="language/temporal-types.html">Temporal types</a> are the most likely to be missed
+in practice: <code>xbar</code> bucketing, <code>within</code>, the unit accessors, and arithmetic
+between a temporal column and an integer.</p>
+<p>Issues and suggestions are welcome on
+<a href="https://github.com/nicelgueta/qpl/issues">GitHub</a>.</p>
 
                     </main>
 

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,32 +181,82 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="reading--writing-files"><a class="header" href="#reading--writing-files">Reading &amp; writing files</a></h1>
-<p><code>load</code> reads a parquet or CSV file, taking a string path. On its own it is
-<strong>eager</strong> — <code>t: load ...</code> materialises a table straight away. Prefix it with
-<a href="lazy-collect.html"><code>lazy</code></a> to keep it as a deferred scan instead.</p>
+<p>Everything so far has queried the demo tables, which qpl handed you already
+loaded. Real work starts and ends on disk, and qpl keeps that deliberately
+small: one verb to read, one verb to write, and one to peek at a schema.</p>
+<h2 id="load"><a class="header" href="#load">load</a></h2>
+<p><code>load</code> reads a parquet or CSV file, choosing between them by extension, and
+takes the path as a string:</p>
+<pre><code class="language-qpl">t: load "data/trades.parquet"
+</code></pre>
+<p>Because <code>load</code> produces a table, it is a table expression, which means it can
+go anywhere a table expression goes. In particular it can go straight into
+the <code>from</code> clause you met in the <a href="select-update-delete.html">previous chapter</a>,
+with no intermediate binding at all:</p>
 <pre><code class="language-qpl">select avg price by sym from load "data/trades.parquet"
-t: load "data/trades.parquet"        / eager — reads the file now, binds a table
-t: lazy load "data/trades.parquet"   / deferred — binds a plan, no IO yet
 select from load "data/quotes.csv"
 </code></pre>
-<p><code>sink</code> streams a <strong>table expression</strong> to a file, also taking a string path — a
-table name, a <code>select ...</code>, an <code>update ...</code>:</p>
+<p>That composability is the reason there’s no separate “open a file” step in
+the language. A file is just another source of rows.</p>
+<p>On its own, <code>load</code> is <strong>eager</strong>: the statement above reads the file there and
+then, and <code>t</code> holds a real table in memory. That’s the right behaviour for a
+file you’re about to poke at interactively, and the wrong one for a file
+larger than the machine’s memory. <a href="lazy-collect.html">lazy / collect</a> covers
+the alternative, where <code>load</code> is deferred until something actually needs the
+rows; the syntax is a single extra word and nothing else about this chapter
+changes.</p>
+<h2 id="sink"><a class="header" href="#sink">sink</a></h2>
+<p><code>sink</code> goes the other way, streaming a table out to a file:</p>
 <pre><code class="language-qpl">trades sink "summary.parquet"
-select sym, price from trades where size &gt; 100 sink "big_trades.parquet"
 </code></pre>
-<p><code>cols</code> shows a table’s schema (works on lazy bindings too):</p>
-<pre><code class="language-qpl">cols trades
+<p>Its left-hand side is a table expression too, so you don’t have to store a
+result before writing it. A whole query can be piped to disk in one
+statement:</p>
+<pre><code class="language-qpl">select sym, price from trades where size &gt; 100 sink "big_trades.parquet"
 </code></pre>
+<p>There’s no “materialise, then save” ceremony because <code>sink</code> is itself the end
+of the pipeline. This matters more than it might appear: it’s what allows a
+query over a very large input to write its output without ever holding the
+whole result in memory, which is the subject of
+<a href="lazy-collect.html">lazy / collect</a>.</p>
+<h2 id="cols"><a class="header" href="#cols">cols</a></h2>
+<p>The last of the three is <code>cols</code>, which shows a table’s schema rather than its
+data:</p>
+<pre><code class="language-qpl">qpl) cols trades
+</code></pre>
+<pre><code>shape: (5, 2)
+┌────────┬──────────────┐
+│ column ┆ dtype        │
+│ ---    ┆ ---          │
+│ str    ┆ str          │
+╞════════╪══════════════╡
+│ sym    ┆ str          │
+│ price  ┆ f64          │
+│ size   ┆ i64          │
+│ side   ┆ str          │
+│ ts     ┆ datetime[ns] │
+└────────┴──────────────┘
+</code></pre>
+<p>This is the first thing to run against a file you’ve never seen, and the
+thing to keep running as you build a pipeline up, since it answers “what have
+I actually got here” without printing a screenful of rows. It takes a table
+expression like everything else, so it works on a query as readily as on a
+name:</p>
+<pre><code class="language-qpl">cols select from trades where size &gt; 100
+</code></pre>
+<p>Because <code>cols</code> reads only the schema, it stays cheap no matter how large the
+underlying data is, and it works on deferred pipelines that haven’t read a
+single row yet.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/symbols-enums.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/select-update-delete.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/table-operators.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/expressions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -216,11 +266,11 @@ select sym, price from trades where size &gt; 100 sink "big_trades.parquet"
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/symbols-enums.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/select-update-delete.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/table-operators.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/expressions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

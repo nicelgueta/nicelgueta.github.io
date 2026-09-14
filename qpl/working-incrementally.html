@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,40 +180,114 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="working-incrementally"><a class="header" href="#working-incrementally">Working incrementally</a></h2>
-<p>This is the part qpl really leans on: <strong>a transformation is a sequence of
-statements, and you build it one statement at a time.</strong></p>
-<p>Every step binds a name; the binding persists, so the next step starts from it.
-There’s no re-running a growing query, no stacking CTEs, no scrolling up to edit
-and resubmit a 30-line block — the loop is <em>type a line, look, type the next</em>.</p>
-<pre><code class="language-qpl">qpl) t: load "trades.parquet"      / bind a table
-qpl) t                              / look at it
-qpl) cols t                         / ...or just its schema
-
-qpl) t: select sym, side, price, size from t where price &gt; 0
-qpl) t: update notional: price * size from t
-
-qpl) / not sure about the next step? run it WITHOUT assigning — the source is untouched
-qpl) update band: ?[size &gt;= 1000; `large; size &gt;= 250; `mid; `small] from t
-qpl) t: update band: ?[size &gt;= 1000; `large; size &gt;= 250; `mid; `small] from t   / keep it
-
-qpl) select traded: sum notional by sym, side, band from t order traded desc
-qpl) t sink "out.parquet"
+                        <h1 id="working-incrementally"><a class="header" href="#working-incrementally">Working incrementally</a></h1>
+<p>You now know enough to write a query, keep its result, and write that result
+to a file. This chapter is about the habit those three things add up to,
+because it’s the one that shapes the rest of the language.</p>
+<p>The idea is simply this: <strong>a transformation is a sequence of statements, and
+you build it one statement at a time.</strong></p>
+<p>Every step binds a name, that binding sticks around for the rest of the
+session, and so the next step starts from wherever the last one finished.
+There’s no growing query to re-run, no stack of CTEs, and no scrolling back
+up to edit a thirty-line block and resubmit the whole thing. The loop is:
+type a line, look at what came back, type the next line.</p>
+<h2 id="watching-it-happen"><a class="header" href="#watching-it-happen">Watching it happen</a></h2>
+<p>Start from the demo <code>trades</code> table and narrow it down:</p>
+<pre><code class="language-qpl">qpl) t: select sym, side, price, size from trades where price &gt; 0
 </code></pre>
-<p>Things that make the loop tight:</p>
+<p>Derive a column from what’s left. <code>update</code> is the sibling of <code>select</code> that
+adds or replaces columns while keeping the rest of the table intact; the
+<a href="language/select-update-delete.html">next chapter</a> covers it properly:</p>
+<pre><code class="language-qpl">qpl) t: update notional: price * size from t
+</code></pre>
+<p>Now for a step you’re less sure about. Suppose you want to tag each trade as
+large, mid or small. You could write it, assign it, look at the result, and
+undo it if it’s wrong. Much easier is to run it <strong>without assigning</strong>, which
+prints the result and changes nothing:</p>
+<pre><code class="language-qpl">qpl) update band: ?[size &gt;= 250; `large; size &gt;= 100; `mid; `small] from t
+</code></pre>
+<pre><code>shape: (8, 6)
+┌──────┬──────┬───────┬──────┬──────────┬───────┐
+│ sym  ┆ side ┆ price ┆ size ┆ notional ┆ band  │
+│ ---  ┆ ---  ┆ ---   ┆ ---  ┆ ---      ┆ ---   │
+│ str  ┆ str  ┆ f64   ┆ i64  ┆ f64      ┆ str   │
+╞══════╪══════╪═══════╪══════╪══════════╪═══════╡
+│ AAPL ┆ buy  ┆ 182.3 ┆ 100  ┆ 18230.0  ┆ mid   │
+│ AAPL ┆ sell ┆ 183.1 ┆ 250  ┆ 45775.0  ┆ large │
+│ MSFT ┆ buy  ┆ 415.2 ┆ 80   ┆ 33216.0  ┆ small │
+│ MSFT ┆ buy  ┆ 416.0 ┆ 300  ┆ 124800.0 ┆ large │
+│ GOOG ┆ sell ┆ 140.5 ┆ 150  ┆ 21075.0  ┆ mid   │
+│ GOOG ┆ buy  ┆ 141.2 ┆ 90   ┆ 12708.0  ┆ small │
+│ AAPL ┆ sell ┆ 184.0 ┆ 500  ┆ 92000.0  ┆ large │
+│ MSFT ┆ sell ┆ 414.8 ┆ 200  ┆ 82960.0  ┆ mid   │
+└──────┴──────┴───────┴──────┴──────────┴───────┘
+</code></pre>
+<p>(Two pieces of that line are getting ahead of the book. The <code>?[...]</code> is a
+vectorised conditional, qpl’s answer to <code>CASE WHEN</code>; read it as a list of
+condition-then-value pairs with a fallback on the end, and see
+<a href="language/expressions.html">Expressions</a> for the real treatment. The
+backticked words are <em>symbols</em>, a kind of value used for short labels like
+these, covered in <a href="language/symbols.html">Symbols</a>.)</p>
+<p><code>t</code> is untouched, because you never assigned to it. The boundaries look
+right, so commit to it by running the same line with a binding on the front:</p>
+<pre><code class="language-qpl">qpl) t: update band: ?[size &gt;= 250; `large; size &gt;= 100; `mid; `small] from t
+</code></pre>
+<p>And then aggregate the finished thing, sorting the result with <code>order</code> as you
+go:</p>
+<pre><code class="language-qpl">qpl) select traded: sum notional by sym, band from t order traded desc
+</code></pre>
+<pre><code>shape: (7, 3)
+┌──────┬───────┬──────────┐
+│ sym  ┆ band  ┆ traded   │
+│ ---  ┆ ---   ┆ ---      │
+│ str  ┆ str   ┆ f64      │
+╞══════╪═══════╪══════════╡
+│ AAPL ┆ large ┆ 137775.0 │
+│ MSFT ┆ large ┆ 124800.0 │
+│ MSFT ┆ mid   ┆ 82960.0  │
+│ MSFT ┆ small ┆ 33216.0  │
+│ GOOG ┆ mid   ┆ 21075.0  │
+│ AAPL ┆ mid   ┆ 18230.0  │
+│ GOOG ┆ small ┆ 12708.0  │
+└──────┴───────┴──────────┘
+</code></pre>
+<p>Five statements, each one short enough to read at a glance, each one checked
+before the next was written.</p>
+<h2 id="why-bother"><a class="header" href="#why-bother">Why bother</a></h2>
+<p>Consider what the same exercise looks like in SQL. The tagging step is buried
+in a <code>CASE</code> expression inside a select list, inside a subquery, inside the
+query you actually wanted. To check that one step you re-run everything. To
+isolate it you comment out the parts around it, run it, then uncomment them
+again. The query only ever exists in one enormous piece, and every inspection
+costs a full round trip.</p>
+<p>Here the pipeline exists as its history. Each intermediate is a name you can
+go back and look at.</p>
+<h2 id="what-makes-the-loop-tight"><a class="header" href="#what-makes-the-loop-tight">What makes the loop tight</a></h2>
+<p>A handful of small things, several of which are covered later but are worth
+knowing exist:</p>
 <ul>
-<li><strong><code>t</code> / <code>cols t</code></strong> — peek at a table or its schema between steps.</li>
-<li><strong>Run a statement without assigning it</strong> — you see the result, nothing changes.
-Assign only once you’re happy.</li>
-<li><strong><code>\d &lt;stmt&gt;</code></strong> — show the compiled plan without executing anything.</li>
-<li><strong><code>lazy</code></strong> binds a <em>plan</em> rather than a table: nothing touches disk until a
-<code>collect</code> or <code>sink</code>, so building a large pipeline is instant and you pay for it
-once, at the end.</li>
-<li>In the <a href="https://github.com/nicelgueta/qpl/tree/main/tools/vscode">VSCode extension</a>, <strong>Ctrl+Enter</strong> sends the current line
-or selection to this same session.</li>
+<li><strong>Type a name to see it.</strong> <code>t</code> prints the table. No ceremony.</li>
+<li><strong><code>cols t</code> shows just the schema</strong>, which is much more useful than the data
+when a table is wide or long. See
+<a href="language/files.html">Reading &amp; writing files</a>.</li>
+<li><strong>Run a statement without assigning it.</strong> You see the result and nothing
+changes, which makes trying a step essentially free. Assign only once
+you’re happy. This is the single most useful habit on the list.</li>
+<li><strong><code>\d &lt;stmt&gt;</code> shows the compiled instructions</strong> without running anything,
+for when a statement isn’t doing what you expected. See <a href="repl.html">REPL</a>.</li>
+<li><strong><code>lazy</code> binds a plan instead of a table</strong>, so that none of the
+intermediate steps actually execute until you ask for the result at the
+end. On a large input this is the difference between paying for eight
+passes over the data and paying for one. See
+<a href="language/lazy-collect.html">lazy / collect</a>, and note that the loop you just
+learned is exactly the same either way.</li>
+<li><strong>Ctrl+Enter in the <a href="https://github.com/nicelgueta/qpl/tree/main/tools/vscode">VSCode extension</a></strong>
+sends the current line or selection to a live session, which turns a <code>.qpl</code>
+file into something close to a notebook.</li>
 </ul>
-<p>The SQL equivalent is: edit the query, re-run the whole thing, eyeball the
-result, comment a block out to isolate a step, uncomment it, repeat.</p>
+<p>Keep this chapter in mind as you read on. Almost everything that follows is a
+single statement in isolation, but they’re all designed to be strung together
+like the five above.</p>
 
                     </main>
 

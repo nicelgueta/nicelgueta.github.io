@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,27 +181,88 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="assignment"><a class="header" href="#assignment">Assignment</a></h1>
-<p><code>:</code> binds a name. The right-hand side decides what kind of binding it is:</p>
-<pre><code class="language-qpl">threshold: 150                                 / scalar
-t: select from trades where size &gt; threshold   / table
-lvl: `low`mid`high                             / symbol vector
-px: trades`price                               / column expression → a list
-top: max trades`price                          / reduction → a scalar
+<p>You met <code>:</code> in the <a href="../quickstart.html">Quickstart</a>, where it kept the result of
+a query under the name <code>t</code>. It’s worth spending a moment on properly, because
+the same operator handles every kind of binding in the language and it’s the
+glue that makes the incremental style possible.</p>
+<p>The rule is that <code>:</code> binds a name, and whatever sits on the right decides what
+kind of binding you get. There’s no type to declare and no keyword to choose
+between:</p>
+<pre><code class="language-qpl">qpl) threshold: 150                                 / a scalar
+qpl) t: select from trades where size &gt; threshold   / a table
 </code></pre>
-<p>Scalar variables are evaluated in Rust and substituted into later queries as
-Polars literals, so they compose transparently with column expressions. See
-<a href="column-expressions.html">Column expressions &amp; lists</a> for <code>table`col</code>,
-reductions, slicing (<code>n#</code>) and indexing.</p>
+<p>Nothing prints for either statement. An assignment stores something; if you
+want to see it, ask for it by name on a line of its own.</p>
+<h2 id="scalars-are-real-values-not-placeholders"><a class="header" href="#scalars-are-real-values-not-placeholders">Scalars are real values, not placeholders</a></h2>
+<p>The second line above quietly did something worth understanding, because it
+explains a lot about how qpl behaves later.</p>
+<p>When you write <code>threshold: 150</code>, qpl evaluates the right-hand side
+immediately, in Rust, and stores the resulting value. It doesn’t keep the
+expression around to evaluate later. So by the time <code>threshold</code> is used
+inside the next query, it is simply the number 150, and it gets compiled into
+that query as a literal.</p>
+<p>The practical effect is that scalars compose into queries transparently, with
+no binding syntax, no parameter list, and no quoting rules to worry about:</p>
+<pre><code class="language-qpl">qpl) threshold: 150
+qpl) select from trades where size &gt; threshold
+</code></pre>
+<pre><code>shape: (4, 5)
+┌──────┬───────┬──────┬──────┬─────────────────────┐
+│ sym  ┆ price ┆ size ┆ side ┆ ts                  │
+│ ---  ┆ ---   ┆ ---  ┆ ---  ┆ ---                 │
+│ str  ┆ f64   ┆ i64  ┆ str  ┆ datetime[ns]        │
+╞══════╪═══════╪══════╪══════╪═════════════════════╡
+│ AAPL ┆ 183.1 ┆ 250  ┆ sell ┆ 2024-03-15 09:31:15 │
+│ MSFT ┆ 416.0 ┆ 300  ┆ buy  ┆ 2024-03-15 09:45:05 │
+│ AAPL ┆ 184.0 ┆ 500  ┆ sell ┆ 2024-03-15 10:15:00 │
+│ MSFT ┆ 414.8 ┆ 200  ┆ sell ┆ 2024-03-15 10:20:35 │
+└──────┴───────┴──────┴──────┴─────────────────────┘
+</code></pre>
+<p>That query is indistinguishable from one with <code>150</code> typed directly into it,
+which is exactly the intent. A threshold you’ll use in six places becomes a
+name you can change in one.</p>
+<p>Ask for a scalar by name and qpl tells you its type along with its value:</p>
+<pre><code class="language-qpl">qpl) threshold
+</code></pre>
+<pre><code>i64: 150
+</code></pre>
+<h2 id="rebinding-is-the-normal-thing-to-do"><a class="header" href="#rebinding-is-the-normal-thing-to-do">Rebinding is the normal thing to do</a></h2>
+<p>Names aren’t precious, and reassigning one is the ordinary way to move a
+pipeline forward rather than something to avoid:</p>
+<pre><code class="language-qpl">qpl) t: select sym, side, price, size from trades where price &gt; 0
+qpl) t: update notional: price * size from t
+</code></pre>
+<p>The second statement reads <code>t</code>, produces a new table, and binds it back to
+<code>t</code>. This is the loop from <a href="../working-incrementally.html">Working incrementally</a>,
+and it’s why the language doesn’t need a pipeline operator: the name <em>is</em> the
+pipeline.</p>
+<h2 id="the-other-kinds"><a class="header" href="#the-other-kinds">The other kinds</a></h2>
+<p>Two more sorts of value can sit on the right of a <code>:</code>, and both get their own
+chapter shortly. They’re mentioned here only so the shape is familiar when
+they appear:</p>
+<pre><code class="language-qpl">qpl) lvl: `low`mid`high        / a list of symbols — see the next chapter
+qpl) top: max trades`price     / a value pulled out of a table
+</code></pre>
+<p>Lists and the <code>table`column</code> form belong to
+<a href="column-expressions.html">Column expressions &amp; lists</a>, and the backticks in the
+first line are the subject of the <a href="symbols.html">very next chapter</a>. For now the
+only thing to take from them is that <code>:</code> doesn’t care: it binds whatever you
+give it.</p>
+<p>Finally, a bare name on the right just copies the binding, which is
+occasionally handy for keeping a snapshot before you start modifying
+something:</p>
+<pre><code class="language-qpl">qpl) orig: trades
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/comments.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/select-update-delete.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/symbols.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -211,11 +272,11 @@ reductions, slicing (<code>n#</code>) and indexing.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/comments.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/select-update-delete.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/symbols.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

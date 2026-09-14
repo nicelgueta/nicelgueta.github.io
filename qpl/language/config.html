@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,24 +181,43 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="config"><a class="header" href="#config">Config</a></h1>
-<p><code>.qpl.cfg key=value ...</code> sets session-wide knobs. A bare <code>.qpl.cfg</code> prints the
-current settings. Works in scripts and the REPL.</p>
+<p>A few behaviours are properties of the session rather than of any one
+statement. <code>.qpl.cfg</code> sets them, taking one or more <code>key=value</code> pairs:</p>
+<pre><code class="language-qpl">.qpl.cfg maxrow=50 maxcol=20
+</code></pre>
+<p>A bare <code>.qpl.cfg</code> prints the current settings, which is useful when a result
+looks unexpected and you want to check what’s in effect. Both forms work in
+scripts and in the REPL.</p>
+<p>There are three knobs:</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Key</th><th>Meaning</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>maxcol</code></td><td>max columns physically printed when rendering a table</td><td><code>8</code></td></tr>
-<tr><td><code>maxrow</code></td><td>max rows physically printed when rendering a table</td><td><code>10</code></td></tr>
+<tr><td><code>maxcol</code></td><td>how many columns are printed when rendering a table</td><td><code>8</code></td></tr>
+<tr><td><code>maxrow</code></td><td>how many rows are printed when rendering a table</td><td><code>10</code></td></tr>
 <tr><td><code>round_type</code></td><td>rounding mode for <code>round</code>: <code>HALF_UP</code> or <code>HALF_TO_EVEN</code></td><td><code>HALF_TO_EVEN</code></td></tr>
 </tbody>
 </table>
 </div>
-<pre><code class="language-qpl">.qpl.cfg maxrow=50 maxcol=20
-.qpl.cfg round_type=HALF_UP
-select mv: 2 round market_value from trades
+<p><code>maxrow</code> and <code>maxcol</code> affect display only. They never change a result, only
+how much of it reaches your terminal, which is why the demo tables in this
+book print in full at eight rows and would start eliding at eleven. Raise
+them while exploring something wide or long.</p>
+<p><code>round_type</code> is different, because it changes an answer. It decides what
+<code>round</code> from <a href="expressions.html">Expressions</a> does with a value sitting exactly
+on a boundary:</p>
+<pre><code class="language-qpl">.qpl.cfg round_type=HALF_UP
+select mv: 2 round price from trades
 </code></pre>
+<p>The default, <code>HALF_TO_EVEN</code>, rounds a tie to the nearest even digit, which is
+what most programming languages and IEEE 754 do, and which avoids the upward
+bias you get from always rounding ties away from zero. <code>HALF_UP</code> is the
+convention most people are taught at school and the one many accounting rules
+require. Neither is more correct in general, so if the numbers you produce
+have to agree with somebody else’s, set this explicitly at the top of the
+script rather than inheriting a default.</p>
 
                     </main>
 

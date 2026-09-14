@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,31 +181,45 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="operator-reference"><a class="header" href="#operator-reference">Operator reference</a></h1>
+<p>Every operator in the language on one page, for when you know what you want
+and need the spelling. The right-hand column points at the chapter that
+explains it.</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Operator</th><th>Meaning</th></tr>
+<tr><th>Operator</th><th>Meaning</th><th></th></tr>
 </thead>
 <tbody>
-<tr><td><code>+</code> <code>-</code> <code>*</code></td><td>arithmetic</td></tr>
-<tr><td><code>%</code></td><td>division (q convention)</td></tr>
-<tr><td><code>=</code> <code>&lt;&gt;</code> <code>!=</code></td><td>equality</td></tr>
-<tr><td><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td><td>comparison</td></tr>
-<tr><td><code>&amp;</code> <code>|</code></td><td>logical and / or</td></tr>
-<tr><td><code>?[...]</code></td><td>vectorised conditional</td></tr>
-<tr><td><code>round</code></td><td><code>&lt;precision&gt; round &lt;col&gt;</code> — round a float column (mode: <code>.qpl.cfg round_type</code>)</td></tr>
-<tr><td><code>over</code></td><td>window: <code>&lt;expr&gt; over </code>p [order <code>k asc]</code>; verbs <code>rn</code> / <code>rank</code> / <code>drank</code></td></tr>
-<tr><td><code>$</code></td><td>cast (<code>f64$x</code>, <code>`date$x</code>, <code>"p"$s</code>); <code>`$x</code> -&gt; categorical</td></tr>
-<tr><td><code>.qpl.d</code> <code>.qpl.t</code> <code>.qpl.p</code> <code>.qpl.n</code></td><td>now: date / time / timestamp / timespan (UTC)</td></tr>
-<tr><td><code>!</code></td><td><code>col!bool</code> sort map; <code>u8!`$x</code> -&gt; categorical physical width; <code>`k1`k2!v1 v2</code> -&gt; dict literal</td></tr>
-<tr><td><code>::</code></td><td>enum cast (<code>lvl::`$x</code>)</td></tr>
-<tr><td><code>#</code></td><td>limit (<code>10#t</code>); take / slice a list (<code>3#l</code>, <code>-3#l</code>)</td></tr>
-<tr><td><code>[...]</code></td><td>positional index into a list (<code>l[0]</code>, <code>l[1 2 3]</code>)</td></tr>
-<tr><td><code>_</code></td><td>drop columns (<code>`a`b _ t</code>)</td></tr>
-<tr><td><code>hopen</code> <code>`w!hopen</code> <code>dispatch</code> <code>async dispatch</code> <code>await</code></td><td>IPC client — see <a href="ipc.html">IPC</a> (<code>--features ipc</code>)</td></tr>
-<tr><td><code>&lt;list&gt; where &lt;pred&gt;</code></td><td>elementwise filter on a list; <code>x</code> is the current element</td></tr>
-<tr><td><code>til</code></td><td><code>til n</code> -&gt; <code>0..n-1</code>; <code>lo til hi</code> -&gt; <code>lo..hi-1</code></td></tr>
-<tr><td><code>zip</code></td><td><code>zip </code>k1<code>k2!v1 v2</code> — build a table from a dict of named lists</td></tr>
+<tr><td><code>+</code> <code>-</code> <code>*</code></td><td>arithmetic</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>%</code></td><td>division, since <code>/</code> is a comment</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>=</code> <code>&lt;&gt;</code> <code>!=</code></td><td>equality and inequality</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td><td>comparison</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>&amp;</code> <code>|</code></td><td>logical and / or</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>/</code></td><td>comment to end of line</td><td><a href="comments.html">Comments</a></td></tr>
+<tr><td><code>:</code></td><td>bind a name; also alias a column in a query</td><td><a href="assignment.html">Assignment</a></td></tr>
+<tr><td><code>`x</code></td><td>a symbol</td><td><a href="symbols.html">Symbols</a></td></tr>
+<tr><td><code>?[...]</code></td><td>vectorised conditional</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>like</code></td><td>glob pattern match</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>round</code></td><td><code>&lt;n&gt; round &lt;col&gt;</code>, mode from <code>.qpl.cfg round_type</code></td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>over</code></td><td>window: <code>&lt;expr&gt; over `p [order `k asc] [rolling n]</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
+<tr><td><code>rn</code> <code>rank</code> <code>drank</code></td><td>ranking verbs, require <code>order</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
+<tr><td><code>i</code></td><td>virtual row-index column, printed as <code>x</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
+<tr><td><code>$</code></td><td>cast: <code>f64$x</code>, <code>`date$x</code>, <code>"p"$s</code></td><td><a href="casts.html">Casts</a>, <a href="temporal-types.html">Temporal types</a></td></tr>
+<tr><td><code>`$x</code></td><td>intern a string as a symbol; in a query, cast to categorical</td><td><a href="symbols.html">Symbols</a>, <a href="categoricals-enums.html">Categoricals &amp; enums</a></td></tr>
+<tr><td><code>::</code></td><td>enum cast, <code>lvl::`$x</code></td><td><a href="categoricals-enums.html">Categoricals &amp; enums</a></td></tr>
+<tr><td><code>!</code></td><td>dict literal; sort map <code>`col!01b</code>; <code>u8!`$x</code> code width</td><td><a href="column-expressions.html">Column expressions</a>, <a href="table-operators.html">Table operators</a></td></tr>
+<tr><td><code>#</code></td><td>first n rows of a table; take from a list (<code>3#l</code>, <code>-3#l</code>)</td><td><a href="table-operators.html">Table operators</a>, <a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>[...]</code></td><td>index into a list (<code>l[0]</code>, <code>l[1 2 3]</code>); call a function</td><td><a href="column-expressions.html">Column expressions</a>, <a href="functions.html">Functions</a></td></tr>
+<tr><td><code>_</code></td><td>drop columns, <code>`a`b _ t</code></td><td><a href="table-operators.html">Table operators</a></td></tr>
+<tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element</td><td><a href="select-update-delete.html">select</a>, <a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>til</code></td><td><code>til n</code> gives <code>0..n-1</code>; <code>lo til hi</code> gives <code>lo..hi-1</code></td><td><a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>zip</code></td><td>build a table from a dict of named lists</td><td><a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>lj</code> <code>ij</code> <code>rj</code></td><td>left / inner / right join</td><td><a href="select-update-delete.html">select</a></td></tr>
+<tr><td><code>{...}</code></td><td>lambda</td><td><a href="functions.html">Functions</a></td></tr>
+<tr><td><code>.qpl.d</code> <code>.qpl.t</code> <code>.qpl.p</code> <code>.qpl.n</code></td><td>current date / time / timestamp / timespan, UTC</td><td><a href="temporal-types.html">Temporal types</a></td></tr>
+<tr><td><code>.qpl.cfg</code></td><td>session settings</td><td><a href="config.html">Config</a></td></tr>
+<tr><td><code>hopen</code> <code>`w!hopen</code> <code>dispatch</code> <code>async dispatch</code> <code>await</code></td><td>IPC client (<code>--features ipc</code>)</td><td><a href="ipc.html">IPC</a></td></tr>
 </tbody>
 </table>
 </div>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,32 +181,86 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
-<p>q-style lambdas, bound to a name:</p>
-<pre><code class="language-qpl">add:   {[x,y] x+y}            / parameter list in [ ], body is ;-separated
-add[2;3]                      / 5   — call with bracketed args
-inc:   {[x] x+1}
-inc 41                        / 42  — a one-arg function also takes `f x`
-inc[41]                      / 42
-
-hypot2: {[a,b] s: (a*a)+(b*b); s}   / earlier statements bind call-local vars;
-hypot2[3;4]                          / the last statement is the return value
-
-fac: {[n] ?[n&lt;2; 1; n*fac[n-1]]}   / `?[..]` works in value context, so
-fac[5]                              / recursion terminates → 120
+<p>Once you’ve typed the same query three times with only one value changing,
+it’s time to give it a name. qpl has lambdas in the q style, bound with the
+same <code>:</code> as everything else.</p>
+<pre><code class="language-qpl">qpl) add: {[x,y] x+y}
+qpl) add[2;3]
 </code></pre>
-<p>A function can return a table, and its result composes like any value
-expression:</p>
-<pre><code class="language-qpl">bysym: {[s] select sym, price from trades where sym = s}
-bysym[`AAPL]                  / a table
-avgpx: {[s] avg select price from trades where sym = s}
-avgpx[`MSFT]                  / a scalar
+<pre><code>i64: 5
 </code></pre>
-<p>The final statement in the body must be an expression (a trailing assignment is
-an error). Parameters and any locals the body assigns are scoped to the call —
-a function cannot mutate outer bindings. Niladic functions are written <code>{[] ..}</code>
-or <code>{ ..}</code> and called <code>f[]</code>. Functions are a named binding kind, not first-class
-values: they cannot be passed as arguments, returned, or used inside a <code>select</code>
-projection. See <a href="https://github.com/nicelgueta/qpl/blob/main/examples/functions.qpl">examples/functions.qpl</a>.</p>
+<p>The body goes in braces, the parameters in brackets at the front, and
+arguments are passed in brackets separated by semicolons. Semicolons rather
+than commas, because a comma already means something inside a query.</p>
+<p>A function of one argument can also be called by just putting the argument
+after it, which reads better for small helpers:</p>
+<pre><code class="language-qpl">qpl) inc: {[x] x+1}
+qpl) inc 41
+</code></pre>
+<pre><code>i64: 42
+</code></pre>
+<p><code>inc[41]</code> works too; they’re the same call.</p>
+<h2 id="several-statements"><a class="header" href="#several-statements">Several statements</a></h2>
+<p>A body can hold more than one statement, separated by semicolons. Earlier
+statements bind local names, and the value of the last one is what comes
+back. There’s no <code>return</code> keyword:</p>
+<pre><code class="language-qpl">qpl) hypot2: {[a,b] s: (a*a)+(b*b); s}
+qpl) hypot2[3;4]
+</code></pre>
+<pre><code>i64: 25
+</code></pre>
+<p>Because <code>?[...]</code> from <a href="expressions.html">Expressions</a> is an ordinary
+expression rather than statement syntax, it works as a function body, and
+recursion follows without any special support:</p>
+<pre><code class="language-qpl">qpl) fac: {[n] ?[n&lt;2; 1; n*fac[n-1]]}
+qpl) fac[5]
+</code></pre>
+<pre><code>i64: 120
+</code></pre>
+<h2 id="returning-tables"><a class="header" href="#returning-tables">Returning tables</a></h2>
+<p>Nothing restricts a body to arithmetic. A function can end in a query, in
+which case calling it gives you a table:</p>
+<pre><code class="language-qpl">qpl) bysym: {[s] select sym, price from trades where sym = s}
+qpl) bysym["AAPL"]
+</code></pre>
+<pre><code>shape: (3, 2)
+┌──────┬───────┐
+│ sym  ┆ price │
+│ ---  ┆ ---   │
+│ str  ┆ f64   │
+╞══════╪═══════╡
+│ AAPL ┆ 182.3 │
+│ AAPL ┆ 183.1 │
+│ AAPL ┆ 184.0 │
+└──────┴───────┘
+</code></pre>
+<p>Or, using a reduction from
+<a href="column-expressions.html">Column expressions &amp; lists</a>, a scalar:</p>
+<pre><code class="language-qpl">qpl) avgpx: {[s] avg select price from trades where sym = s}
+qpl) avgpx["MSFT"]
+</code></pre>
+<pre><code>f64: 415.3333333333333
+</code></pre>
+<p>Either result composes like any other value of that kind, so a function
+returning a table can be fed straight into another query.</p>
+<h2 id="the-rules"><a class="header" href="#the-rules">The rules</a></h2>
+<p>A few constraints define what a function is in qpl, and they’re worth reading
+once rather than discovering individually:</p>
+<p><strong>The last statement must be an expression.</strong> A trailing assignment is an
+error, since there would be nothing to return.</p>
+<p><strong>Locals are local.</strong> Parameters, and anything the body binds, exist only for
+the duration of the call. A function cannot modify a name outside itself, so
+a call’s effect is entirely described by what it returns.</p>
+<p><strong>Niladic functions</strong> take no arguments and are written <code>{[] ...}</code> or simply
+<code>{ ... }</code>, then called as <code>f[]</code>. The empty brackets are what distinguish
+calling it from naming it.</p>
+<p><strong>Functions are not values.</strong> You can bind one and call it, but you cannot
+pass one as an argument, return one from another function, or use one inside
+a <code>select</code> projection. If you’re reaching for a higher-order function, the
+language will not meet you there; that’s a deliberate limit on how much
+machinery the interpreter carries rather than an oversight.</p>
+<p><a href="https://github.com/nicelgueta/qpl/blob/main/examples/functions.qpl">examples/functions.qpl</a>
+in the repository is a runnable script covering all of the above.</p>
 
                     </main>
 
@@ -216,7 +270,7 @@ projection. See <a href="https://github.com/nicelgueta/qpl/blob/main/examples/fu
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/casts.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/lazy-collect.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -230,7 +284,7 @@ projection. See <a href="https://github.com/nicelgueta/qpl/blob/main/examples/fu
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/casts.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/lazy-collect.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

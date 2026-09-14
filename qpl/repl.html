@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,29 +180,46 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="repl"><a class="header" href="#repl">REPL</a></h2>
+                        <h1 id="repl"><a class="header" href="#repl">REPL</a></h1>
+<p>You’ve been using the REPL since the Quickstart. This chapter covers the
+parts of it that aren’t the language itself: a handful of commands, all
+beginning with <code>\</code>, that administer the session rather than querying data.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Command</th><th>Action</th></tr>
 </thead>
 <tbody>
-<tr><td><code>\d &lt;stmt&gt;</code></td><td>disassemble — show bytecode without executing</td></tr>
-<tr><td><code>\l &lt;path&gt;</code></td><td>run a <code>.qpl</code> script in the current session</td></tr>
-<tr><td><code>\1 &lt;path&gt;</code></td><td>tee all stdout to <code>&lt;path&gt;</code> (bare <code>\1</code> detaches)</td></tr>
-<tr><td><code>log &lt;expr&gt;</code> / <code>1 &lt;expr&gt;</code></td><td>print a scalar</td></tr>
-<tr><td><code>cols &lt;name&gt;</code></td><td>show a table’s schema</td></tr>
-<tr><td>Ctrl-C</td><td>abandon a partial statement (or exit at an empty prompt)</td></tr>
+<tr><td><code>\d &lt;stmt&gt;</code></td><td>disassemble: show the compiled instructions without running them</td></tr>
+<tr><td><code>\l &lt;path&gt;</code></td><td>run a <code>.qpl</code> script inside the current session</td></tr>
+<tr><td><code>\1 &lt;path&gt;</code></td><td>mirror all output to a file (bare <code>\1</code> stops)</td></tr>
+<tr><td><code>\port &lt;n&gt;</code></td><td>start the IPC listener, if built with that feature</td></tr>
+<tr><td>Ctrl-C</td><td>abandon a half-typed statement, or exit at an empty prompt</td></tr>
 <tr><td>Ctrl-D</td><td>exit</td></tr>
 </tbody>
 </table>
 </div>
+<p>Two of those are covered elsewhere: <code>\1</code> in <a href="language/logging.html">Logging</a>
+and <code>\port</code> in <a href="language/ipc.html">IPC</a>.</p>
+<h2 id="loading-a-script-into-a-live-session"><a class="header" href="#loading-a-script-into-a-live-session">Loading a script into a live session</a></h2>
+<p><code>\l</code> runs a script <em>in the session you already have</em>, rather than starting a
+new process. Anything the script binds is yours afterwards, and anything you
+had already stays put.</p>
+<pre><code class="language-qpl">qpl) \l setup.qpl
+</code></pre>
+<p>This is the natural companion to the incremental style. Keep the settled part
+of your work in a file, load it, and carry on exploring from there. It also
+pairs with <code>qpl -i script.qpl</code>, which does the same thing at startup.</p>
+<h2 id="seeing-what-a-statement-compiles-to"><a class="header" href="#seeing-what-a-statement-compiles-to">Seeing what a statement compiles to</a></h2>
+<p><code>\d</code> shows the instructions a statement produces, without executing any of
+them. Every query you write is compiled to a short sequence of stack-machine
+operations before the VM runs it, and this prints that sequence:</p>
 <pre><code>qpl) \d select avg price by sym from trades where size &gt; 100
 0000: FROM_SRC InMem("trades")
 0001: PUSH_COL_REF size
 0002: PUSH_CONST Int(100)
 0003: BIN_OP &gt;
-0004: FILTER 1
+0004: FRAME_EXPR Filter(1)
 0005: PUSH_COL_REF sym
 0006: ALIAS Some("sym")
 0007: BUILD_KEYS 1
@@ -213,6 +230,17 @@
 0012: SELECT_BY
 0013: RESULT
 </code></pre>
+<p>Read top to bottom it follows the query closely: start from <code>trades</code>, push
+<code>size</code> and <code>100</code> and compare them, filter on the result, build <code>sym</code> into the
+grouping keys, build <code>avg price</code> into the projection, then run the grouped
+select.</p>
+<p>Most of the time you’ll never need this. It earns its place when a statement
+does something you didn’t expect, because the instruction list usually makes
+it obvious which clause was parsed differently from how you read it. The
+right-to-left evaluation described in <a href="language/casts.html">Casts</a> is a common
+culprit, and <code>\d</code> is the fastest way to confirm it.</p>
+<p><a href="architecture.html">Architecture</a> says a little more about where those
+instructions come from and what runs them.</p>
 
                     </main>
 

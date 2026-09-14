@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,27 +180,46 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="why"><a class="header" href="#why">Why?</a></h2>
-<p>I often need to query large parquet files on cloud storage under time
-pressure, or knock out a quick transform job. DuckDB is great for this, but I
-always forget the syntax — and prompting an agent for it is often slower than
-just writing the query myself.</p>
-<p>So: a language fast enough to type without thinking, but with DuckDB-level
-performance. As a bonus, one that LLM agents can drive easily too — and can’t
-do much damage with, sandboxed or not.</p>
-<h3 id="polars"><a class="header" href="#polars">Polars</a></h3>
-<p>Writing a DuckDB-grade engine from scratch solo isn’t realistic, so I cheated:
-Polars (a dataframe library written in Rust) is the backend. Its API is clean
-enough that the “language” is really just a VM translating instructions into
-Polars queries — which left me free to build whatever front-end I wanted.</p>
-<p>That front-end borrows from kdb+/q, a language I’d been lightly exposed to at
-work and wanted an excuse to actually learn, while still getting to write Rust.</p>
-<p>Thus: <code>qpl</code>.</p>
-<h3 id="example"><a class="header" href="#example">Example</a></h3>
-<p>Read two parquet files, left-join them, derive a couple of columns, tag every
-row with a conditional, dictionary-encode a key, aggregate, sort, and write the
-result back out.</p>
-<p>DuckDB:</p>
+                        <h1 id="why"><a class="header" href="#why">Why?</a></h1>
+<p>The honest answer is that this started as a personal itch.</p>
+<p>A lot of my work involves querying large parquet files sitting on cloud
+storage, usually under time pressure, or knocking out a quick transform job
+that needs to exist by the end of the afternoon. DuckDB is genuinely great at
+this, but it stops short as soon as I want to do anything scripty around the
+query. So I’d reach for Python and Polars instead, which handles the scripty
+part fine but turns every query into a verbose block of method chaining.
+Polars’ own SQL support isn’t much better in practice: you end up with a
+large SQL string embedded in a Python file, with no editor support inside it
+and no feedback until it runs.</p>
+<p>Handing the whole thing to an agent has become the obvious move, and
+sometimes it is the right one. But for the eighty percent of queries that are
+genuinely simple, describing what I want in English and waiting takes longer
+than just writing the query, assuming the language lets me write it quickly.</p>
+<p>That “assuming” is the whole project. I wanted something concise enough to
+type without really thinking about it, which behaves like a scripting
+language when I need it to, treats queries as first-class syntax rather than
+strings, and still runs at a speed in the same league as DuckDB. A pleasant
+side effect is that a language like that is also easy for an LLM agent to
+drive, and difficult for one to do much damage with, sandboxed or not.</p>
+<p>Ambitious? Well. Quite.</p>
+<h2 id="standing-on-polars"><a class="header" href="#standing-on-polars">Standing on Polars</a></h2>
+<p>Writing a DuckDB-grade query engine solo isn’t a realistic weekend project,
+so I didn’t. Polars does that part.</p>
+<p>Polars is a dataframe library written in Rust, and its API turned out to be
+clean enough that the “language” I needed to build was really just a small
+virtual machine translating my syntax into Polars operations. That left me
+free to design whatever front end I wanted without also having to invent
+columnar execution, predicate pushdown, or a parquet reader. Published
+benchmarks put Polars a little behind DuckDB and comfortably ahead of
+everything else in the space, which is more than good enough for what I need.</p>
+<p>For the front end I borrowed heavily from kdb+/q. I’d been lightly exposed to
+q at work, wanted a proper excuse to learn it, and wanted to write some Rust.
+qpl is what came out of those three things colliding.</p>
+<h2 id="what-it-looks-like"><a class="header" href="#what-it-looks-like">What it looks like</a></h2>
+<p>Here is the kind of job this is for. Read two parquet files, left-join them,
+derive a couple of columns, tag every row with a conditional, encode a key
+column compactly, aggregate, sort, and write the result back out.</p>
+<p>In DuckDB:</p>
 <pre><code class="language-sql">CREATE TYPE sym_t AS ENUM (SELECT DISTINCT sym FROM read_parquet('trades.parquet'));
 COPY (
     SELECT
@@ -219,15 +238,22 @@ COPY (
     ORDER BY tot DESC
 ) TO 'summary.parquet' (FORMAT PARQUET);
 </code></pre>
-<p>qpl — the whole thing is one statement:</p>
+<p>And in qpl, where the whole thing is a single statement:</p>
 <pre><code class="language-qpl">select tot: sum price * size, avg_spread: avg ask - bid, n: count price
     by csym: `$sym, side, band: ?[size &gt;= 1000; `large; size &gt;= 250; `mid; `small]
     from load "trades.parquet" `sym lj load "quotes.parquet" `sym where price &gt; 0
     order tot desc
     sink "summary.parquet"
 </code></pre>
-<p>But the same pipeline is more naturally built up <strong>one statement at a time</strong> in
-the REPL — see <a href="working-incrementally.html">Working incrementally</a>:</p>
+<p>Don’t try to read that yet. Every piece of it is introduced properly over the
+next few chapters, and the point of showing it here isn’t the syntax but the
+shape: no <code>CREATE TYPE</code> preamble, no <code>COPY (...) TO</code>, no repeating the
+grouping keys in a <code>GROUP BY</code> clause after you’ve already named them, and no
+wrapper around the whole thing just to get the output onto disk.</p>
+<h2 id="the-way-youd-actually-write-it"><a class="header" href="#the-way-youd-actually-write-it">The way you’d actually write it</a></h2>
+<p>Although that statement fits on four lines, it isn’t how the query would
+really come into existence. In practice you’d build it up one statement at a
+time, looking at the data between each step:</p>
 <pre><code class="language-qpl">j: select sym, side, price, size, bid, ask from load "trades.parquet" `sym lj load "quotes.parquet" `sym where price &gt; 0
 j  / check the table so far
 j: update spread: ask - bid, notional: price * size from j
@@ -239,6 +265,10 @@ cols j                                     / check the schema so far
 select tot: sum notional, avg_spread: avg spread, n: count price by csym: `$sym, side, band from j order tot desc
 j sink "summary.parquet"
 </code></pre>
+<p>That loop, rather than any individual piece of syntax, is what the language
+is really designed around. <a href="working-incrementally.html">Working incrementally</a>
+comes back to it in detail once you’ve seen enough of the basics for it to
+land.</p>
 
                     </main>
 

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,28 +181,105 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="table-operators"><a class="header" href="#table-operators">Table operators</a></h1>
-<pre><code class="language-qpl">distinct select sym from trades
-
-10 limit select from trades      / first N rows
-10#select from trades            / `#` is the same
-10#trades
-
-`price`size drop select from trades   / drop columns
-`price`size _ trades                  / `_` is the same
-
-`sym`price!01b trades            / sort by a `col!bool` map (0 asc, 1 desc)
-sorted: `sym`price!01b select from trades where size &gt; 100
+<p>Alongside the three query statements there are a few operators that act on a
+whole table directly, with no <code>from</code> clause. They’re terse because they’re
+used constantly, and each one takes a table expression, so they compose with
+queries and with each other.</p>
+<h2 id="distinct"><a class="header" href="#distinct">distinct</a></h2>
+<p>Unique rows:</p>
+<pre><code class="language-qpl">qpl) distinct select sym from trades
 </code></pre>
+<pre><code>shape: (3, 1)
+┌──────┐
+│ sym  │
+│ ---  │
+│ str  │
+╞══════╡
+│ AAPL │
+│ MSFT │
+│ GOOG │
+└──────┘
+</code></pre>
+<p>Eight rows in, three out. Note that <code>distinct</code> applies to whole rows, so what
+it does depends on which columns you selected first.</p>
+<h2 id="limiting"><a class="header" href="#limiting">Limiting</a></h2>
+<p>Taking the first few rows has two spellings that do the same thing. <code>limit</code>
+reads as prose; <code>#</code> is the q-style shorthand:</p>
+<pre><code class="language-qpl">qpl) 3#trades
+</code></pre>
+<pre><code>shape: (3, 5)
+┌──────┬───────┬──────┬──────┬─────────────────────┐
+│ sym  ┆ price ┆ size ┆ side ┆ ts                  │
+│ ---  ┆ ---   ┆ ---  ┆ ---  ┆ ---                 │
+│ str  ┆ f64   ┆ i64  ┆ str  ┆ datetime[ns]        │
+╞══════╪═══════╪══════╪══════╪═════════════════════╡
+│ AAPL ┆ 182.3 ┆ 100  ┆ buy  ┆ 2024-03-15 09:30:00 │
+│ AAPL ┆ 183.1 ┆ 250  ┆ sell ┆ 2024-03-15 09:31:15 │
+│ MSFT ┆ 415.2 ┆ 80   ┆ buy  ┆ 2024-03-15 09:32:40 │
+└──────┴───────┴──────┴──────┴─────────────────────┘
+</code></pre>
+<pre><code class="language-qpl">10 limit select from trades      / identical to 10#select from trades
+</code></pre>
+<p>This is the same <code>#</code> that sliced a list in
+<a href="column-expressions.html">Column expressions &amp; lists</a>. Whether you get a slice
+or a limit depends only on whether the thing on its right is a list or a
+table, and in both cases it means “the first n”.</p>
+<h2 id="dropping-columns"><a class="header" href="#dropping-columns">Dropping columns</a></h2>
+<p>Also two spellings, <code>drop</code> and <code>_</code>, taking a list of column names as symbols:</p>
+<pre><code class="language-qpl">`price`size drop select from trades
+`price`size _ trades                  / the same thing
+</code></pre>
+<p>This overlaps with <code>delete </code>price<code>size from trades</code> from the
+<a href="select-update-delete.html">select chapter</a>. Use whichever reads better in
+context; <code>_</code> is handy mid-pipeline, <code>delete</code> when the statement is already a
+query.</p>
+<h2 id="sorting"><a class="header" href="#sorting">Sorting</a></h2>
+<p>Sorting uses the dict-literal form you met at the end of
+<a href="column-expressions.html">Column expressions &amp; lists</a>: a list of column names,
+<code>!</code>, then a boolean per column giving its direction. <code>0</code> is ascending and <code>1</code>
+is descending.</p>
+<pre><code class="language-qpl">qpl) `sym`price!01b select sym, price from trades
+</code></pre>
+<pre><code>shape: (8, 2)
+┌──────┬───────┐
+│ sym  ┆ price │
+│ ---  ┆ ---   │
+│ str  ┆ f64   │
+╞══════╪═══════╡
+│ AAPL ┆ 184.0 │
+│ AAPL ┆ 183.1 │
+│ AAPL ┆ 182.3 │
+│ GOOG ┆ 141.2 │
+│ GOOG ┆ 140.5 │
+│ MSFT ┆ 416.0 │
+│ MSFT ┆ 415.2 │
+│ MSFT ┆ 414.8 │
+└──────┴───────┘
+</code></pre>
+<p>Read <code>`sym`price!01b</code> as: by <code>sym</code> ascending, then by <code>price</code> descending.
+The bit vector lines up positionally with the symbol list.</p>
+<p>That result is identical to <code>select sym, price from trades order sym asc, price desc</code> from the select chapter, which raises the obvious question of why
+both exist. <code>order</code> is part of a query and reads better inside one; the <code>!</code>
+form is an operator that applies to any table, which makes it convenient when
+you’re sorting something you already have:</p>
+<pre><code class="language-qpl">sorted: `sym`price!01b select from trades where size &gt; 100
+</code></pre>
+<h2 id="they-compose"><a class="header" href="#they-compose">They compose</a></h2>
+<p>Since each of these takes a table expression and produces one, they stack:</p>
+<pre><code class="language-qpl">`price`size drop distinct select from trades
+</code></pre>
+<p>Because qpl evaluates right to left, the reading order is the order things
+happen: select from trades, take the distinct rows, then drop two columns.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/files.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/categoricals-enums.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/lazy-collect.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/window-functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -212,11 +289,11 @@ sorted: `sym`price!01b select from trades where size &gt; 100
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/files.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/categoricals-enums.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/lazy-collect.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/window-functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,23 +180,41 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
+                        <h1 id="architecture"><a class="header" href="#architecture">Architecture</a></h1>
+<p>Every line you type takes the same path, one statement at a time:</p>
 <pre><code>source -&gt; lexer -&gt; tokens -&gt; parser -&gt; AST -&gt; compiler -&gt; instructions -&gt; VM (Polars LazyFrame) -&gt; DataFrame
 </code></pre>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Module</th><th>Role</th></tr>
+<tr><th>Stage</th><th>Role</th></tr>
 </thead>
 <tbody>
-<tr><td><code>lexer</code></td><td>tokenise source text</td></tr>
-<tr><td><code>parser</code></td><td>build the typed AST</td></tr>
-<tr><td><code>compiler</code></td><td>emit stack-machine instructions</td></tr>
-<tr><td><code>vm</code></td><td>execute instructions, build &amp; collect a <code>LazyFrame</code></td></tr>
-<tr><td><code>repl</code></td><td>interactive loop + script runner</td></tr>
+<tr><td><code>lexer</code></td><td>turn source text into tokens</td></tr>
+<tr><td><code>parser</code></td><td>build a typed syntax tree from those tokens</td></tr>
+<tr><td><code>compiler</code></td><td>emit stack-machine instructions from the tree</td></tr>
+<tr><td><code>vm</code></td><td>execute the instructions, building and collecting a Polars <code>LazyFrame</code></td></tr>
+<tr><td><code>repl</code></td><td>the interactive loop and the script runner</td></tr>
 </tbody>
 </table>
 </div>
+<p>The <code>\d</code> command from the <a href="repl.html">previous chapter</a> prints the output of
+the compiler stage, which is the last point at which the pipeline is still
+qpl’s own.</p>
+<p>What’s notable is what <em>isn’t</em> in that list. There’s no query optimiser,
+because qpl doesn’t need one. The VM’s job is to translate instructions into
+calls against a Polars <code>LazyFrame</code>, and the plan that results is Polars’
+to optimise: predicate pushdown, projection pruning and the rest all happen
+on the other side of that boundary. You can watch it happen in the plan
+output shown in <a href="language/lazy-collect.html">lazy / collect</a>.</p>
+<p>This division is why the whole interpreter is a fairly small amount of code
+for a language that queries at the speed it does, and it’s also why the
+language stays deliberately compact. New syntax generally means new
+instructions for the VM to execute, and the project treats that as a cost to
+justify rather than a default, preferring to reuse the existing instruction
+set wherever a new feature can be expressed in terms of it. That’s a
+maintainer’s concern more than a user’s, but it explains why the
+<a href="language/operator-reference.html">operator reference</a> fits on a single page.</p>
 
                     </main>
 

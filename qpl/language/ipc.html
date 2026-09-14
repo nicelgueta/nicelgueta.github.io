@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,77 +181,93 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="ipc"><a class="header" href="#ipc">IPC</a></h1>
-<p>Optional feature (<code>--features ipc</code>, off by default — see <a href="../install.html">Install</a>);
-adds no dependencies to a default build. Lets one qpl process act as a client
-to another over a plain REQ/REP socket pair (<a href="https://github.com/zeromq/zmq.rs"><code>zeromq</code></a>,
-pure Rust, no libzmq system dependency).</p>
-<p>The problem this solves: a qpl session is normally a single process holding
-its own tables in memory — one script, one address space. IPC lets a second
-process reach into a <em>running</em> session instead of re-loading and re-computing
-everything itself, which is the same reason kdb+ shops lean on IPC so heavily.
-Concretely:</p>
+<p><em>This chapter describes an optional feature. It’s compiled in with
+<code>--features ipc</code>, as <a href="../install.html">Install</a> covered, and adds nothing at
+all to a build without it.</em></p>
+<p>Every session so far has been a single process with its own tables in its own
+memory. IPC is what you reach for when that stops being enough: it lets one
+qpl process send statements to another running one and get real results back,
+over a plain REQ/REP socket pair. The transport is
+<a href="https://github.com/zeromq/zmq.rs">zeromq</a> in pure Rust, so there’s no system
+libzmq to install.</p>
+<h2 id="what-its-for"><a class="header" href="#what-its-for">What it’s for</a></h2>
+<p>Suppose loading and preparing your tables takes two minutes. Without IPC,
+every script that wants to ask a question of that data pays the two minutes
+itself. With IPC you pay it once, in a long-lived session, and everything
+else asks that session.</p>
+<p>That basic move covers several situations:</p>
 <ul>
-<li><strong>A shared data process.</strong> Load the big/slow-to-build tables once in a
-long-lived server session (<code>qpl -i</code>), then have any number of short-lived
-client scripts query it without paying that load cost themselves.</li>
-<li><strong>Splitting compute from callers.</strong> A scheduled job, a web backend, or a
-notebook can <code>dispatch</code> a query and get back a real table/scalar, without
-embedding qpl or re-implementing the query in whatever language it’s
-written in — the wire format is plain TCP, not qpl-specific.</li>
-<li><strong>Fan-out across sessions.</strong> A single client can <code>hopen</code> several servers
-(e.g. one per dataset, or one per region) and <code>async dispatch</code> to all of
-them, then <code>await</code> each — running independent queries concurrently instead
-of one after another.</li>
-<li><strong>Remote administration of a live session.</strong> <code>dispatch</code> treats the request
-exactly like a typed REPL line, so a client can bind new globals, extend a
-lazy pipeline, or otherwise reshape the server’s session state on the fly —
-handy for poking at or updating a long-running process without restarting it.</li>
+<li><strong>A shared data process.</strong> Load the slow tables once in a long-running
+session started with <code>qpl -i</code>, then let any number of short-lived client
+scripts query it for free.</li>
+<li><strong>Separating compute from callers.</strong> A scheduled job, a web backend or a
+notebook can dispatch a query and receive a real table, without embedding
+qpl or reimplementing the query in another language. The wire protocol is
+ordinary TCP.</li>
+<li><strong>Fanning out.</strong> One client can open connections to several servers, one
+per dataset or per region, dispatch to all of them without waiting, and
+collect the answers as they arrive. Independent queries then run
+concurrently rather than in sequence.</li>
+<li><strong>Adjusting a live session.</strong> Because a dispatched request is treated
+exactly like a typed line, a client can bind new names or extend a pipeline
+inside a running process, which is handy for a long-lived job you don’t
+want to restart.</li>
 </ul>
-<p><strong>Server</strong>: <code>\port &lt;n&gt;</code> opens a listener; bare <code>\port</code> closes it. Only
-available in the interactive REPL (<code>qpl -i script.qpl</code>) — a script alone exits
-before anything could connect, so there’s a REPL to keep the process alive.
-Once opened, every request is evaluated exactly like a typed REPL line
-(assignments mutate the server’s session, <code>select</code>/<code>update</code>/<code>delete</code> all
-work), except the <code>\</code>-prefixed system commands (<code>\d</code>, <code>\l</code>, <code>\1</code>, <code>\port</code>
-itself), which are local session administration, not part of what a remote
-client dispatches.</p>
+<h2 id="running-a-server"><a class="header" href="#running-a-server">Running a server</a></h2>
+<p><code>\port &lt;n&gt;</code> starts listening; a bare <code>\port</code> stops.</p>
 <pre><code class="language-qpl">qpl -i --load-demo setup.qpl
 qpl) \port 5001        / start serving
-qpl) \port              / stop
+qpl) \port             / stop
 </code></pre>
-<p><strong>Client</strong>: <code>hopen</code> opens a connection (a plain port number connects to
-<code>127.0.0.1</code>; a <code>"host:port"</code> string connects elsewhere); <code>dispatch</code> sends a
-whole statement to it and blocks for the reply; <code>async dispatch</code> returns
-immediately with a pending handle, resolved later by <code>await</code>. A table comes
-back as a real table, a scalar as a real scalar — both fully usable locally,
-same as if the query had run in-process.</p>
+<p>This only works in the interactive REPL, which is why the example uses
+<code>qpl -i</code>. A script on its own exits as soon as it finishes, before anything
+could connect, so there has to be a prompt keeping the process alive.</p>
+<p>Every request that arrives is evaluated exactly as though someone had typed
+it at the server’s own prompt. Assignments change the server’s session,
+queries run against its tables. The exception is the <code>\</code>-prefixed commands
+(<code>\d</code>, <code>\l</code>, <code>\1</code>, and <code>\port</code> itself), which are local administration and
+aren’t something a remote caller can trigger.</p>
+<h2 id="connecting-as-a-client"><a class="header" href="#connecting-as-a-client">Connecting as a client</a></h2>
+<p><code>hopen</code> opens a connection. A bare port number connects to <code>127.0.0.1</code>; a
+<code>"host:port"</code> string goes further afield.</p>
 <pre><code class="language-qpl">conn: hopen 5001                       / or hopen "db.internal:5001"
-resp: conn dispatch select from trades where price &gt; 100
+</code></pre>
+<p><code>dispatch</code> sends a whole statement and waits for the answer:</p>
+<pre><code class="language-qpl">resp: conn dispatch select from trades where price &gt; 100
 resp                                    / a genuine table, queryable further
-
-pending: conn async dispatch select avg price by sym from trades
+</code></pre>
+<p>What comes back is a real local value. A table arrives as a table you can
+query further, a scalar as a scalar. Nothing about <code>resp</code> remembers that it
+came from somewhere else.</p>
+<p>For work you don’t want to wait on, <code>async dispatch</code> returns immediately with
+a pending handle, and <code>await</code> resolves it later:</p>
+<pre><code class="language-qpl">pending: conn async dispatch select avg price by sym from trades
 / ... do other things while the server works ...
 result: await pending
 </code></pre>
-<p>A dispatched assignment (<code>conn dispatch t: select from u</code>) has nothing to
-print, same as it would locally — the client gets back a boolean acknowledgment
-rather than a value to bind.</p>
-<p><strong>Read vs. write handles</strong>: bare <code>hopen</code> opens a <strong>read-only</strong> connection —
-the default. The server rejects anything that writes to its session when
-dispatched from a read handle: an assignment (<code>x: ...</code>, <code>t: select ...</code>),
-<code>sink</code>, and <code>\1</code>. Everything else (<code>select</code>/<code>update</code>/<code>delete</code>, building a
-lazy pipeline, etc.) still works. <code>`w!hopen</code> opens a <strong>write</strong> handle
-instead, with none of those restrictions:</p>
-<pre><code class="language-qpl">ro: hopen 5001                          / read-only (default)
+<p>That pairing is what makes the fan-out case work: dispatch to several
+connections first, then await each in turn.</p>
+<p>A dispatched assignment has no result to send back, just as it would print
+nothing locally, so the client receives a boolean acknowledgement instead:</p>
+<pre><code class="language-qpl">conn dispatch t: select from u
+</code></pre>
+<h2 id="read-and-write-handles"><a class="header" href="#read-and-write-handles">Read and write handles</a></h2>
+<p>A client that can run arbitrary statements on a server can also modify it, so
+qpl defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
+connection, and the server refuses anything that would write to its session:
+assignments, <code>sink</code>, and <code>\1</code>. Queries of every kind still work.</p>
+<pre><code class="language-qpl">ro: hopen 5001                          / read-only, the default
 ro dispatch t: select from trades       / rejected by the server
-ro dispatch select from trades          / fine — no write involved
-
-rw: `w!hopen 5001                       / write handle
+ro dispatch select from trades          / fine, nothing is written
+</code></pre>
+<p>When you do want write access, ask for it explicitly at connection time:</p>
+<pre><code class="language-qpl">rw: `w!hopen 5001                       / a write handle
 rw dispatch t: select from trades       / allowed
 </code></pre>
-<p>The permission is decided by the client at <code>hopen</code> time and enforced by the
-server per request — it only ever applies to commands arriving over a
-connection, never to the server operator’s own local REPL/script input.</p>
+<p>The permission is chosen by the client when it connects and enforced by the
+server on every request over that connection. It applies only to statements
+arriving over a socket, never to what the person sitting at the server’s own
+prompt types.</p>
 
                     </main>
 

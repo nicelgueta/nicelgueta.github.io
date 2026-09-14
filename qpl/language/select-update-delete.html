@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,55 +181,273 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="select--update--delete"><a class="header" href="#select--update--delete">select / update / delete</a></h1>
-<pre><code>select &lt;cols&gt; from &lt;table-expr&gt; [by &lt;keys&gt;] [where &lt;preds&gt;] [order &lt;col&gt; &lt;asc|desc&gt;, ...]
+<p>This is the heart of the language. Three statements share one grammar:</p>
+<pre><code>&lt;select|update|delete&gt; &lt;cols&gt; from &lt;table-expr&gt; [by &lt;keys&gt;] [where &lt;preds&gt;] [order &lt;col&gt; &lt;asc|desc&gt;, ...]
 </code></pre>
-<pre><code class="language-qpl">select from trades
-select sym, price from trades
-select px: price, qty: size from trades          / aliasing
-select avg price by sym from trades              / group-by aggregation
-select total: sum size by sym from trades where side = "buy"
-select from trades where size &gt; 100
-select from trades where size &gt; 100, price &lt; 400  / comma-separated preds = AND
-select from trades where (size &gt; 400) | (side = "buy")   / &amp; / | for and / or
-select from trades where 10100000b               / boolean-vector mask
-select from trades order sym asc, price desc
+<p>and they differ only in what they do with the result. <code>select</code> projects, so
+you get back the columns you asked for and nothing else. <code>update</code> keeps the
+whole table and adds or replaces columns in it. <code>delete</code> takes things away,
+either rows or columns.</p>
+<p>Learn the clauses once and they work the same way in all three.</p>
+<h2 id="select"><a class="header" href="#select">select</a></h2>
+<p>The minimal form asks for everything:</p>
+<pre><code class="language-qpl">qpl) select from trades
 </code></pre>
-<p><code>from</code> takes any table expression, not just a table name — a nested <code>select</code>, a
-<code>load</code>, <code>distinct</code>, <code>lazy</code>, and so on all work, and this composes with the
-table operators below too:</p>
-<pre><code class="language-qpl">select from select price from trades where price &gt; 100  / from a nested select
-cols select from trades where size &gt; 100                / cols on a nested select
-select sym, price from load "data/trades.parquet"        / from a load directly
+<p>That’s the same eight rows you saw in the Quickstart. There’s no column list,
+which means every column. You’ll use this constantly, because it’s the form
+you want whenever you’re filtering rather than projecting.</p>
+<p>Name columns to narrow it:</p>
+<pre><code class="language-qpl">qpl) select sym, price from trades
 </code></pre>
-<p>A join’s right side (<code>`sym lj/ij/rj &lt;table&gt; `sym</code>) is a bare table name or
-<code>load "path"</code> by default; wrap it in parens to join against any other table
-expression — the parens give the parser an explicit end point, otherwise a
-nested select’s own join would swallow the outer <code>right_on</code> symbols:</p>
-<pre><code class="language-qpl">select price, bid from trades `sym lj quotes `sym                            / bare name
-select price, bid from trades `sym lj (distinct quotes) `sym                 / any table expr, parenthesised
-select price, bid from trades `sym lj (select sym, bid from quotes where bid &gt; 0) `sym
+<p>And rename them as you go, using the same <code>:</code> that binds names elsewhere:</p>
+<pre><code class="language-qpl">qpl) select px: price, qty: size from trades
 </code></pre>
-<p><code>update</code> returns the whole table with the named columns replaced or added:</p>
+<pre><code>shape: (8, 2)
+┌───────┬─────┐
+│ px    ┆ qty │
+│ ---   ┆ --- │
+│ f64   ┆ i64 │
+╞═══════╪═════╡
+│ 182.3 ┆ 100 │
+│ 183.1 ┆ 250 │
+│ 415.2 ┆ 80  │
+│ 416.0 ┆ 300 │
+│ 140.5 ┆ 150 │
+│ 141.2 ┆ 90  │
+│ 184.0 ┆ 500 │
+│ 414.8 ┆ 200 │
+└───────┴─────┘
+</code></pre>
+<p><code>px: price</code> names the output column. It’s the same operator as an assignment,
+doing the same conceptual job, one level down.</p>
+<h3 id="filtering"><a class="header" href="#filtering">Filtering</a></h3>
+<p><code>where</code> takes one or more predicates. Separate them with commas and they’re
+combined with AND:</p>
+<pre><code class="language-qpl">qpl) select from trades where size &gt; 100, price &lt; 400
+</code></pre>
+<pre><code>shape: (3, 5)
+┌──────┬───────┬──────┬──────┬─────────────────────┐
+│ sym  ┆ price ┆ size ┆ side ┆ ts                  │
+│ ---  ┆ ---   ┆ ---  ┆ ---  ┆ ---                 │
+│ str  ┆ f64   ┆ i64  ┆ str  ┆ datetime[ns]        │
+╞══════╪═══════╪══════╪══════╪═════════════════════╡
+│ AAPL ┆ 183.1 ┆ 250  ┆ sell ┆ 2024-03-15 09:31:15 │
+│ GOOG ┆ 140.5 ┆ 150  ┆ sell ┆ 2024-03-15 10:01:30 │
+│ AAPL ┆ 184.0 ┆ 500  ┆ sell ┆ 2024-03-15 10:15:00 │
+└──────┴───────┴──────┴──────┴─────────────────────┘
+</code></pre>
+<p>Three trades are both larger than 100 and cheaper than $400.</p>
+<p>When you need OR, or want to be explicit about grouping, <code>&amp;</code> and <code>|</code> are the
+logical operators:</p>
+<pre><code class="language-qpl">qpl) select from trades where (size &gt; 400) | (side = "buy")
+</code></pre>
+<p>A <code>where</code> clause doesn’t have to be built from comparisons at all. Anything
+producing a boolean per row will do, including a literal bit vector, which is
+occasionally useful for hand-picking rows:</p>
+<pre><code class="language-qpl">qpl) select from trades where 10100000b
+</code></pre>
+<p>That’s q’s notation for a run of booleans, and it selects the first and third
+rows. <a href="expressions.html">Expressions</a> covers the full predicate vocabulary,
+including pattern matching on text.</p>
+<h3 id="grouping"><a class="header" href="#grouping">Grouping</a></h3>
+<p><code>by</code> groups, and the aggregate goes where a plain column name would:</p>
+<pre><code class="language-qpl">qpl) select avg price by sym from trades
+</code></pre>
+<pre><code>shape: (3, 2)
+┌──────┬────────────┐
+│ sym  ┆ price      │
+│ ---  ┆ ---        │
+│ str  ┆ f64        │
+╞══════╪════════════╡
+│ MSFT ┆ 415.333333 │
+│ GOOG ┆ 140.85     │
+│ AAPL ┆ 183.133333 │
+└──────┴────────────┘
+</code></pre>
+<p>Read it out loud and it’s the statement: select the average price, by sym,
+from trades. The grouping key appears once, not twice as SQL requires.</p>
+<p>Aggregates combine with everything else, and naming the output is usually
+worth it:</p>
+<pre><code class="language-qpl">qpl) select total: sum size by sym from trades where side = "sell"
+</code></pre>
+<pre><code>shape: (3, 2)
+┌──────┬───────┐
+│ sym  ┆ total │
+│ ---  ┆ ---   │
+│ str  ┆ i64   │
+╞══════╪═══════╡
+│ GOOG ┆ 150   │
+│ AAPL ┆ 750   │
+│ MSFT ┆ 200   │
+└──────┴───────┘
+</code></pre>
+<p><code>avg</code> and <code>sum</code> are two of about twenty-five aggregates; the full list is in
+<a href="expressions.html">Expressions</a>.</p>
+<h3 id="sorting"><a class="header" href="#sorting">Sorting</a></h3>
+<p><code>order</code> takes sort keys with a direction each, comma separated:</p>
+<pre><code class="language-qpl">qpl) select sym, price from trades order sym asc, price desc
+</code></pre>
+<pre><code>shape: (8, 2)
+┌──────┬───────┐
+│ sym  ┆ price │
+│ ---  ┆ ---   │
+│ str  ┆ f64   │
+╞══════╪═══════╡
+│ AAPL ┆ 184.0 │
+│ AAPL ┆ 183.1 │
+│ AAPL ┆ 182.3 │
+│ GOOG ┆ 141.2 │
+│ GOOG ┆ 140.5 │
+│ MSFT ┆ 416.0 │
+│ MSFT ┆ 415.2 │
+│ MSFT ┆ 414.8 │
+└──────┴───────┘
+</code></pre>
+<h2 id="from-takes-any-table-expression"><a class="header" href="#from-takes-any-table-expression"><code>from</code> takes any table expression</a></h2>
+<p>Here’s the part that makes the language compose rather than merely query.
+<code>from</code> doesn’t require a table name. It accepts anything that evaluates to a
+table, and a <code>select</code> evaluates to a table, so queries nest with no special
+subquery syntax:</p>
+<pre><code class="language-qpl">qpl) select from select price from trades where price &gt; 100
+</code></pre>
+<p>The same is true in the other direction: anything that takes a table takes a
+query. You’ll see this repeatedly in later chapters, where operators like
+<code>distinct</code> and <code>cols</code> are introduced and simply work on whatever you hand
+them.</p>
+<p>This is also how you query a file directly, using <code>load</code> — the
+<a href="files.html">next chapter</a> is about reading and writing files, but the shape is
+worth seeing here, since it’s just another table expression in the <code>from</code>
+position:</p>
+<pre><code class="language-qpl">select sym, price from load "data/trades.parquet"
+</code></pre>
+<h2 id="joining"><a class="header" href="#joining">Joining</a></h2>
+<p>A join names the column to match on either side, with the join type in the
+middle. <code>lj</code> is a left join, <code>ij</code> an inner join, <code>rj</code> a right join. The column
+names are symbols, from the <a href="symbols.html">previous chapter</a>:</p>
+<pre><code class="language-qpl">qpl) select sym, price, bid, ask from trades `sym lj quotes `sym
+</code></pre>
+<pre><code>shape: (14, 4)
+┌──────┬───────┬───────┬───────┐
+│ sym  ┆ price ┆ bid   ┆ ask   │
+│ ---  ┆ ---   ┆ ---   ┆ ---   │
+│ str  ┆ f64   ┆ f64   ┆ f64   │
+╞══════╪═══════╪═══════╪═══════╡
+│ AAPL ┆ 182.3 ┆ 182.0 ┆ 182.5 │
+│ AAPL ┆ 182.3 ┆ 183.8 ┆ 184.2 │
+│ AAPL ┆ 183.1 ┆ 182.0 ┆ 182.5 │
+│ AAPL ┆ 183.1 ┆ 183.8 ┆ 184.2 │
+│ MSFT ┆ 415.2 ┆ 415.0 ┆ 415.5 │
+│ …    ┆ …     ┆ …     ┆ …     │
+│ GOOG ┆ 141.2 ┆ 140.3 ┆ 140.8 │
+│ AAPL ┆ 184.0 ┆ 182.0 ┆ 182.5 │
+│ AAPL ┆ 184.0 ┆ 183.8 ┆ 184.2 │
+│ MSFT ┆ 414.8 ┆ 415.0 ┆ 415.5 │
+│ MSFT ┆ 414.8 ┆ 414.5 ┆ 415.0 │
+└──────┴───────┴───────┴───────┘
+</code></pre>
+<p>Eight trades went in and fourteen rows came out, which is worth pausing on
+because it’s a property of joins rather than anything qpl is doing. <code>quotes</code>
+holds two AAPL rows and two MSFT rows, so every AAPL trade matches both AAPL
+quotes and appears twice. This is ordinary join fan-out, and the reason the
+<code>shape:</code> line is the first thing to look at after any join.</p>
+<p>By default the right-hand side is a bare table name or a <code>load</code>. To join
+against anything more elaborate, wrap it in parentheses:</p>
+<pre><code class="language-qpl">select price, bid from trades `sym lj (select sym, bid from quotes where bid &gt; 0) `sym
+</code></pre>
+<p>The parentheses aren’t decoration. Without them the parser has no way to tell
+where the inner query stops, and the inner query’s own join would swallow the
+<code>`sym</code> that belongs to the outer one. You hit this once, add the
+parentheses, and never think about it again.</p>
+<h2 id="update"><a class="header" href="#update">update</a></h2>
+<p><code>update</code> returns the whole table with columns added or replaced. Everything
+you don’t mention is left alone:</p>
+<pre><code class="language-qpl">qpl) update notional: price * size from trades
+</code></pre>
+<pre><code>shape: (8, 6)
+┌──────┬───────┬──────┬──────┬─────────────────────┬──────────┐
+│ sym  ┆ price ┆ size ┆ side ┆ ts                  ┆ notional │
+│ ---  ┆ ---   ┆ ---  ┆ ---  ┆ ---                 ┆ ---      │
+│ str  ┆ f64   ┆ i64  ┆ str  ┆ datetime[ns]        ┆ f64      │
+╞══════╪═══════╪══════╪══════╪═════════════════════╪══════════╡
+│ AAPL ┆ 182.3 ┆ 100  ┆ buy  ┆ 2024-03-15 09:30:00 ┆ 18230.0  │
+│ AAPL ┆ 183.1 ┆ 250  ┆ sell ┆ 2024-03-15 09:31:15 ┆ 45775.0  │
+│ MSFT ┆ 415.2 ┆ 80   ┆ buy  ┆ 2024-03-15 09:32:40 ┆ 33216.0  │
+│ MSFT ┆ 416.0 ┆ 300  ┆ buy  ┆ 2024-03-15 09:45:05 ┆ 124800.0 │
+│ GOOG ┆ 140.5 ┆ 150  ┆ sell ┆ 2024-03-15 10:01:30 ┆ 21075.0  │
+│ GOOG ┆ 141.2 ┆ 90   ┆ buy  ┆ 2024-03-15 10:02:50 ┆ 12708.0  │
+│ AAPL ┆ 184.0 ┆ 500  ┆ sell ┆ 2024-03-15 10:15:00 ┆ 92000.0  │
+│ MSFT ┆ 414.8 ┆ 200  ┆ sell ┆ 2024-03-15 10:20:35 ┆ 82960.0  │
+└──────┴───────┴──────┴──────┴─────────────────────┴──────────┘
+</code></pre>
+<p>Use an existing column name and you replace it instead of adding one:</p>
 <pre><code class="language-qpl">update price: price * 2 from trades
-update price: price * 2 by sym from trades where size &gt; 100
-update notional: price * size from trades where price &gt; 0   / new column; null where the filter misses
 </code></pre>
-<p>With a <code>where</code>, rows that don’t match keep the column’s old value — or <code>null</code> if
-it’s a brand-new column.</p>
-<p><code>delete</code> removes rows (with <code>where</code>) or columns (with a symbol list):</p>
-<pre><code class="language-qpl">delete from trades where size &lt; 100
-delete `price`size from trades
+<p><code>by</code> works here too, which gives you “compute this per group and apply it to
+the rows of that group”:</p>
+<pre><code class="language-qpl">update price: price * 2 by sym from trades where size &gt; 100
 </code></pre>
+<p>That example also shows <code>where</code> on an <code>update</code>, which behaves differently
+from <code>where</code> on a <code>select</code> and catches people out. A <code>select</code> drops rows that
+don’t match. An <code>update</code> never drops anything: rows that don’t match simply
+keep the value they had. If the column is brand new, unmatched rows have no
+previous value to keep, so they come out <code>null</code>.</p>
+<h2 id="delete"><a class="header" href="#delete">delete</a></h2>
+<p><code>delete</code> removes rows when given a <code>where</code>. Note that the predicate describes
+what goes <em>away</em>, so the two small trades under 100 shares are the ones
+missing from the result:</p>
+<pre><code class="language-qpl">qpl) delete from trades where size &lt; 100
+</code></pre>
+<pre><code>shape: (6, 5)
+┌──────┬───────┬──────┬──────┬─────────────────────┐
+│ sym  ┆ price ┆ size ┆ side ┆ ts                  │
+│ ---  ┆ ---   ┆ ---  ┆ ---  ┆ ---                 │
+│ str  ┆ f64   ┆ i64  ┆ str  ┆ datetime[ns]        │
+╞══════╪═══════╪══════╪══════╪═════════════════════╡
+│ AAPL ┆ 182.3 ┆ 100  ┆ buy  ┆ 2024-03-15 09:30:00 │
+│ AAPL ┆ 183.1 ┆ 250  ┆ sell ┆ 2024-03-15 09:31:15 │
+│ MSFT ┆ 416.0 ┆ 300  ┆ buy  ┆ 2024-03-15 09:45:05 │
+│ GOOG ┆ 140.5 ┆ 150  ┆ sell ┆ 2024-03-15 10:01:30 │
+│ AAPL ┆ 184.0 ┆ 500  ┆ sell ┆ 2024-03-15 10:15:00 │
+│ MSFT ┆ 414.8 ┆ 200  ┆ sell ┆ 2024-03-15 10:20:35 │
+└──────┴───────┴──────┴──────┴─────────────────────┘
+</code></pre>
+<p>And it removes columns when given a list of symbols instead:</p>
+<pre><code class="language-qpl">qpl) delete `ts`side from trades
+</code></pre>
+<pre><code>shape: (8, 3)
+┌──────┬───────┬──────┐
+│ sym  ┆ price ┆ size │
+│ ---  ┆ ---   ┆ ---  │
+│ str  ┆ f64   ┆ i64  │
+╞══════╪═══════╪══════╡
+│ AAPL ┆ 182.3 ┆ 100  │
+│ AAPL ┆ 183.1 ┆ 250  │
+│ MSFT ┆ 415.2 ┆ 80   │
+│ MSFT ┆ 416.0 ┆ 300  │
+│ GOOG ┆ 140.5 ┆ 150  │
+│ GOOG ┆ 141.2 ┆ 90   │
+│ AAPL ┆ 184.0 ┆ 500  │
+│ MSFT ┆ 414.8 ┆ 200  │
+└──────┴───────┴──────┘
+</code></pre>
+<p>One statement does one or the other, never both, since removing rows and
+removing columns are different enough operations that combining them would
+only be confusing.</p>
+<h2 id="where-this-is-heading"><a class="header" href="#where-this-is-heading">Where this is heading</a></h2>
+<p>You can now express most of what a day’s work needs. The chapters that follow
+fill in the pieces these statements are built from: how to get data in and
+out of files, what can go inside a <code>where</code> or a projection, and how to pull
+individual values out of a table rather than always getting a table back.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/assignment.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/symbols.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/column-expressions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/files.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -239,11 +457,11 @@ delete `price`size from trades
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/assignment.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/symbols.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/column-expressions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/files.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

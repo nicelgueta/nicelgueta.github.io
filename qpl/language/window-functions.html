@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,57 +181,182 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="window-functions"><a class="header" href="#window-functions">Window functions</a></h1>
-<p><code>&lt;expr&gt; over `key</code> computes <code>&lt;expr&gt;</code> per partition and broadcasts the
-result back to every row (SQL <code>&lt;expr&gt; OVER (PARTITION BY key)</code>). Any column
-expression or aggregate works:</p>
-<pre><code class="language-qpl">select sym, price, top: max price over `sym from trades
-select sym, gap: (max price over `sym) - price from trades   / `over` binds tighter than `-`
+<p>There are three things you might want from an aggregate, and so far you’ve
+seen two of them. <code>max trades</code>price<code>reduces the whole column to one value.</code>select max price by sym` reduces each group to one row. The third is to
+compute something per group and then give the answer back to <em>every row</em> in
+that group, leaving the table its original height.</p>
+<p>That’s what <code>over</code> does, and it corresponds to SQL’s
+<code>&lt;expr&gt; OVER (PARTITION BY ...)</code>.</p>
+<pre><code class="language-qpl">qpl) select sym, price, top: max price over `sym from trades
 </code></pre>
-<p>Partition keys are backtick symbols — one (<code>`sym</code>) or several (<code>`sym`day</code>).</p>
-<p>An <code>order</code> sub-clause (space-separated <code>`col asc|desc</code> pairs, per-column
-direction) enables the ranking verbs, which stand alone in place of <code>&lt;expr&gt;</code>:</p>
+<pre><code>shape: (8, 3)
+┌──────┬───────┬───────┐
+│ sym  ┆ price ┆ top   │
+│ ---  ┆ ---   ┆ ---   │
+│ str  ┆ f64   ┆ f64   │
+╞══════╪═══════╪═══════╡
+│ AAPL ┆ 182.3 ┆ 184.0 │
+│ AAPL ┆ 183.1 ┆ 184.0 │
+│ MSFT ┆ 415.2 ┆ 416.0 │
+│ MSFT ┆ 416.0 ┆ 416.0 │
+│ GOOG ┆ 140.5 ┆ 141.2 │
+│ GOOG ┆ 141.2 ┆ 141.2 │
+│ AAPL ┆ 184.0 ┆ 184.0 │
+│ MSFT ┆ 414.8 ┆ 416.0 │
+└──────┴───────┴───────┘
+</code></pre>
+<p>Still eight rows, but each now knows the highest price its symbol reached.
+Compare that to <code>select max price by sym</code>, which would have given three rows
+and thrown away everything else.</p>
+<p>The partition keys are symbols, one or several: <code>over `sym</code> or
+<code>over `sym`day</code>.</p>
+<p>Having the group’s answer on every row is what makes comparisons against it
+possible:</p>
+<pre><code class="language-qpl">select sym, gap: (max price over `sym) - price from trades
+</code></pre>
+<p>The parentheses there are load-bearing. <code>over</code> binds more tightly than <code>-</code>,
+so without them the expression would be read as partitioning by
+<code>(`sym) - price</code>, which is nonsense.</p>
+<h2 id="ordering-within-a-partition"><a class="header" href="#ordering-within-a-partition">Ordering within a partition</a></h2>
+<p>Some questions need the rows of a partition to be in a defined order before
+they can be answered at all. “The previous price” and “the running total”
+both presuppose a sequence.</p>
+<p>An <code>order</code> sub-clause supplies one. It takes space-separated pairs of a
+column and a direction:</p>
+<pre><code class="language-qpl">qpl) select sym, ts, price, run: cumsum price over `sym order `ts asc from trades
+</code></pre>
+<pre><code>shape: (8, 4)
+┌──────┬─────────────────────┬───────┬────────┐
+│ sym  ┆ ts                  ┆ price ┆ run    │
+│ ---  ┆ ---                 ┆ ---   ┆ ---    │
+│ str  ┆ datetime[ns]        ┆ f64   ┆ f64    │
+╞══════╪═════════════════════╪═══════╪════════╡
+│ AAPL ┆ 2024-03-15 09:30:00 ┆ 182.3 ┆ 182.3  │
+│ AAPL ┆ 2024-03-15 09:31:15 ┆ 183.1 ┆ 365.4  │
+│ MSFT ┆ 2024-03-15 09:32:40 ┆ 415.2 ┆ 415.2  │
+│ MSFT ┆ 2024-03-15 09:45:05 ┆ 416.0 ┆ 831.2  │
+│ GOOG ┆ 2024-03-15 10:01:30 ┆ 140.5 ┆ 140.5  │
+│ GOOG ┆ 2024-03-15 10:02:50 ┆ 141.2 ┆ 281.7  │
+│ AAPL ┆ 2024-03-15 10:15:00 ┆ 184.0 ┆ 549.4  │
+│ MSFT ┆ 2024-03-15 10:20:35 ┆ 414.8 ┆ 1246.0 │
+└──────┴─────────────────────┴───────┴────────┘
+</code></pre>
+<p>Each symbol accumulates its own running total in time order. AAPL’s third
+trade continues from where its second left off, at 549.4, rather than from
+anything MSFT did in between.</p>
+<p>This is where the cumulative and row-relative verbs from
+<a href="expressions.html">Expressions</a> earn their place. <code>cumsum</code>, <code>lag</code>, <code>diff</code>,
+<code>ffill</code> and the rest are all far more useful with an explicit ordering than
+without one:</p>
+<pre><code class="language-qpl">select sym, ts, price,
+    prev: lag price over `sym order `ts asc
+    from trades
+</code></pre>
+<p>For a plain aggregate like these, one direction applies to all the ordering
+keys.</p>
+<h2 id="ranking"><a class="header" href="#ranking">Ranking</a></h2>
+<p>Ordering also unlocks three verbs that answer “where does this row come in
+its group”. They stand on their own in place of an expression, and they
+<em>require</em> an <code>order</code>, since a ranking without a sequence is meaningless.</p>
+<pre><code class="language-qpl">qpl) select sym, price, r: rank over `sym order `price desc from trades
+</code></pre>
+<pre><code>shape: (8, 3)
+┌──────┬───────┬─────┐
+│ sym  ┆ price ┆ r   │
+│ ---  ┆ ---   ┆ --- │
+│ str  ┆ f64   ┆ i64 │
+╞══════╪═══════╪═════╡
+│ AAPL ┆ 182.3 ┆ 3   │
+│ AAPL ┆ 183.1 ┆ 2   │
+│ MSFT ┆ 415.2 ┆ 2   │
+│ MSFT ┆ 416.0 ┆ 1   │
+│ GOOG ┆ 140.5 ┆ 2   │
+│ GOOG ┆ 141.2 ┆ 1   │
+│ AAPL ┆ 184.0 ┆ 1   │
+│ MSFT ┆ 414.8 ┆ 3   │
+└──────┴───────┴─────┘
+</code></pre>
+<p>Each symbol’s most expensive trade is ranked 1. The three verbs differ only
+in how they handle ties:</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Verb</th><th>SQL</th><th>Ties</th></tr>
+<tr><th>Verb</th><th>SQL equivalent</th><th>On a tie</th></tr>
 </thead>
 <tbody>
-<tr><td><code>rn</code></td><td><code>row_number()</code></td><td>broken by row order — strict <code>1..n</code></td></tr>
-<tr><td><code>rank</code></td><td><code>rank()</code></td><td>share the lowest rank, then a gap (<code>1,1,3</code>)</td></tr>
-<tr><td><code>drank</code></td><td><code>dense_rank()</code></td><td>share a rank, no gap (<code>1,1,2</code>)</td></tr>
+<tr><td><code>rn</code></td><td><code>row_number()</code></td><td>never ties; row order breaks it, giving a strict <code>1..n</code></td></tr>
+<tr><td><code>rank</code></td><td><code>rank()</code></td><td>tied rows share the lower rank, then a gap: <code>1, 1, 3</code></td></tr>
+<tr><td><code>drank</code></td><td><code>dense_rank()</code></td><td>tied rows share a rank, no gap: <code>1, 1, 2</code></td></tr>
 </tbody>
 </table>
 </div>
+<p>Unlike the plain aggregates, ranking verbs accept a different direction per
+key, since ranking by one column ascending and another descending is a
+perfectly sensible request:</p>
 <pre><code class="language-qpl">select emp, country, role,
     seat: rank over `country`role order `desk asc `date desc,
     seniority: rn over `country order `hired asc
     from staff
 </code></pre>
-<p>The ranking verbs <strong>require</strong> <code>order</code>. Any other aggregate <strong>may</strong> take it: with
-an <code>order</code> sub-clause the partition is sorted before the aggregate runs, so
-<code>cumsum</code> / <code>diff</code> / <code>ffill</code> and friends compose in a defined order (a single
-direction applies to every key — mixed asc/desc is ranking-verb only):</p>
-<pre><code class="language-qpl">select sym, ts, px,
-    run:  cumsum px over `sym order `ts asc,       / running total in time order
-    prev: lag px    over `sym order `ts asc         / previous row's price
-    from trades
+<h2 id="rolling-windows"><a class="header" href="#rolling-windows">Rolling windows</a></h2>
+<p>Adding <code>rolling &lt;n&gt;</code> turns an aggregate into a fixed-width window over the
+ordered partition, which is how you’d compute a moving average:</p>
+<pre><code class="language-qpl">qpl) select sym, price, ma2: avg price over `sym order `ts asc rolling 2 from trades
 </code></pre>
-<p><strong>Rolling windows</strong> — a trailing <code>rolling &lt;n&gt;</code> sub-clause turns the aggregate
-into a fixed <code>n</code>-row rolling reduction over the ordered partition
-(<code>sum</code>/<code>avg</code>/<code>min</code>/<code>max</code>/<code>std</code>/<code>var</code>/<code>median</code>):</p>
-<pre><code class="language-qpl">select sym, ts, px, ma5: avg px over `sym order `ts asc rolling 5 from trades
+<pre><code>shape: (8, 3)
+┌──────┬───────┬────────┐
+│ sym  ┆ price ┆ ma2    │
+│ ---  ┆ ---   ┆ ---    │
+│ str  ┆ f64   ┆ f64    │
+╞══════╪═══════╪════════╡
+│ AAPL ┆ 182.3 ┆ null   │
+│ AAPL ┆ 183.1 ┆ 182.7  │
+│ MSFT ┆ 415.2 ┆ null   │
+│ MSFT ┆ 416.0 ┆ 415.6  │
+│ GOOG ┆ 140.5 ┆ null   │
+│ GOOG ┆ 141.2 ┆ 140.85 │
+│ AAPL ┆ 184.0 ┆ 183.55 │
+│ MSFT ┆ 414.8 ┆ 415.4  │
+└──────┴───────┴────────┘
 </code></pre>
-<p>The first <code>n-1</code> rows of each partition are <code>null</code> (the window isn’t full yet).</p>
-<p><strong>Virtual column <code>i</code></strong> is the row index (aliased to <code>x</code> in output, per q):</p>
-<pre><code class="language-qpl">select i, sym from trades
-select from trades where i &lt; 5
+<p>The first row of each symbol is <code>null</code>, because a two-row window needs two
+rows and only one has been seen. In general the first <code>n-1</code> rows of every
+partition are null. That’s correct rather than a problem, but it is something
+to plan for downstream, either by filtering those rows out or by accepting
+nulls in the result.</p>
+<p>Rolling works with <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, <code>std</code>, <code>var</code> and <code>median</code>.</p>
+<h2 id="the-row-number-column"><a class="header" href="#the-row-number-column">The row number column</a></h2>
+<p>One last piece fits naturally here. <code>i</code> is a virtual column holding the row
+index, available in any query without existing in the table. Following q, it
+comes out named <code>x</code>:</p>
+<pre><code class="language-qpl">qpl) select i, sym from trades
 </code></pre>
+<pre><code>shape: (8, 2)
+┌─────┬──────┐
+│ x   ┆ sym  │
+│ --- ┆ ---  │
+│ u32 ┆ str  │
+╞═════╪══════╡
+│ 0   ┆ AAPL │
+│ 1   ┆ AAPL │
+│ 2   ┆ MSFT │
+│ 3   ┆ MSFT │
+│ 4   ┆ GOOG │
+│ 5   ┆ GOOG │
+│ 6   ┆ AAPL │
+│ 7   ┆ MSFT │
+└─────┴──────┘
+</code></pre>
+<p>It also works in a predicate, where <code>where i &lt; 5</code> is a crude “first five
+rows”. For that specific job <code>5#trades</code> from
+<a href="table-operators.html">Table operators</a> is clearer; <code>i</code> comes into its own when
+you need the index itself as a value.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/expressions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/table-operators.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -245,7 +370,7 @@ select from trades where i &lt; 5
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/expressions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/table-operators.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,11 +180,35 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="install"><a class="header" href="#install">Install</a></h2>
+                        <h1 id="install"><a class="header" href="#install">Install</a></h1>
+<p>If you already have a Rust toolchain, building from source is one command:</p>
 <pre><code class="language-bash">cargo install --path .
 </code></pre>
-<p>Or grab a pre-built binary from <a href="https://github.com/nicelgueta/qpl/releases">Releases</a>. Add <code>--features ipc</code> for the <a href="language/ipc.html">IPC</a> client/server (<code>hopen</code>/<code>dispatch</code>/<code>\port</code>) — off by
-default, and pulls in no extra dependencies unless enabled.</p>
+<p>Be warned that Polars is a large crate and a cold build takes a few minutes.
+If you’d rather not wait, or don’t have Rust installed at all, there are
+prebuilt binaries on the
+<a href="https://github.com/nicelgueta/qpl/releases">releases page</a> for Linux (both
+gnu and musl), Linux ARM64, and macOS on both Intel and Apple silicon.</p>
+<p>Either route leaves you with a single <code>qpl</code> executable and nothing else. No
+interpreter to keep in step with it, no wheel to install, no virtual
+environment to remember to activate. That property is deliberate rather than
+incidental: a lot of the appeal of a tool like this is being able to drop it
+into a container, a CI job, or a colleague’s laptop as easily as <code>jq</code>.</p>
+<h2 id="the-ipc-feature"><a class="header" href="#the-ipc-feature">The IPC feature</a></h2>
+<p>There is one build-time decision worth knowing about, though you can safely
+defer it. qpl can optionally act as a client and server, so that one qpl
+process can query the tables held in another running one. That feature is
+switched off by default and adds no dependencies at all to a normal build:</p>
+<pre><code class="language-bash">cargo install --path . --features ipc
+</code></pre>
+<p>Almost nobody needs this on day one, and nothing about a default build is a
+dead end, since you can rebuild with the feature whenever the need shows up.
+<a href="language/ipc.html">IPC</a> covers what it does, near the end of the book.</p>
+<h2 id="checking-it-worked"><a class="header" href="#checking-it-worked">Checking it worked</a></h2>
+<pre><code class="language-bash">qpl --version
+</code></pre>
+<p>Once that responds, <a href="quickstart.html">Quickstart</a> has you querying data within
+a couple of lines.</p>
 
                     </main>
 

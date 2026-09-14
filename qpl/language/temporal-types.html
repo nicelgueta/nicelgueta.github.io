@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,73 +181,158 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="temporal-types"><a class="header" href="#temporal-types">Temporal types</a></h1>
-<p>kdb+/q-style date &amp; time literals. Each has an underlying integer offset that
-<code>`int$</code> / <code>`long$</code> exposes.</p>
+<p>Dates and times in qpl follow kdb+/q, which means they are written as
+literals directly in the language rather than parsed from strings. If you’ve
+used q this will be entirely familiar. If you haven’t, the notation to get
+used to is that dates use dots rather than dashes, and a <code>D</code> separates the
+date part of a timestamp from the time part.</p>
+<pre><code class="language-qpl">qpl) d: 2024.03.15
+qpl) d
+</code></pre>
+<pre><code>date: 2024.03.15
+</code></pre>
+<p>There are seven temporal types, differing in what they measure and how finely:</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>type</th><th>literal</th><th>offset</th></tr>
+<tr><th>Type</th><th>Literal</th><th>Counts</th></tr>
 </thead>
 <tbody>
 <tr><td>date</td><td><code>2024.03.15</code></td><td>days since <code>2000.01.01</code></td></tr>
 <tr><td>month</td><td><code>2024.03m</code></td><td>months since <code>2000.01</code></td></tr>
-<tr><td>time</td><td><code>12:30:00.000</code></td><td>ms of day (stored as ns)</td></tr>
-<tr><td>minute</td><td><code>12:30</code></td><td>minutes of day</td></tr>
-<tr><td>second</td><td><code>12:30:00</code></td><td>seconds of day</td></tr>
-<tr><td>timestamp</td><td><code>2024.03.15D12:30:00.000000000</code></td><td>ns since <code>2000.01.01</code></td></tr>
-<tr><td>timespan</td><td><code>0D12:30:00.000000000</code></td><td>ns duration</td></tr>
+<tr><td>time</td><td><code>12:30:00.000</code></td><td>milliseconds into the day</td></tr>
+<tr><td>minute</td><td><code>12:30</code></td><td>minutes into the day</td></tr>
+<tr><td>second</td><td><code>12:30:00</code></td><td>seconds into the day</td></tr>
+<tr><td>timestamp</td><td><code>2024.03.15D12:30:00.000000000</code></td><td>nanoseconds since <code>2000.01.01</code></td></tr>
+<tr><td>timespan</td><td><code>0D12:30:00.000000000</code></td><td>nanoseconds of duration</td></tr>
 </tbody>
 </table>
 </div>
-<pre><code class="language-qpl">d: 2024.03.15
-d + 10                              / 2024.03.25   (days)
-2024.03.20 - 2024.03.15             / 5
-p: 2024.03.15D09:30:00.000000000
-p - 0D00:05:00.000000000            / 2024.03.15D09:25:00.000000000
-p &lt; 2024.03.15D16:00:00.0           / 1b
+<p>The right-hand column isn’t trivia. Each of these really is an integer
+underneath, counting from the epoch shown, and you can see that number with a
+cast:</p>
+<pre><code class="language-qpl">qpl) int$2024.03.15
 </code></pre>
-<p>Adding an integer shifts by one unit of the operand’s own resolution — <code>date</code>+n
-days, <code>month</code>+n months, <code>time</code>+n ms, <code>minute</code>+n minutes, <code>second</code>+n seconds,
-<code>timestamp</code>/<code>timespan</code>+n ns. Comparison works across variants of the same
-family (<code>date</code>↔<code>timestamp</code>, <code>time</code>↔<code>minute</code>↔<code>second</code>).</p>
-<p>Casts use the backtick form <code>`date$x</code>, <code>`month$x</code>, <code>`timestamp$x</code>,
-or a kdb single-char type code on a string — <code>"p"$</code> timestamp, <code>"d"$</code> date,
-<code>"t"$</code> time, <code>"m"$</code> month, <code>"u"$</code> minute, <code>"v"$</code> second, <code>"n"$</code> timespan:</p>
-<pre><code class="language-qpl">`date$2024.03.15D12:30:00.0         / 2024.03.15
-`month$2024.03.15                    / 2024.03m
-`timestamp$2024.03.15               / 2024.03.15D00:00:00.000000000
-"p"$"2024.03.15D12:30:00"           / parse a string
+<pre><code>i64: 8840
 </code></pre>
-<p>In <strong>column</strong> context, a string→temporal cast parses through Polars’ string
-parser (<code>expr.cast(&lt;temporal&gt;)</code> on a string is deprecated). The format is
-inferred per value — ISO <em>and</em> kdb’s dotted <code>2024.03.15</code> both work:</p>
+<p>The last two rows deserve a distinction: a <strong>timestamp</strong> is a point in time,
+whereas a <strong>timespan</strong> is a length of time. They look similar because both
+use the <code>D</code>, but <code>2024.03.15D09:30:00.000000000</code> is half past nine that
+morning, while <code>0D00:05:00.000000000</code> is five minutes.</p>
+<h2 id="arithmetic"><a class="header" href="#arithmetic">Arithmetic</a></h2>
+<p>Since each type is a count, adding a plain integer moves by one unit <em>of that
+type’s own resolution</em>. Add 10 to a date and you move ten days:</p>
+<pre><code class="language-qpl">qpl) 2024.03.15 + 10
+</code></pre>
+<pre><code>date: 2024.03.25
+</code></pre>
+<p>Add 10 to a month and you move ten months; to a time, ten milliseconds; to a
+timestamp or timespan, ten nanoseconds. You never have to remember a
+conversion factor, but you do have to be aware of which type you’re holding.</p>
+<p>Subtracting two values of the same type gives the count between them:</p>
+<pre><code class="language-qpl">qpl) 2024.03.20 - 2024.03.15
+</code></pre>
+<pre><code>i64: 5
+</code></pre>
+<p>And subtracting a duration from a point in time gives an earlier point:</p>
+<pre><code class="language-qpl">qpl) p: 2024.03.15D09:30:00.000000000
+qpl) p - 0D00:05:00.000000000
+</code></pre>
+<pre><code>timestamp: 2024.03.15D09:25:00.000000000
+</code></pre>
+<p>Comparison works across types in the same family, so a date can be compared
+with a timestamp, and time with minute or second, without an explicit
+conversion:</p>
+<pre><code class="language-qpl">qpl) p &lt; 2024.03.15D16:00:00.0
+</code></pre>
+<pre><code>bool: true
+</code></pre>
+<h2 id="converting"><a class="header" href="#converting">Converting</a></h2>
+<p>Casts use the backtick form of a type name:</p>
+<pre><code class="language-qpl">qpl) `date$2024.03.15D12:30:00.0        / drop the time part
+</code></pre>
+<pre><code>date: 2024.03.15
+</code></pre>
+<pre><code class="language-qpl">qpl) `month$2024.03.15
+</code></pre>
+<pre><code>month: 2024.03m
+</code></pre>
+<pre><code class="language-qpl">qpl) `timestamp$2024.03.15              / midnight on that date
+</code></pre>
+<pre><code>timestamp: 2024.03.15D00:00:00.000000000
+</code></pre>
+<p>For parsing text, q’s single-character type codes also work, applied to a
+string: <code>"p"</code> for timestamp, <code>"d"</code> date, <code>"t"</code> time, <code>"m"</code> month, <code>"u"</code>
+minute, <code>"v"</code> second, <code>"n"</code> timespan.</p>
+<pre><code class="language-qpl">qpl) "p"$"2024.03.15D12:30:00"
+</code></pre>
+<pre><code>timestamp: 2024.03.15D12:30:00.000000000
+</code></pre>
+<h2 id="temporal-columns"><a class="header" href="#temporal-columns">Temporal columns</a></h2>
+<p>A datetime column in a table behaves as you’d hope. The demo <code>trades</code> table
+has one, and pulling it out as a list (as
+<a href="column-expressions.html">Column expressions &amp; lists</a> described) gives you
+timestamps rather than raw integers:</p>
+<pre><code class="language-qpl">qpl) trades`ts
+</code></pre>
+<pre><code>timestamp[8]: 2024.03.15D09:30:00.000000000 2024.03.15D09:31:15.000000000 …
+</code></pre>
+<p>Converting a <em>string</em> column to a temporal type is slightly different from
+converting a scalar, because Polars parses string columns through a dedicated
+parser rather than a plain cast. The upside is that the format is inferred
+per value, so both ISO and kdb’s dotted notation are understood without you
+having to say which you have:</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>cast</th><th>parser</th><th>result column</th></tr>
+<tr><th>Cast</th><th>Produces</th></tr>
 </thead>
 <tbody>
-<tr><td><code>`date$s</code> / <code>`month$s</code></td><td><code>str.to_datetime</code> → date</td><td><code>Date</code></td></tr>
-<tr><td><code>`timestamp$s</code> (<code>"p"$s</code>)</td><td><code>str.to_datetime</code></td><td><code>Datetime</code> (keeps the time part)</td></tr>
-<tr><td><code>`time$s</code> (<code>"t"$s</code>)</td><td><code>str.to_time</code></td><td><code>Time</code></td></tr>
+<tr><td><code>`date$s</code> / <code>`month$s</code></td><td>a <code>Date</code> column</td></tr>
+<tr><td><code>`timestamp$s</code> or <code>"p"$s</code></td><td>a <code>Datetime</code> column, keeping the time</td></tr>
+<tr><td><code>`time$s</code> or <code>"t"$s</code></td><td>a <code>Time</code> column</td></tr>
 </tbody>
 </table>
 </div>
 <pre><code class="language-qpl">select d: `date$date_str from t        / "2024.03.15"          -&gt; 2024-03-15
 select ts: `timestamp$ts_str from t    / "2024-03-15T09:30:00" -&gt; 2024-03-15 09:30:00
 </code></pre>
-<p>A value the inferred format cannot read aborts the query (strict by default).</p>
-<p>Now-functions (<strong>UTC</strong> — there is no timezone database): <code>.qpl.d</code> today’s date,
-<code>.qpl.t</code> time, <code>.qpl.p</code> timestamp (ns), <code>.qpl.n</code> timespan since midnight. They
-are ordinary expressions:</p>
+<p>Parsing is strict: a value the inferred format can’t read aborts the query
+rather than becoming null. That’s the right default, because a malformed
+timestamp almost always means something upstream is wrong, and you’d much
+rather find out now than discover a silently-dropped day’s data inside an
+aggregate later.</p>
+<p>Note also that once a temporal value is in a column it prints in Polars’ ISO
+style rather than the kdb style you typed it in, as you can see in the <code>ts</code>
+column of any <code>trades</code> output. Month becomes a <code>Date</code> on the first of the
+month.</p>
+<h2 id="current-time"><a class="header" href="#current-time">Current time</a></h2>
+<p>Four expressions read the clock, all in <strong>UTC</strong> — qpl bundles no timezone
+database, so there’s no ambiguity about which zone you’re getting, and no
+opportunity for a machine’s local settings to change a query’s meaning.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th></th></tr>
+</thead>
+<tbody>
+<tr><td><code>.qpl.d</code></td><td>today’s date</td></tr>
+<tr><td><code>.qpl.t</code></td><td>the time</td></tr>
+<tr><td><code>.qpl.p</code></td><td>the timestamp, to nanoseconds</td></tr>
+<tr><td><code>.qpl.n</code></td><td>timespan since midnight</td></tr>
+</tbody>
+</table>
+</div>
+<p>They’re ordinary expressions and can be used anywhere one is allowed:</p>
 <pre><code class="language-qpl">log .qpl.d
 </code></pre>
-<p>Temporal literals project as Polars-native columns (<code>Date</code>, <code>Datetime[ns]</code>,
-<code>Time</code>, <code>Duration[ns]</code>); month maps to <code>Date</code> at the 1st. Column output is
-Polars’ ISO form, not the kdb form. Not yet in the language: <code>xbar</code> bucketing,
-the <code>within</code> window operator, <code>.minute</code> / <code>.date</code> unit accessors, and
-temporal arithmetic on a <strong>column</strong> (<code>date_col + n</code> — scalar arithmetic is
-fully supported) — those are planned.</p>
+<h2 id="not-there-yet"><a class="header" href="#not-there-yet">Not there yet</a></h2>
+<p>A few things q users reach for by reflex aren’t implemented. Rather than let
+you find out by trial and error: <code>xbar</code> bucketing, the <code>within</code> operator,
+the <code>.minute</code> and <code>.date</code> unit accessors, and arithmetic between a temporal
+<strong>column</strong> and an integer. That last one is the only real limitation in
+practice, since scalar temporal arithmetic (everything above) is complete.
+All are on the <a href="../roadmap.html">roadmap</a>.</p>
 
                     </main>
 
@@ -257,7 +342,7 @@ fully supported) — those are planned.</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/symbols-enums.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/categoricals-enums.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -271,7 +356,7 @@ fully supported) — those are planned.</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/symbols-enums.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/categoricals-enums.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

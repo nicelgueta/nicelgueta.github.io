@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-421a8131.js"></script>
+        <script src="toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,16 +181,52 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="qpl--quick-polars-query-language"><a class="header" href="#qpl--quick-polars-query-language">qpl — Quick Polars Query Language</a></h1>
-<p>An agent-friendly, q/kdb+-inspired query language that compiles to Polars lazy
-frames. Write concise select statements; Polars runs them fast. Single binary,
-zero dependencies — no Python, no Polars install needed.</p>
-<p>There’s also a <a href="https://github.com/nicelgueta/qpl/tree/main/tools/vscode">VSCode extension</a> —
-syntax highlighting plus a Ctrl+Enter REPL for sending lines straight from the
-editor.</p>
-<p>Source, issues, and releases live on
+<p>qpl is a query language with two rather different parents. The syntax is
+borrowed from kdb+/q, which means it is terse to the point of looking
+cryptic until it suddenly doesn’t. The engine underneath is
+<a href="https://pola.rs">Polars</a>, which means the queries you write run at a speed
+competitive with DuckDB. Nothing else is involved: qpl ships as a single
+static binary, with no Python, no Polars installation, and no runtime to set
+up.</p>
+<p>The result is a language you can type a real query into faster than you could
+describe that query to somebody else, and which will then chew through a
+parquet file considerably larger than the memory on the machine.</p>
+<h2 id="how-this-book-is-arranged"><a class="header" href="#how-this-book-is-arranged">How this book is arranged</a></h2>
+<p>This book is written to be read straight through the first time. Each chapter
+assumes the ones before it and nothing after it, so if a piece of syntax
+turns up that hasn’t been introduced yet, that’s a bug in the book rather
+than something you were supposed to already know. Where a later chapter is
+genuinely the right home for a detail, the text says so and moves on instead
+of explaining it twice.</p>
+<p>Everything is built around the same two small tables, <code>trades</code> and <code>quotes</code>,
+which qpl can load for you:</p>
+<pre><code class="language-bash">qpl --load-demo
+</code></pre>
+<p>They hold one morning of invented market data, eight trades and five quotes.
+Being small is the point: every result printed in this book is the real
+output of the query above it, short enough to read in full, so you can check
+your understanding against what the language actually did rather than
+against a description of what it should have done.</p>
+<p>The most useful way to read what follows is with that REPL open in another
+window. qpl is a language you learn by typing rather than by studying, and
+the examples are all a single line long precisely so that you can.</p>
+<h2 id="before-you-start"><a class="header" href="#before-you-start">Before you start</a></h2>
+<p>If you have never used kdb+/q, two conventions will look strange on first
+contact, and both are explained properly when they come up: <code>/</code> starts a
+comment, which is why division is written <code>%</code> rather than <code>/</code>. Neither has
+any deeper meaning, and after an hour you will stop noticing.</p>
+<p>If you <em>have</em> used q, most of your instincts will transfer intact, and the
+<a href="language/operator-reference.html">Operator reference</a> is probably the fastest
+way in.</p>
+<h2 id="elsewhere"><a class="header" href="#elsewhere">Elsewhere</a></h2>
+<p>There’s a <a href="https://github.com/nicelgueta/qpl/tree/main/tools/vscode">VSCode extension</a>
+with syntax highlighting and a Ctrl+Enter REPL, which sends the current line
+straight to a live session. It comes into its own once you graduate from the
+prompt to writing <code>.qpl</code> scripts.</p>
+<p>The source, issue tracker, and prebuilt binaries all live on
 <a href="https://github.com/nicelgueta/qpl">GitHub</a>.</p>
-<p>See <a href="why.html">Why?</a> for the motivation, or jump straight to
-<a href="install.html">Install</a> and <a href="quickstart.html">Quickstart</a>.</p>
+<p>Next: <a href="why.html">Why?</a> if you want to know why this exists at all, or skip to
+<a href="install.html">Install</a> and <a href="quickstart.html">Quickstart</a> to start typing.</p>
 
                     </main>
 

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>lazy / collect - qpl</title>
+        <title>Categoricals &amp; enums - qpl</title>
 
 
         <!-- Custom HTML head -->
@@ -146,7 +146,7 @@
                         <a href="https://github.com/nicelgueta/qpl" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        <a href="https://github.com/nicelgueta/qpl/edit/main/book/src/language/lazy-collect.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        <a href="https://github.com/nicelgueta/qpl/edit/main/book/src/language/categoricals-enums.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
                             <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
@@ -180,89 +180,112 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="lazy--collect"><a class="header" href="#lazy--collect">lazy / collect</a></h1>
-<p>Everything so far has run the moment you pressed return. For interactive work
-on a table that fits in memory, that’s exactly right. It stops being right
-when the input is enormous.</p>
-<p>Consider the incremental workflow from
-<a href="../working-incrementally.html">Working incrementally</a>: five statements, each
-reading the result of the last. Run eagerly against a hundred-gigabyte
-parquet file, that’s five full passes over the data, four intermediate
-results held in memory, and a long wait between each line you type.</p>
-<p><code>lazy</code> fixes this. Put it at the front of a table expression and qpl stores
-the <strong>plan</strong> for producing that table instead of the table itself.</p>
-<pre><code class="language-qpl">t: lazy load "trades.parquet"
-q: lazy select sym, bid, ask from load "quotes.parquet"
+                        <h1 id="categoricals--enums"><a class="header" href="#categoricals--enums">Categoricals &amp; enums</a></h1>
+<p><a href="symbols.html">Symbols</a> introduced the backtick as a way of naming things, and
+ended by promising that symbols do one more job. This is that job.</p>
+<p>The problem is a familiar one. A column like <code>sym</code> in the demo data holds
+text, and the same handful of values repeat over and over: three distinct
+tickers across eight rows here, and perhaps a few hundred distinct values
+across a hundred million rows in real data. Stored as plain strings, every
+row carries its own copy of the text, and every comparison during a group-by,
+a join or a sort is a string comparison.</p>
+<p>Both problems go away if you store each distinct value once and give each row
+a small integer pointing at it. Polars offers two flavours of that idea, and
+qpl exposes both.</p>
+<h2 id="categoricals"><a class="header" href="#categoricals">Categoricals</a></h2>
+<p>Inside a table expression, <code>`$</code> casts a column to a <strong>categorical</strong>: an
+interned pool of strings, with the column itself holding integer codes.</p>
+<pre><code class="language-qpl">select country: `$country from t
 </code></pre>
-<p>Neither statement has read a single byte. <code>t</code> and <code>q</code> are recipes.</p>
-<h2 id="building-up-a-plan"><a class="header" href="#building-up-a-plan">Building up a plan</a></h2>
-<p>The way you extend a plan is the way you’d extend anything else: assign the
-name again. Each statement adds to the recipe rather than executing it.</p>
-<pre><code class="language-qpl">t: select sym, side, price, size from t where size &gt; 100
-t: update notional: price * size from t
-t: update band: ?[notional &gt; 50000; `big; `small] from t
+<p>Notice that this is the same <code>`$</code> that interned a string into a symbol in
+the earlier chapter. It’s the same idea applied to a whole column rather than
+a single value, which is why the spelling is shared.</p>
+<p>The codes are <code>u32</code> by default. If you know the column has few distinct
+values you can ask for a narrower code type, which costs less memory:</p>
+<pre><code class="language-qpl">select country: u8!`$country from t   / u8 codes, up to 256 distinct values
 </code></pre>
-<p>Three more statements, still no file access, all effectively instantaneous.
-The workflow you learned earlier is completely unchanged; the only difference
-is the word <code>lazy</code> several lines further up.</p>
-<p>Laziness is contagious, which is what makes that work. Querying a lazy
-binding gives you another lazy binding, so the REPL shows the plan rather
-than a table:</p>
-<pre><code class="language-qpl">qpl) l: lazy select sym, price from trades where size &gt; 100
-qpl) l
+<p>A categorical fixes the storage and comparison cost, but it doesn’t give the
+values any <em>order</em>. Sorting or comparing categorical values falls back to
+comparing the underlying text, because as far as Polars knows, the pool is
+just a bag of strings.</p>
+<h2 id="enums"><a class="header" href="#enums">Enums</a></h2>
+<p>An <strong>enum</strong> is the ordered version. You declare the values up front, in the
+order you want them to have, and that order fixes both how they sort and
+which code each one gets. The declaration is an ordinary symbol list:</p>
+<pre><code class="language-qpl">qpl) lvl: `low`mid`high
 </code></pre>
-<pre><code>simple π 2/2 ["sym", "price"]
-  FILTER col("size") &gt; 100
-  FROM
-    DF ["sym", "price", "size", "side", ...]; PROJECT["sym", "price", "size"] 3/5 COLUMNS
+<p>Then cast a column against it with <code>::</code>, naming the enum on the left:</p>
+<pre><code class="language-qpl">qpl) t: update band: lvl::`$?[size &gt;= 250; `high; size &gt;= 100; `mid; `low] from trades
+qpl) select sym, size, band from t
 </code></pre>
-<p>That’s Polars’ own description of what it intends to do, read from the bottom
-up: start from the frame, take only the three columns needed, filter, then
-project the two you asked for. Notice that it plans to read three columns
-rather than all five, and that it pushed the filter down next to the source.
-Nobody asked for either optimisation. This is the real benefit of deferring
-work: by the time anything executes, Polars can see the whole pipeline at
-once and rearrange it.</p>
-<p>Everything composes lazily. Joins, <code>by</code> aggregation, <code>order</code>, <code>distinct</code> and
-<code>limit</code> all simply add to the plan:</p>
-<pre><code class="language-qpl">j: select sym, side, price, size, bid, ask from t `sym lj q `sym
-j: select traded: sum notional, n: count price by sym, side from j
+<pre><code>shape: (8, 3)
+┌──────┬──────┬──────┐
+│ sym  ┆ size ┆ band │
+│ ---  ┆ ---  ┆ ---  │
+│ str  ┆ i64  ┆ enum │
+╞══════╪══════╪══════╡
+│ AAPL ┆ 100  ┆ mid  │
+│ AAPL ┆ 250  ┆ high │
+│ MSFT ┆ 80   ┆ low  │
+│ MSFT ┆ 300  ┆ high │
+│ GOOG ┆ 150  ┆ mid  │
+│ GOOG ┆ 90   ┆ low  │
+│ AAPL ┆ 500  ┆ high │
+│ MSFT ┆ 200  ┆ mid  │
+└──────┴──────┴──────┘
 </code></pre>
-<h2 id="making-it-happen"><a class="header" href="#making-it-happen">Making it happen</a></h2>
-<p>Two things force the plan to run, and which you want depends on where the
-result is going.</p>
-<p><code>collect</code> executes it and binds an ordinary in-memory table, for when you
-want to carry on working with the result interactively:</p>
-<pre><code class="language-qpl">tm: collect j
+<p>The <code>dtype</code> row reports <code>enum</code> rather than <code>str</code>. The <code>?[...]</code> in the middle
+is just the conditional from <a href="expressions.html">Expressions</a> producing symbols,
+and <code>lvl::</code> converts its output into the declared enum.</p>
+<p>Now the payoff. Because the enum knows that <code>low</code> comes before <code>mid</code> comes
+before <code>high</code>, you can compare against a value and get the meaning you’d
+expect:</p>
+<pre><code class="language-qpl">qpl) select sym, size, band from t where band &gt;= `mid
 </code></pre>
-<p><code>sink</code> executes it and streams the output straight to a file, without ever
-assembling the whole result in memory:</p>
-<pre><code class="language-qpl">j sink "summary.parquet"
+<pre><code>shape: (6, 3)
+┌──────┬──────┬──────┐
+│ sym  ┆ size ┆ band │
+│ ---  ┆ ---  ┆ ---  │
+│ str  ┆ i64  ┆ enum │
+╞══════╪══════╪══════╡
+│ AAPL ┆ 100  ┆ mid  │
+│ AAPL ┆ 250  ┆ high │
+│ MSFT ┆ 300  ┆ high │
+│ GOOG ┆ 150  ┆ mid  │
+│ AAPL ┆ 500  ┆ high │
+│ MSFT ┆ 200  ┆ mid  │
+└──────┴──────┴──────┘
 </code></pre>
-<p><code>sink</code> is the one that makes larger-than-memory work possible. The entire
-pipeline — read, filter, derive, join, aggregate, write — becomes a single
-streaming pass, and the peak memory is whatever the individual stages need
-rather than the size of the data.</p>
-<h2 id="when-to-use-which"><a class="header" href="#when-to-use-which">When to use which</a></h2>
-<p>Use eager evaluation while exploring something small, because seeing results
-immediately is the whole point of a REPL. Reach for <code>lazy</code> when the input is
-large, when the pipeline has several steps, or when the output is headed for
-a file rather than your screen. The syntax cost is one word, and you can
-develop a pipeline eagerly against a sample and then add <code>lazy</code> to run it
-over the full dataset.</p>
-<p><a href="https://github.com/nicelgueta/qpl/blob/main/examples/lazy_join_pipeline.qpl">examples/lazy_join_pipeline.qpl</a>
-is a complete example: two inputs, a join, an aggregation, and a sink to
-parquet, with nothing ever collected along the way.</p>
+<p><code>band &gt;= </code>mid`` means mid or high. Ask the same question of a plain string
+column and you’d get alphabetical order, in which “high” sorts before “low”
+and the query means nothing useful. Sorting behaves the same way, and because
+the comparison happens on the integer codes rather than the text, it’s also
+faster than the string version it replaces.</p>
+<h2 id="practical-notes"><a class="header" href="#practical-notes">Practical notes</a></h2>
+<p>What you cast can be a string column, or an existing categorical or enum,
+which Polars re-keys against the new ordering.</p>
+<p>Any value that appears in the column but not in the enum declaration becomes
+<code>null</code> rather than raising an error. This is the one thing to watch: it’s
+worth checking that your declared list genuinely covers every value the data
+can contain, since a typo in the declaration shows up as a column of nulls
+rather than as a complaint.</p>
+<p>Choosing between the two is straightforward. If the values have a natural
+order that you want to sort or compare by, declare an enum. If they’re just
+labels and you only care about grouping, joining and memory, a categorical is
+less setup.</p>
+<p>The <a href="https://docs.pola.rs/user-guide/expressions/categorical-data-and-enums">Polars user guide on categorical data and enums</a>
+goes deeper on the representation; qpl’s <code>`$</code> and <code>::</code> are thin syntax
+over exactly that machinery.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/temporal-types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/multiline.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/table-operators.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -272,11 +295,11 @@ parquet, with nothing ever collected along the way.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/temporal-types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/multiline.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/table-operators.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

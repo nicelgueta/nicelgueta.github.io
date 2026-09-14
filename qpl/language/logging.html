@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0a69469c.js";
+            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-421a8131.js"></script>
+        <script src="../toc-4c623711.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,21 +181,52 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="logging"><a class="header" href="#logging">Logging</a></h1>
-<p><code>log &lt;expr&gt;</code> (or <code>1 &lt;expr&gt;</code>, kdb-style) evaluates a scalar and prints it raw;
-bare <code>log</code> / <code>1</code> prints a blank line. Space-separated expressions are rendered
-and concatenated:</p>
-<pre><code class="language-qpl">log "starting run"
-log "test" str$2*3 " that"       / test6 that
-log "rows &gt; " thr ": " n         / rows &gt; 150: 42
+<p>Tables print themselves. Everything else — a progress note halfway through a
+script, a computed value you want to see, a label on a result — goes through
+<code>log</code>.</p>
+<pre><code class="language-qpl">qpl) log "starting run"
 </code></pre>
-<p>Top-level juxtaposition separates items rather than forming a call — wrap a call
-in parens: <code>log (f x) " done"</code>.</p>
-<p><code>\1 &lt;path&gt;</code> tees all stdout (log lines <em>and</em> query output) to a file as well as
-the terminal; bare <code>\1</code> detaches it. Works in scripts and the REPL.</p>
+<pre><code>starting run
+</code></pre>
+<p><code>log</code> prints its argument raw, with none of the type prefix or table framing
+that a result gets. Given several space-separated expressions it renders each
+one and joins them, which serves as string interpolation without the language
+needing any:</p>
+<pre><code class="language-qpl">qpl) apx: avg select price from trades where sym = "AAPL"
+qpl) log "avg AAPL px: " apx
+</code></pre>
+<pre><code>avg AAPL px: 183.13333333333333
+</code></pre>
+<p>Numbers are rendered for you, so the cast isn’t required, though
+<a href="casts.html">casting</a> to <code>str</code> explicitly is available when you want to control
+the form:</p>
+<pre><code class="language-qpl">qpl) log "test" str$2*3 " that"
+</code></pre>
+<pre><code>test6 that
+</code></pre>
+<p>A bare <code>log</code> prints an empty line.</p>
+<p><code>log</code> is the only thing that writes to stdout. kdb spells this <code>1 x</code>, after
+the Unix stdout file descriptor, and qpl used to accept that too — but a
+statement beginning with a digit is genuinely ambiguous, since <code>1 + 1</code> is
+also a perfectly good expression, and the shorthand caused more confusion
+than it saved keystrokes. It’s gone.</p>
+<h2 id="a-parsing-note"><a class="header" href="#a-parsing-note">A parsing note</a></h2>
+<p>At the top level, putting two things next to each other separates them into
+two items to be printed, rather than applying one to the other. That matters
+if you want to log the result of calling a function, since the call needs
+parentheses to stay a call:</p>
+<pre><code class="language-qpl">log (f x) " done"
+</code></pre>
+<h2 id="teeing-output-to-a-file"><a class="header" href="#teeing-output-to-a-file">Teeing output to a file</a></h2>
+<p><code>\1 &lt;path&gt;</code> mirrors everything printed — log lines and query results alike —
+into a file as well as the terminal. A bare <code>\1</code> stops it. This works in
+scripts and in the REPL:</p>
 <pre><code class="language-qpl">\1 run.log
 select from trades where size &gt; 100
 \1
 </code></pre>
+<p>It’s the simplest way to keep a record of what a script actually produced,
+without changing any of the statements in it.</p>
 
                     </main>
 
