@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "../searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -215,6 +215,14 @@ column at a time, name them:</p>
 </code></pre>
 <p>The available types are <code>f64</code> (or <code>float</code>), <code>f32</code>, <code>i64</code> (or <code>int</code>), <code>i32</code>,
 <code>i16</code>, <code>i8</code>, <code>u64</code>, <code>u32</code>, <code>u16</code>, <code>u8</code>, <code>bool</code>, and <code>str</code> (or <code>string</code>).</p>
+<h2 id="casting-a-whole-query"><a class="header" href="#casting-a-whole-query">Casting a whole query</a></h2>
+<p>The thing on the right of <code>$</code> doesn’t have to be a bare column reference —
+a whole <code>select</code> (or <code>update</code>/<code>collect</code>/…) works too, and casts its
+one-column result:</p>
+<pre><code class="language-qpl">qpl) `date$select ts from trades where sym = "AAPL"
+</code></pre>
+<pre><code>date[3]: 2024.03.15 2024.03.15 2024.03.15
+</code></pre>
 <h2 id="width-only-matters-in-a-column"><a class="header" href="#width-only-matters-in-a-column">Width only matters in a column</a></h2>
 <p>The narrow integer types are worth a note. In a <strong>scalar</strong> context, every
 integer width collapses to a single 64-bit integer, and both float widths
@@ -308,7 +316,7 @@ bites first, because a cast is often the innermost thing in an expression.</p>
         <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="../theme/qpl-highlight-d661aa6b.js"></script>
 
 
 

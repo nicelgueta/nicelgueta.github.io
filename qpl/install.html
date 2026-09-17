@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-4c623711.js"></script>
@@ -195,15 +195,14 @@ environment to remember to activate. That property is deliberate rather than
 incidental: a lot of the appeal of a tool like this is being able to drop it
 into a container, a CI job, or a colleague’s laptop as easily as <code>jq</code>.</p>
 <h2 id="the-ipc-feature"><a class="header" href="#the-ipc-feature">The IPC feature</a></h2>
-<p>There is one build-time decision worth knowing about, though you can safely
-defer it. qpl can optionally act as a client and server, so that one qpl
-process can query the tables held in another running one. That feature is
-switched off by default and adds no dependencies at all to a normal build:</p>
-<pre><code class="language-bash">cargo install --path . --features ipc
+<p>qpl can act as a client and server, so that one qpl process can query the
+tables held in another running one. That’s built in by default. If you don’t
+want the two extra dependencies it pulls in (<code>tokio</code>, <code>zeromq</code>), drop it:</p>
+<pre><code class="language-bash">cargo install --path . --no-default-features
 </code></pre>
-<p>Almost nobody needs this on day one, and nothing about a default build is a
-dead end, since you can rebuild with the feature whenever the need shows up.
-<a href="language/ipc.html">IPC</a> covers what it does, near the end of the book.</p>
+<p>Nothing about that is a dead end, since you can rebuild with the feature
+whenever the need shows up. <a href="language/ipc.html">IPC</a> covers what it does, near
+the end of the book.</p>
 <h2 id="checking-it-worked"><a class="header" href="#checking-it-worked">Checking it worked</a></h2>
 <pre><code class="language-bash">qpl --version
 </code></pre>
@@ -261,7 +260,7 @@ a couple of lines.</p>
         <script src="book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="theme/qpl-highlight-d661aa6b.js"></script>
 
 
 

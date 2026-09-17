@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "../searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -226,6 +226,15 @@ name you can change in one.</p>
 </code></pre>
 <pre><code>i64: 150
 </code></pre>
+<p>A big round number can be written in scientific notation instead of counting
+zeros: <code>1e6</code> and <code>10e5</code> both lex as the integer <code>1000000</code>. It only folds to an
+<code>Int</code> when the mantissa has no decimal point and the exponent isn’t negative
+— <code>1.5e3</code> and <code>5e-2</code> are floats (<code>1500.0</code> and <code>0.05</code>), same as they’d be
+anywhere else.</p>
+<pre><code class="language-qpl">qpl) row_cap: 1e6
+</code></pre>
+<pre><code>i64: 1000000
+</code></pre>
 <h2 id="rebinding-is-the-normal-thing-to-do"><a class="header" href="#rebinding-is-the-normal-thing-to-do">Rebinding is the normal thing to do</a></h2>
 <p>Names aren’t precious, and reassigning one is the ordinary way to move a
 pipeline forward rather than something to avoid:</p>
@@ -305,7 +314,7 @@ something:</p>
         <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="../theme/qpl-highlight-d661aa6b.js"></script>
 
 
 

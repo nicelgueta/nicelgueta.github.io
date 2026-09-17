@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "../searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -316,16 +316,44 @@ opportunity for a machine’s local settings to change a query’s meaning.</p>
 <tr><th></th><th></th></tr>
 </thead>
 <tbody>
-<tr><td><code>.qpl.d</code></td><td>today’s date</td></tr>
-<tr><td><code>.qpl.t</code></td><td>the time</td></tr>
-<tr><td><code>.qpl.p</code></td><td>the timestamp, to nanoseconds</td></tr>
-<tr><td><code>.qpl.n</code></td><td>timespan since midnight</td></tr>
+<tr><td><code>.qpl.dt</code></td><td>today’s date</td></tr>
+<tr><td><code>.qpl.tm</code></td><td>the time</td></tr>
+<tr><td><code>.qpl.ts</code></td><td>the timestamp, to nanoseconds</td></tr>
+<tr><td><code>.qpl.dlta</code></td><td>timespan since midnight</td></tr>
 </tbody>
 </table>
 </div>
-<p>They’re ordinary expressions and can be used anywhere one is allowed:</p>
-<pre><code class="language-qpl">log .qpl.d
+<p>They’re ordinary <strong>niladic built-in functions</strong>, not special syntax: like any
+function taking no parameters they can be called bare, as if they were
+variables, or with empty brackets, and they can be used anywhere an
+expression is allowed:</p>
+<pre><code class="language-qpl">log .qpl.dt
+log .qpl.ts[]
 </code></pre>
+<p>Being built-ins, those four names are reserved — binding over one
+(<code>.qpl.dt: 3</code>) is an error rather than a silent shadow. Wrapping one in a
+function of your own is the usual way to give it a shorter name:</p>
+<pre><code class="language-qpl">now: {[] .qpl.ts}
+log now
+</code></pre>
+<h2 id="raw-integers-and-the-epoch"><a class="header" href="#raw-integers-and-the-epoch">Raw integers and the epoch</a></h2>
+<p>A whole-column cast (<code>`timestamp$col</code>) goes through Polars, which counts
+nanoseconds from the <strong>Unix epoch</strong> (<code>1970.01.01</code>). A scalar <code>`timestamp$n</code>
+or <code>`long$ts</code> follows that same convention by default, so the two agree
+and a nanosecond count from almost any other tool round-trips as you’d
+expect:</p>
+<pre><code class="language-qpl">qpl) `timestamp$1700000000000000000
+</code></pre>
+<pre><code>timestamp: 2023.11.14D22:13:20.000000000
+</code></pre>
+<p>If you’re coming from kdb and want that boundary to use the type’s own
+internal epoch (<code>2000.01.01</code>) instead, set the
+<a href="config.html">config</a> knob <code>useqepoch</code>:</p>
+<pre><code class="language-qpl">.qpl.cfg useqepoch=true
+`timestamp$0                   / now reads as 2000.01.01D00:00:00.000000000
+</code></pre>
+<p>It moves only the raw-integer casts in both directions. Literals, arithmetic
+and display are unaffected either way.</p>
 <h2 id="not-there-yet"><a class="header" href="#not-there-yet">Not there yet</a></h2>
 <p>A few things q users reach for by reflex aren’t implemented. Rather than let
 you find out by trial and error: <code>xbar</code> bucketing, the <code>within</code> operator,
@@ -385,7 +413,7 @@ All are on the <a href="../roadmap.html">roadmap</a>.</p>
         <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="../theme/qpl-highlight-d661aa6b.js"></script>
 
 
 

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "../searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -217,6 +217,26 @@ qpl) fac[5]
 </code></pre>
 <pre><code>i64: 120
 </code></pre>
+<h2 id="writing-a-body-across-multiple-lines"><a class="header" href="#writing-a-body-across-multiple-lines">Writing a body across multiple lines</a></h2>
+<p>Semicolons are only needed to fit more than one statement on the same
+physical line. Written across several lines, a body reads like a script —
+one statement per line, indented under the opening <code>{[..]</code>:</p>
+<pre><code class="language-qpl">summarise: {[min_price]
+    joined: select sym, side, price, size, bid, ask from trades `sym lj quotes `sym
+    priced: select from joined where price &gt; min_price
+    banded: update band: `$?[size &gt;= 300; `large; size &gt;= 150; `mid; `small] from priced
+    select tot: sum price * size, avg_spread: avg ask - bid, n: count price
+        by sym, side, band
+        from banded
+        order tot desc
+    }
+</code></pre>
+<p>The rule is exactly the one from <a href="multiline.html">Multi-line statements</a>, just
+shifted one indent level in: a new line
+indented no further than the body’s first statement starts a new one; a line
+indented <em>more</em> than that continues the statement above (like the <code>by</code>/
+<code>from</code>/<code>order</code> lines above, which all belong to the final <code>select</code>). An
+explicit <code>;</code> still works if you’d rather keep two statements on one line.</p>
 <h2 id="returning-tables"><a class="header" href="#returning-tables">Returning tables</a></h2>
 <p>Nothing restricts a body to arithmetic. A function can end in a query, in
 which case calling it gives you a table:</p>
@@ -252,13 +272,53 @@ error, since there would be nothing to return.</p>
 the duration of the call. A function cannot modify a name outside itself, so
 a call’s effect is entirely described by what it returns.</p>
 <p><strong>Niladic functions</strong> take no arguments and are written <code>{[] ...}</code> or simply
-<code>{ ... }</code>, then called as <code>f[]</code>. The empty brackets are what distinguish
-calling it from naming it.</p>
-<p><strong>Functions are not values.</strong> You can bind one and call it, but you cannot
-pass one as an argument, return one from another function, or use one inside
-a <code>select</code> projection. If you’re reaching for a higher-order function, the
-language will not meet you there; that’s a deliberate limit on how much
-machinery the interpreter carries rather than an oversight.</p>
+<code>{ ... }</code>. They can be called either with empty brackets, <code>f[]</code>, or bare,
+<code>f</code>, which reads like a variable that recomputes every time you mention it:</p>
+<pre><code class="language-qpl">qpl) now: {[] .qpl.ts}
+qpl) now
+qpl) now[]
+</code></pre>
+<p>That’s exactly how the <code>.qpl.dt</code>/<code>.qpl.tm</code>/<code>.qpl.ts</code>/<code>.qpl.dlta</code> now-functions from
+<a href="temporal-types.html">Temporal types</a> work — they’re built-ins resolved by the
+same name lookup user functions go through, not special syntax. A function
+that <em>does</em> take parameters has no bare form: naming it gives you the function
+itself rather than calling it. Built-in names are reserved: binding over one
+is an error rather than a silent shadow.</p>
+<p><strong>A function is not a column value.</strong> <code>select px: inc from trades</code> is an
+error. Everywhere else, a function is an ordinary value — see below.</p>
+<h2 id="functions-as-values"><a class="header" href="#functions-as-values">Functions as values</a></h2>
+<p>A function is a value like an int or a list. It can be passed to another
+function, returned from one, and stored in a variable, and a <code>{[..] ..}</code>
+literal is legal anywhere an expression is:</p>
+<pre><code class="language-qpl">qpl) apply: {[f,x] f[x]}
+qpl) apply[{[y] y*2}; 5]
+</code></pre>
+<pre><code>i64: 10
+</code></pre>
+<p>The parameter <code>f</code> holds a function, so <code>f[x]</code> inside the body calls it. A
+function bound by name works the same way, since the name is just where the
+value happens to live:</p>
+<pre><code class="language-qpl">qpl) apply[inc; 41]
+</code></pre>
+<pre><code>i64: 42
+</code></pre>
+<p>A literal can also be applied on the spot, without being bound first, and a
+body can end in one — which is how a function returns a function:</p>
+<pre><code class="language-qpl">qpl) {[y] y*2}[21]
+qpl) adder: {[n] {[y] y+1}}
+qpl) plus1: adder[0]
+qpl) plus1[41]
+</code></pre>
+<pre><code>i64: 42
+i64: 42
+</code></pre>
+<p><strong>There is no lexical capture.</strong> A body sees its own parameters plus the
+session globals, and nothing else — not the locals of whoever called it, and
+not the locals of wherever the literal was written. So in <code>adder</code> above, the
+inner <code>{[y] y+1}</code> cannot refer to <code>n</code>; writing <code>{[y] y+n}</code> there gives you an
+undefined-name error when it runs. That’s the same rule named functions have
+always followed, and it’s why a function value needs to carry nothing but its
+parameters and its body.</p>
 <p><a href="https://github.com/nicelgueta/qpl/blob/main/examples/functions.qpl">examples/functions.qpl</a>
 in the repository is a runnable script covering all of the above.</p>
 
@@ -313,7 +373,7 @@ in the repository is a runnable script covering all of the above.</p>
         <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="../theme/qpl-highlight-d661aa6b.js"></script>
 
 
 

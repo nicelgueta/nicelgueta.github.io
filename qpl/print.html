@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-4c623711.js"></script>
@@ -331,15 +331,14 @@ environment to remember to activate. That property is deliberate rather than
 incidental: a lot of the appeal of a tool like this is being able to drop it
 into a container, a CI job, or a colleague’s laptop as easily as <code>jq</code>.</p>
 <h2 id="the-ipc-feature"><a class="header" href="#the-ipc-feature">The IPC feature</a></h2>
-<p>There is one build-time decision worth knowing about, though you can safely
-defer it. qpl can optionally act as a client and server, so that one qpl
-process can query the tables held in another running one. That feature is
-switched off by default and adds no dependencies at all to a normal build:</p>
-<pre><code class="language-bash">cargo install --path . --features ipc
+<p>qpl can act as a client and server, so that one qpl process can query the
+tables held in another running one. That’s built in by default. If you don’t
+want the two extra dependencies it pulls in (<code>tokio</code>, <code>zeromq</code>), drop it:</p>
+<pre><code class="language-bash">cargo install --path . --no-default-features
 </code></pre>
-<p>Almost nobody needs this on day one, and nothing about a default build is a
-dead end, since you can rebuild with the feature whenever the need shows up.
-<a href="#ipc">IPC</a> covers what it does, near the end of the book.</p>
+<p>Nothing about that is a dead end, since you can rebuild with the feature
+whenever the need shows up. <a href="#ipc">IPC</a> covers what it does, near
+the end of the book.</p>
 <h2 id="checking-it-worked"><a class="header" href="#checking-it-worked">Checking it worked</a></h2>
 <pre><code class="language-bash">qpl --version
 </code></pre>
@@ -667,6 +666,15 @@ name you can change in one.</p>
 <pre><code class="language-qpl">qpl) threshold
 </code></pre>
 <pre><code>i64: 150
+</code></pre>
+<p>A big round number can be written in scientific notation instead of counting
+zeros: <code>1e6</code> and <code>10e5</code> both lex as the integer <code>1000000</code>. It only folds to an
+<code>Int</code> when the mantissa has no decimal point and the exponent isn’t negative
+— <code>1.5e3</code> and <code>5e-2</code> are floats (<code>1500.0</code> and <code>0.05</code>), same as they’d be
+anywhere else.</p>
+<pre><code class="language-qpl">qpl) row_cap: 1e6
+</code></pre>
+<pre><code>i64: 1000000
 </code></pre>
 <h2 id="rebinding-is-the-normal-thing-to-do"><a class="header" href="#rebinding-is-the-normal-thing-to-do">Rebinding is the normal thing to do</a></h2>
 <p>Names aren’t precious, and reassigning one is the ordinary way to move a
@@ -1428,6 +1436,14 @@ column at a time, name them:</p>
 </code></pre>
 <p>The available types are <code>f64</code> (or <code>float</code>), <code>f32</code>, <code>i64</code> (or <code>int</code>), <code>i32</code>,
 <code>i16</code>, <code>i8</code>, <code>u64</code>, <code>u32</code>, <code>u16</code>, <code>u8</code>, <code>bool</code>, and <code>str</code> (or <code>string</code>).</p>
+<h2 id="casting-a-whole-query"><a class="header" href="#casting-a-whole-query">Casting a whole query</a></h2>
+<p>The thing on the right of <code>$</code> doesn’t have to be a bare column reference —
+a whole <code>select</code> (or <code>update</code>/<code>collect</code>/…) works too, and casts its
+one-column result:</p>
+<pre><code class="language-qpl">qpl) `date$select ts from trades where sym = "AAPL"
+</code></pre>
+<pre><code>date[3]: 2024.03.15 2024.03.15 2024.03.15
+</code></pre>
 <h2 id="width-only-matters-in-a-column"><a class="header" href="#width-only-matters-in-a-column">Width only matters in a column</a></h2>
 <p>The narrow integer types are worth a note. In a <strong>scalar</strong> context, every
 integer width collapses to a single 64-bit integer, and both float widths
@@ -1606,16 +1622,44 @@ opportunity for a machine’s local settings to change a query’s meaning.</p>
 <tr><th></th><th></th></tr>
 </thead>
 <tbody>
-<tr><td><code>.qpl.d</code></td><td>today’s date</td></tr>
-<tr><td><code>.qpl.t</code></td><td>the time</td></tr>
-<tr><td><code>.qpl.p</code></td><td>the timestamp, to nanoseconds</td></tr>
-<tr><td><code>.qpl.n</code></td><td>timespan since midnight</td></tr>
+<tr><td><code>.qpl.dt</code></td><td>today’s date</td></tr>
+<tr><td><code>.qpl.tm</code></td><td>the time</td></tr>
+<tr><td><code>.qpl.ts</code></td><td>the timestamp, to nanoseconds</td></tr>
+<tr><td><code>.qpl.dlta</code></td><td>timespan since midnight</td></tr>
 </tbody>
 </table>
 </div>
-<p>They’re ordinary expressions and can be used anywhere one is allowed:</p>
-<pre><code class="language-qpl">log .qpl.d
+<p>They’re ordinary <strong>niladic built-in functions</strong>, not special syntax: like any
+function taking no parameters they can be called bare, as if they were
+variables, or with empty brackets, and they can be used anywhere an
+expression is allowed:</p>
+<pre><code class="language-qpl">log .qpl.dt
+log .qpl.ts[]
 </code></pre>
+<p>Being built-ins, those four names are reserved — binding over one
+(<code>.qpl.dt: 3</code>) is an error rather than a silent shadow. Wrapping one in a
+function of your own is the usual way to give it a shorter name:</p>
+<pre><code class="language-qpl">now: {[] .qpl.ts}
+log now
+</code></pre>
+<h2 id="raw-integers-and-the-epoch"><a class="header" href="#raw-integers-and-the-epoch">Raw integers and the epoch</a></h2>
+<p>A whole-column cast (<code>`timestamp$col</code>) goes through Polars, which counts
+nanoseconds from the <strong>Unix epoch</strong> (<code>1970.01.01</code>). A scalar <code>`timestamp$n</code>
+or <code>`long$ts</code> follows that same convention by default, so the two agree
+and a nanosecond count from almost any other tool round-trips as you’d
+expect:</p>
+<pre><code class="language-qpl">qpl) `timestamp$1700000000000000000
+</code></pre>
+<pre><code>timestamp: 2023.11.14D22:13:20.000000000
+</code></pre>
+<p>If you’re coming from kdb and want that boundary to use the type’s own
+internal epoch (<code>2000.01.01</code>) instead, set the
+<a href="#config">config</a> knob <code>useqepoch</code>:</p>
+<pre><code class="language-qpl">.qpl.cfg useqepoch=true
+`timestamp$0                   / now reads as 2000.01.01D00:00:00.000000000
+</code></pre>
+<p>It moves only the raw-integer casts in both directions. Literals, arithmetic
+and display are unaffected either way.</p>
 <h2 id="not-there-yet"><a class="header" href="#not-there-yet">Not there yet</a></h2>
 <p>A few things q users reach for by reflex aren’t implemented. Rather than let
 you find out by trial and error: <code>xbar</code> bucketing, the <code>within</code> operator,
@@ -1765,6 +1809,10 @@ reads as prose; <code>#</code> is the q-style shorthand:</p>
 <a href="#column-expressions--lists">Column expressions &amp; lists</a>. Whether you get a slice
 or a limit depends only on whether the thing on its right is a list or a
 table, and in both cases it means “the first n”.</p>
+<p>A negative count takes from the end instead — the last <code>n</code> rows — same as <code>#</code>
+on a list:</p>
+<pre><code class="language-qpl">qpl) -3 limit trades      / identical to -3#trades
+</code></pre>
 <h2 id="dropping-columns"><a class="header" href="#dropping-columns">Dropping columns</a></h2>
 <p>Also two spellings, <code>drop</code> and <code>_</code>, taking a list of column names as symbols:</p>
 <pre><code class="language-qpl">`price`size drop select from trades
@@ -2021,6 +2069,26 @@ qpl) fac[5]
 </code></pre>
 <pre><code>i64: 120
 </code></pre>
+<h2 id="writing-a-body-across-multiple-lines"><a class="header" href="#writing-a-body-across-multiple-lines">Writing a body across multiple lines</a></h2>
+<p>Semicolons are only needed to fit more than one statement on the same
+physical line. Written across several lines, a body reads like a script —
+one statement per line, indented under the opening <code>{[..]</code>:</p>
+<pre><code class="language-qpl">summarise: {[min_price]
+    joined: select sym, side, price, size, bid, ask from trades `sym lj quotes `sym
+    priced: select from joined where price &gt; min_price
+    banded: update band: `$?[size &gt;= 300; `large; size &gt;= 150; `mid; `small] from priced
+    select tot: sum price * size, avg_spread: avg ask - bid, n: count price
+        by sym, side, band
+        from banded
+        order tot desc
+    }
+</code></pre>
+<p>The rule is exactly the one from <a href="#multi-line-statements">Multi-line statements</a>, just
+shifted one indent level in: a new line
+indented no further than the body’s first statement starts a new one; a line
+indented <em>more</em> than that continues the statement above (like the <code>by</code>/
+<code>from</code>/<code>order</code> lines above, which all belong to the final <code>select</code>). An
+explicit <code>;</code> still works if you’d rather keep two statements on one line.</p>
 <h2 id="returning-tables"><a class="header" href="#returning-tables">Returning tables</a></h2>
 <p>Nothing restricts a body to arithmetic. A function can end in a query, in
 which case calling it gives you a table:</p>
@@ -2056,13 +2124,53 @@ error, since there would be nothing to return.</p>
 the duration of the call. A function cannot modify a name outside itself, so
 a call’s effect is entirely described by what it returns.</p>
 <p><strong>Niladic functions</strong> take no arguments and are written <code>{[] ...}</code> or simply
-<code>{ ... }</code>, then called as <code>f[]</code>. The empty brackets are what distinguish
-calling it from naming it.</p>
-<p><strong>Functions are not values.</strong> You can bind one and call it, but you cannot
-pass one as an argument, return one from another function, or use one inside
-a <code>select</code> projection. If you’re reaching for a higher-order function, the
-language will not meet you there; that’s a deliberate limit on how much
-machinery the interpreter carries rather than an oversight.</p>
+<code>{ ... }</code>. They can be called either with empty brackets, <code>f[]</code>, or bare,
+<code>f</code>, which reads like a variable that recomputes every time you mention it:</p>
+<pre><code class="language-qpl">qpl) now: {[] .qpl.ts}
+qpl) now
+qpl) now[]
+</code></pre>
+<p>That’s exactly how the <code>.qpl.dt</code>/<code>.qpl.tm</code>/<code>.qpl.ts</code>/<code>.qpl.dlta</code> now-functions from
+<a href="#temporal-types">Temporal types</a> work — they’re built-ins resolved by the
+same name lookup user functions go through, not special syntax. A function
+that <em>does</em> take parameters has no bare form: naming it gives you the function
+itself rather than calling it. Built-in names are reserved: binding over one
+is an error rather than a silent shadow.</p>
+<p><strong>A function is not a column value.</strong> <code>select px: inc from trades</code> is an
+error. Everywhere else, a function is an ordinary value — see below.</p>
+<h2 id="functions-as-values"><a class="header" href="#functions-as-values">Functions as values</a></h2>
+<p>A function is a value like an int or a list. It can be passed to another
+function, returned from one, and stored in a variable, and a <code>{[..] ..}</code>
+literal is legal anywhere an expression is:</p>
+<pre><code class="language-qpl">qpl) apply: {[f,x] f[x]}
+qpl) apply[{[y] y*2}; 5]
+</code></pre>
+<pre><code>i64: 10
+</code></pre>
+<p>The parameter <code>f</code> holds a function, so <code>f[x]</code> inside the body calls it. A
+function bound by name works the same way, since the name is just where the
+value happens to live:</p>
+<pre><code class="language-qpl">qpl) apply[inc; 41]
+</code></pre>
+<pre><code>i64: 42
+</code></pre>
+<p>A literal can also be applied on the spot, without being bound first, and a
+body can end in one — which is how a function returns a function:</p>
+<pre><code class="language-qpl">qpl) {[y] y*2}[21]
+qpl) adder: {[n] {[y] y+1}}
+qpl) plus1: adder[0]
+qpl) plus1[41]
+</code></pre>
+<pre><code>i64: 42
+i64: 42
+</code></pre>
+<p><strong>There is no lexical capture.</strong> A body sees its own parameters plus the
+session globals, and nothing else — not the locals of whoever called it, and
+not the locals of wherever the literal was written. So in <code>adder</code> above, the
+inner <code>{[y] y+1}</code> cannot refer to <code>n</code>; writing <code>{[y] y+n}</code> there gives you an
+undefined-name error when it runs. That’s the same rule named functions have
+always followed, and it’s why a function value needs to carry nothing but its
+parameters and its body.</p>
 <p><a href="https://github.com/nicelgueta/qpl/blob/main/examples/functions.qpl">examples/functions.qpl</a>
 in the repository is a runnable script covering all of the above.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2170,6 +2278,10 @@ off mid-expression. A blank line submits what it has.</p>
 <p>In practice this means you can type or paste a multi-line statement at the
 prompt much as you’d write it in a file, and press return on an empty line
 when you’re done.</p>
+<p>Inside a <code>{[..] ..}</code> <a href="#writing-a-body-across-multiple-lines">function body</a>,
+the same rule applies one indent level in: each line at the body’s own
+baseline indent is a separate statement (no <code>;</code> needed), and a line indented
+<em>further</em> continues the one above, exactly like the script rule above.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="logging"><a class="header" href="#logging">Logging</a></h1>
 <p>Tables print themselves. Everything else — a progress note halfway through a
@@ -2208,6 +2320,20 @@ if you want to log the result of calling a function, since the call needs
 parentheses to stay a call:</p>
 <pre><code class="language-qpl">log (f x) " done"
 </code></pre>
+<h2 id="inside-a-function-body"><a class="header" href="#inside-a-function-body">Inside a function body</a></h2>
+<p>The bareword form above only works as a whole top-level line — it runs to the
+end of the line, so it has no way to stop early if it’s embedded in something
+bigger. <code>log[...]</code> is the same thing scoped with brackets instead, which is
+what makes it usable inside a function body or nested in a larger expression:</p>
+<pre><code class="language-qpl">info: {[s] log[str$.qpl.ts " - INFO " s]}
+info["service started"]
+</code></pre>
+<pre><code>2024.03.15D09:30:00.000000000 - INFO service started
+</code></pre>
+<p>Arguments inside the brackets are still space-separated and concatenated
+exactly like the bareword form (a <code>;</code> between them is accepted too, but never
+required) — <code>[...]</code> only marks where the argument list ends, since a function
+body can’t rely on “the rest of the line” the way a REPL line can.</p>
 <h2 id="teeing-output-to-a-file"><a class="header" href="#teeing-output-to-a-file">Teeing output to a file</a></h2>
 <p><code>\1 &lt;path&gt;</code> mirrors everything printed — log lines and query results alike —
 into a file as well as the terminal. A bare <code>\1</code> stops it. This works in
@@ -2227,7 +2353,7 @@ statement. <code>.qpl.cfg</code> sets them, taking one or more <code>key=value</
 <p>A bare <code>.qpl.cfg</code> prints the current settings, which is useful when a result
 looks unexpected and you want to check what’s in effect. Both forms work in
 scripts and in the REPL.</p>
-<p>There are three knobs:</p>
+<p>The knobs are:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2236,14 +2362,19 @@ scripts and in the REPL.</p>
 <tbody>
 <tr><td><code>maxcol</code></td><td>how many columns are printed when rendering a table</td><td><code>8</code></td></tr>
 <tr><td><code>maxrow</code></td><td>how many rows are printed when rendering a table</td><td><code>10</code></td></tr>
+<tr><td><code>tblwidth</code></td><td>how many characters wide a printed table may be, <code>-1</code> for unlimited</td><td><code>-1</code></td></tr>
+<tr><td><code>strlen</code></td><td>how many characters of a cell are shown before an ellipsis, <code>-1</code> for unlimited</td><td><code>30</code></td></tr>
 <tr><td><code>round_type</code></td><td>rounding mode for <code>round</code>: <code>HALF_UP</code> or <code>HALF_TO_EVEN</code></td><td><code>HALF_TO_EVEN</code></td></tr>
+<tr><td><code>useqepoch</code></td><td>read/write raw integers at the <code>timestamp</code> boundary as ns since kdb’s <code>2000.01.01</code> rather than the Unix epoch</td><td><code>false</code></td></tr>
 </tbody>
 </table>
 </div>
-<p><code>maxrow</code> and <code>maxcol</code> affect display only. They never change a result, only
-how much of it reaches your terminal, which is why the demo tables in this
-book print in full at eight rows and would start eliding at eleven. Raise
-them while exploring something wide or long.</p>
+<p><code>maxrow</code>, <code>maxcol</code>, <code>tblwidth</code> and <code>strlen</code> affect display only. They never
+change a result, only how much of it reaches your terminal, which is why the
+demo tables in this book print in full at eight rows and would start eliding
+at eleven. Raise them while exploring something wide or long — <code>tblwidth=200</code>
+for a table with many columns, <code>strlen=-1</code> when a string column is being cut
+off mid-value.</p>
 <p><code>round_type</code> is different, because it changes an answer. It decides what
 <code>round</code> from <a href="#expressions">Expressions</a> does with a value sitting exactly
 on a boundary:</p>
@@ -2257,11 +2388,15 @@ convention most people are taught at school and the one many accounting rules
 require. Neither is more correct in general, so if the numbers you produce
 have to agree with somebody else’s, set this explicitly at the top of the
 script rather than inheriting a default.</p>
+<p><code>useqepoch</code> also changes answers, and is covered where it matters, in
+<a href="#temporal-types">Temporal types</a>: it only affects a raw integer crossing
+the <code>timestamp</code> boundary (<code>`timestamp$n</code>, <code>`long$ts</code>), choosing
+between the Unix epoch (the default) and kdb’s <code>2000.01.01</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="ipc"><a class="header" href="#ipc">IPC</a></h1>
-<p><em>This chapter describes an optional feature. It’s compiled in with
-<code>--features ipc</code>, as <a href="#install">Install</a> covered, and adds nothing at
-all to a build without it.</em></p>
+<p><em>This chapter describes the <code>ipc</code> feature, on by default (drop it with
+<code>--no-default-features</code>, as <a href="#install">Install</a> covered), and adds
+nothing at all to a build without it.</em></p>
 <p>Every session so far has been a single process with its own tables in its own
 memory. IPC is what you reach for when that stops being enough: it lets one
 qpl process send statements to another running one and get real results back,
@@ -2384,9 +2519,9 @@ explains it.</p>
 <tr><td><code>zip</code></td><td>build a table from a dict of named lists</td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
 <tr><td><code>lj</code> <code>ij</code> <code>rj</code></td><td>left / inner / right join</td><td><a href="#select--update--delete">select</a></td></tr>
 <tr><td><code>{...}</code></td><td>lambda</td><td><a href="#functions">Functions</a></td></tr>
-<tr><td><code>.qpl.d</code> <code>.qpl.t</code> <code>.qpl.p</code> <code>.qpl.n</code></td><td>current date / time / timestamp / timespan, UTC</td><td><a href="#temporal-types">Temporal types</a></td></tr>
+<tr><td><code>.qpl.dt</code> <code>.qpl.tm</code> <code>.qpl.ts</code> <code>.qpl.dlta</code></td><td>current date / time / timestamp / timespan, UTC</td><td><a href="#temporal-types">Temporal types</a></td></tr>
 <tr><td><code>.qpl.cfg</code></td><td>session settings</td><td><a href="#config">Config</a></td></tr>
-<tr><td><code>hopen</code> <code>`w!hopen</code> <code>dispatch</code> <code>async dispatch</code> <code>await</code></td><td>IPC client (<code>--features ipc</code>)</td><td><a href="#ipc">IPC</a></td></tr>
+<tr><td><code>hopen</code> <code>`w!hopen</code> <code>dispatch</code> <code>async dispatch</code> <code>await</code></td><td>IPC client (<code>ipc</code> feature, on by default)</td><td><a href="#ipc">IPC</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -2553,7 +2688,7 @@ between a temporal column and an integer.</p>
         <script src="book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="theme/qpl-highlight-d661aa6b.js"></script>
 
         <script>
         window.addEventListener('load', function() {

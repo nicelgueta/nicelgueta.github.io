@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "../searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -224,6 +224,10 @@ reads as prose; <code>#</code> is the q-style shorthand:</p>
 <a href="column-expressions.html">Column expressions &amp; lists</a>. Whether you get a slice
 or a limit depends only on whether the thing on its right is a list or a
 table, and in both cases it means “the first n”.</p>
+<p>A negative count takes from the end instead — the last <code>n</code> rows — same as <code>#</code>
+on a list:</p>
+<pre><code class="language-qpl">qpl) -3 limit trades      / identical to -3#trades
+</code></pre>
 <h2 id="dropping-columns"><a class="header" href="#dropping-columns">Dropping columns</a></h2>
 <p>Also two spellings, <code>drop</code> and <code>_</code>, taking a list of column names as symbols:</p>
 <pre><code class="language-qpl">`price`size drop select from trades
@@ -322,7 +326,7 @@ happen: select from trades, take the distinct rows, then drop two columns.</p>
         <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="../theme/qpl-highlight-d661aa6b.js"></script>
 
 
 

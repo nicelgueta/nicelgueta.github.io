@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6fd81d0f.js";
+            window.path_to_searchindex_js = "../searchindex-1fd3d319.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -217,6 +217,20 @@ if you want to log the result of calling a function, since the call needs
 parentheses to stay a call:</p>
 <pre><code class="language-qpl">log (f x) " done"
 </code></pre>
+<h2 id="inside-a-function-body"><a class="header" href="#inside-a-function-body">Inside a function body</a></h2>
+<p>The bareword form above only works as a whole top-level line — it runs to the
+end of the line, so it has no way to stop early if it’s embedded in something
+bigger. <code>log[...]</code> is the same thing scoped with brackets instead, which is
+what makes it usable inside a function body or nested in a larger expression:</p>
+<pre><code class="language-qpl">info: {[s] log[str$.qpl.ts " - INFO " s]}
+info["service started"]
+</code></pre>
+<pre><code>2024.03.15D09:30:00.000000000 - INFO service started
+</code></pre>
+<p>Arguments inside the brackets are still space-separated and concatenated
+exactly like the bareword form (a <code>;</code> between them is accepted too, but never
+required) — <code>[...]</code> only marks where the argument list ends, since a function
+body can’t rely on “the rest of the line” the way a REPL line can.</p>
 <h2 id="teeing-output-to-a-file"><a class="header" href="#teeing-output-to-a-file">Teeing output to a file</a></h2>
 <p><code>\1 &lt;path&gt;</code> mirrors everything printed — log lines and query results alike —
 into a file as well as the terminal. A bare <code>\1</code> stops it. This works in
@@ -279,7 +293,7 @@ without changing any of the statements in it.</p>
         <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../theme/qpl-highlight-2172e3a2.js"></script>
+        <script src="../theme/qpl-highlight-d661aa6b.js"></script>
 
 
 
