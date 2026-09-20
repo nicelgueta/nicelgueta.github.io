@@ -1,0 +1,1 @@
+import{l as e}from"./useAppColors-CzHwS3Vm.js";import{$ as t,H as n,R as r,at as i,z as a}from"./Button-cuYdSyfu.js";var o=e(),s=r(function(e,r){let s=n(`Link`,e),{className:c,isExternal:l,...u}=t(e);return(0,o.jsx)(a.a,{target:l?`_blank`:void 0,rel:l?`noopener`:void 0,ref:r,className:i(`chakra-link`,c),...u,__css:s})});s.displayName=`Link`;export{s as t};
