@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1fd3d319.js";
+            window.path_to_searchindex_js = "searchindex-00c3bbe4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-4c623711.js"></script>
@@ -344,6 +344,27 @@ the end of the book.</p>
 </code></pre>
 <p>Once that responds, <a href="#quickstart">Quickstart</a> has you querying data within
 a couple of lines.</p>
+<h2 id="editor-support"><a class="header" href="#editor-support">Editor support</a></h2>
+<h3 id="vscode-extension"><a class="header" href="#vscode-extension">VSCode extension</a></h3>
+<p>The <a href="https://marketplace.visualstudio.com/items?itemName=nicelgueta.qpl">VSCode extension</a>
+(<code>nicelgueta.qpl</code> on the Marketplace) adds syntax highlighting, autocomplete
+for keywords/builtins/table and column names, and a Ctrl+Enter binding that
+sends the current line or selection to a REPL running alongside the editor —
+install it and go straight to editing <code>.qpl</code> files with the interpreter one
+keystroke away.</p>
+<h3 id="try-it-in-a-browser-no-install"><a class="header" href="#try-it-in-a-browser-no-install">Try it in a browser, no install</a></h3>
+<p>qpl also compiles to WebAssembly, and that build is running live at
+<a href="https://nicelgueta.github.io/fastboard/board/">FastBoard</a> — free to try with
+nothing to install. Open the board, add a <strong>Code Editor</strong> widget, and set its
+language to <code>qpl</code>. The editor is Monaco, the same editor VSCode is built on,
+so it comes with the same syntax highlighting and autocomplete as the
+extension above, straight from the wasm-compiled interpreter.</p>
+<p>You can also add a <strong>Data Table</strong> widget alongside it, upload your own CSV or Parquet, and link the Code Editor’s target table to it to route query results straight
+into the table — a way to poke at qpl against real data without leaving the
+browser tab. Because the interpreter is compiled to wasm and runs entirely
+client-side, in a Web Worker, nothing you upload is ever sent to a server —
+there isn’t one for this to talk to. Query it, chart it, close the tab, and
+none of it left your machine. Check the network tab under dev tools if you don’t believe me.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
 <p>Start the REPL with the demo tables loaded:</p>
