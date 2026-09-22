@@ -9,7 +9,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Query Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-00c3bbe4.js";
+            window.path_to_searchindex_js = "searchindex-f1848e64.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-4c623711.js"></script>
@@ -178,7 +178,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="qpl--quick-polars-query-language"><a class="header" href="#qpl--quick-polars-query-language">qpl — Quick Polars Query Language</a></h1>
+                        <h1 id="qpl--quick-polars-language"><a class="header" href="#qpl--quick-polars-language">qpl — Quick Polars Language</a></h1>
 <p>qpl is a query language with two rather different parents. The syntax is
 borrowed from kdb+/q, which means it is terse to the point of looking
 cryptic until it suddenly doesn’t. The engine underneath is
@@ -1141,6 +1141,18 @@ front of a column or variable it expands to a subtraction from zero, so it
 works the same way in every context:</p>
 <pre><code class="language-qpl">select neg_mv: -price from trades
 </code></pre>
+<h2 id="a-word-about-evaluation-order"><a class="header" href="#a-word-about-evaluation-order">A word about evaluation order</a></h2>
+<p>This is worth internalising early, because it applies to every expression in
+the language, not just the operators above: qpl evaluates right to left,
+following q, rather than the left-to-right order most languages use. With <code>+</code>
+or <code>*</code> that’s invisible, but with anything that doesn’t commute it changes the
+answer.</p>
+<p><code>10 - 3 - 2</code> doesn’t give <code>5</code>; reading right to left, <code>3 - 2</code> happens first,
+then <code>10 - 1</code>, giving <code>9</code>. Parentheses make the order explicit whenever it
+matters: <code>(10 - 3) - 2</code> is the <code>5</code> a left-to-right reader would expect.
+<a href="#casts">Casts</a> is where this most often catches people out, because a cast
+tends to sit innermost in an expression — but the rule is general, so keep it
+in mind anywhere you chain non-commutative operators.</p>
 <h2 id="conditionals"><a class="header" href="#conditionals">Conditionals</a></h2>
 <p><code>?[...]</code> is the vectorised conditional, and it’s the piece of syntax most
 worth getting comfortable with, since it does the work of SQL’s <code>CASE WHEN</code>
@@ -1327,7 +1339,12 @@ qpl) select sym, price from trades where price &gt;= top
 └──────┴───────┘
 </code></pre>
 <p>In SQL that needs a correlated subquery. Here it’s two statements, and the
-first one is reusable.</p>
+first one is reusable — handy when several later queries need the same
+<code>top</code>. When you don’t need to reuse it, skip the intermediate name and write
+the reduction straight into the <code>where</code>, wrapped in parentheses so qpl can
+tell it’s a single value and not a column reference:</p>
+<pre><code class="language-qpl">select sym, price from trades where price &gt;= (max price)
+</code></pre>
 <p>Verbs that don’t reduce — <code>cumsum</code>, <code>abs</code>, and the parameterised ones like
 <code>2 round</code> — return another list of the same length instead.</p>
 <h2 id="taking-part-of-a-list"><a class="header" href="#taking-part-of-a-list">Taking part of a list</a></h2>
@@ -1359,12 +1376,14 @@ one: (trades`sym)[0]         / a single symbol
 <p>Following q, a parenthesised expression can also be indexed by just putting
 the indices after it: <code>(trades`price) 2 3</code> means the same as
 <code>(trades`price)[2 3]</code>.</p>
-<p>One limitation to note: <code>where</code> attaches to a column expression <em>before</em> it
-becomes a list. Once you’ve bound a list to a name, that form is no longer
-available, so filter first and materialise second.</p>
+<p>One limitation to note: the <code>where</code> in <code>trades\</code>price where size &gt; 100<code>filters the *table's* rows by any of its columns, before the one column is extracted. Once a list is bound to a name, that particular form is gone — a bound list has no other columns left to filter by, so</code>size<code>is no longer in scope. (A list still has a</code>where` of its own after that point, just a different one —
+filtering by the list’s <em>own</em> values, covered later in this chapter — so
+don’t read “no longer available” as “lists can’t be filtered.”)</p>
 <h2 id="arithmetic-on-whole-lists"><a class="header" href="#arithmetic-on-whole-lists">Arithmetic on whole lists</a></h2>
-<p>Because a list is a Series, operators apply elementwise. A list against a
-scalar broadcasts the scalar across every element:</p>
+<p>Like in <strong>array programming</strong> languages: operators work on whole lists at once instead
+of looping over elements, the same style kdb+/q and NumPy use. Because a list
+is a Series, operators apply elementwise. A list against a scalar broadcasts
+the scalar across every element:</p>
 <pre><code class="language-qpl">qpl) l: 10 20 30 40 50
 qpl) l + 2
 </code></pre>
@@ -1459,12 +1478,17 @@ column at a time, name them:</p>
 <code>i16</code>, <code>i8</code>, <code>u64</code>, <code>u32</code>, <code>u16</code>, <code>u8</code>, <code>bool</code>, and <code>str</code> (or <code>string</code>).</p>
 <h2 id="casting-a-whole-query"><a class="header" href="#casting-a-whole-query">Casting a whole query</a></h2>
 <p>The thing on the right of <code>$</code> doesn’t have to be a bare column reference —
-a whole <code>select</code> (or <code>update</code>/<code>collect</code>/…) works too, and casts its
-one-column result:</p>
+a whole <code>select</code> (or <code>update</code>/<code>collect</code>/…) works too:</p>
 <pre><code class="language-qpl">qpl) `date$select ts from trades where sym = "AAPL"
 </code></pre>
 <pre><code>date[3]: 2024.03.15 2024.03.15 2024.03.15
 </code></pre>
+<p>This only makes sense for a <strong>single-column</strong> query — the cast applies to
+one column and returns a list, not a table. If the query returns more than
+one column, the cast doesn’t error; it silently casts the <em>first</em> column
+and drops the rest, so <code>`date$select ts, sym from trades</code> gives back the
+dates only, with <code>sym</code> discarded. Keep the query to the one column you
+actually want cast.</p>
 <h2 id="width-only-matters-in-a-column"><a class="header" href="#width-only-matters-in-a-column">Width only matters in a column</a></h2>
 <p>The narrow integer types are worth a note. In a <strong>scalar</strong> context, every
 integer width collapses to a single 64-bit integer, and both float widths
@@ -1491,11 +1515,10 @@ which is what you’d want:</p>
 </code></pre>
 <pre><code>i64: 43
 </code></pre>
-<h2 id="a-word-about-evaluation-order"><a class="header" href="#a-word-about-evaluation-order">A word about evaluation order</a></h2>
-<p>That last example is a convenient place to mention something that applies to
-the whole language rather than just to casts. qpl evaluates right to left,
-following q. With <code>+</code> it makes no visible difference, but with an operator
-that doesn’t commute it very much does.</p>
+<h2 id="evaluation-order-bites-here-first"><a class="header" href="#evaluation-order-bites-here-first">Evaluation order bites here first</a></h2>
+<p><a href="#expressions">Expressions</a> already introduced qpl’s right-to-left
+evaluation order, but a cast is usually where it’s first felt in practice,
+because a cast tends to be the innermost thing in an expression.</p>
 <p>Writing <code>int$"42" - 1</code> doesn’t subtract one from forty-two. Reading right to
 left, the <code>-</code> is applied first, so qpl tries to cast the result of
 <code>"42" - 1</code>. What you want is:</p>

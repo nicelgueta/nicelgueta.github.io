@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Query Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-00c3bbe4.js";
+            window.path_to_searchindex_js = "../searchindex-f1848e64.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -217,12 +217,17 @@ column at a time, name them:</p>
 <code>i16</code>, <code>i8</code>, <code>u64</code>, <code>u32</code>, <code>u16</code>, <code>u8</code>, <code>bool</code>, and <code>str</code> (or <code>string</code>).</p>
 <h2 id="casting-a-whole-query"><a class="header" href="#casting-a-whole-query">Casting a whole query</a></h2>
 <p>The thing on the right of <code>$</code> doesn’t have to be a bare column reference —
-a whole <code>select</code> (or <code>update</code>/<code>collect</code>/…) works too, and casts its
-one-column result:</p>
+a whole <code>select</code> (or <code>update</code>/<code>collect</code>/…) works too:</p>
 <pre><code class="language-qpl">qpl) `date$select ts from trades where sym = "AAPL"
 </code></pre>
 <pre><code>date[3]: 2024.03.15 2024.03.15 2024.03.15
 </code></pre>
+<p>This only makes sense for a <strong>single-column</strong> query — the cast applies to
+one column and returns a list, not a table. If the query returns more than
+one column, the cast doesn’t error; it silently casts the <em>first</em> column
+and drops the rest, so <code>`date$select ts, sym from trades</code> gives back the
+dates only, with <code>sym</code> discarded. Keep the query to the one column you
+actually want cast.</p>
 <h2 id="width-only-matters-in-a-column"><a class="header" href="#width-only-matters-in-a-column">Width only matters in a column</a></h2>
 <p>The narrow integer types are worth a note. In a <strong>scalar</strong> context, every
 integer width collapses to a single 64-bit integer, and both float widths
@@ -249,11 +254,10 @@ which is what you’d want:</p>
 </code></pre>
 <pre><code>i64: 43
 </code></pre>
-<h2 id="a-word-about-evaluation-order"><a class="header" href="#a-word-about-evaluation-order">A word about evaluation order</a></h2>
-<p>That last example is a convenient place to mention something that applies to
-the whole language rather than just to casts. qpl evaluates right to left,
-following q. With <code>+</code> it makes no visible difference, but with an operator
-that doesn’t commute it very much does.</p>
+<h2 id="evaluation-order-bites-here-first"><a class="header" href="#evaluation-order-bites-here-first">Evaluation order bites here first</a></h2>
+<p><a href="expressions.html">Expressions</a> already introduced qpl’s right-to-left
+evaluation order, but a cast is usually where it’s first felt in practice,
+because a cast tends to be the innermost thing in an expression.</p>
 <p>Writing <code>int$"42" - 1</code> doesn’t subtract one from forty-two. Reading right to
 left, the <code>-</code> is applied first, so qpl tries to cast the result of
 <code>"42" - 1</code>. What you want is:</p>

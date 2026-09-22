@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Query Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-00c3bbe4.js";
+            window.path_to_searchindex_js = "../searchindex-f1848e64.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -244,7 +244,12 @@ qpl) select sym, price from trades where price &gt;= top
 └──────┴───────┘
 </code></pre>
 <p>In SQL that needs a correlated subquery. Here it’s two statements, and the
-first one is reusable.</p>
+first one is reusable — handy when several later queries need the same
+<code>top</code>. When you don’t need to reuse it, skip the intermediate name and write
+the reduction straight into the <code>where</code>, wrapped in parentheses so qpl can
+tell it’s a single value and not a column reference:</p>
+<pre><code class="language-qpl">select sym, price from trades where price &gt;= (max price)
+</code></pre>
 <p>Verbs that don’t reduce — <code>cumsum</code>, <code>abs</code>, and the parameterised ones like
 <code>2 round</code> — return another list of the same length instead.</p>
 <h2 id="taking-part-of-a-list"><a class="header" href="#taking-part-of-a-list">Taking part of a list</a></h2>
@@ -276,12 +281,14 @@ one: (trades`sym)[0]         / a single symbol
 <p>Following q, a parenthesised expression can also be indexed by just putting
 the indices after it: <code>(trades`price) 2 3</code> means the same as
 <code>(trades`price)[2 3]</code>.</p>
-<p>One limitation to note: <code>where</code> attaches to a column expression <em>before</em> it
-becomes a list. Once you’ve bound a list to a name, that form is no longer
-available, so filter first and materialise second.</p>
+<p>One limitation to note: the <code>where</code> in <code>trades\</code>price where size &gt; 100<code>filters the *table's* rows by any of its columns, before the one column is extracted. Once a list is bound to a name, that particular form is gone — a bound list has no other columns left to filter by, so</code>size<code>is no longer in scope. (A list still has a</code>where` of its own after that point, just a different one —
+filtering by the list’s <em>own</em> values, covered later in this chapter — so
+don’t read “no longer available” as “lists can’t be filtered.”)</p>
 <h2 id="arithmetic-on-whole-lists"><a class="header" href="#arithmetic-on-whole-lists">Arithmetic on whole lists</a></h2>
-<p>Because a list is a Series, operators apply elementwise. A list against a
-scalar broadcasts the scalar across every element:</p>
+<p>Like in <strong>array programming</strong> languages: operators work on whole lists at once instead
+of looping over elements, the same style kdb+/q and NumPy use. Because a list
+is a Series, operators apply elementwise. A list against a scalar broadcasts
+the scalar across every element:</p>
 <pre><code class="language-qpl">qpl) l: 10 20 30 40 50
 qpl) l + 2
 </code></pre>

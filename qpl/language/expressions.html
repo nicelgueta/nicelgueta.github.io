@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Query Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-00c3bbe4.js";
+            window.path_to_searchindex_js = "../searchindex-f1848e64.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c623711.js"></script>
@@ -209,6 +209,18 @@ front of a column or variable it expands to a subtraction from zero, so it
 works the same way in every context:</p>
 <pre><code class="language-qpl">select neg_mv: -price from trades
 </code></pre>
+<h2 id="a-word-about-evaluation-order"><a class="header" href="#a-word-about-evaluation-order">A word about evaluation order</a></h2>
+<p>This is worth internalising early, because it applies to every expression in
+the language, not just the operators above: qpl evaluates right to left,
+following q, rather than the left-to-right order most languages use. With <code>+</code>
+or <code>*</code> that’s invisible, but with anything that doesn’t commute it changes the
+answer.</p>
+<p><code>10 - 3 - 2</code> doesn’t give <code>5</code>; reading right to left, <code>3 - 2</code> happens first,
+then <code>10 - 1</code>, giving <code>9</code>. Parentheses make the order explicit whenever it
+matters: <code>(10 - 3) - 2</code> is the <code>5</code> a left-to-right reader would expect.
+<a href="casts.html">Casts</a> is where this most often catches people out, because a cast
+tends to sit innermost in an expression — but the rule is general, so keep it
+in mind anywhere you chain non-commutative operators.</p>
 <h2 id="conditionals"><a class="header" href="#conditionals">Conditionals</a></h2>
 <p><code>?[...]</code> is the vectorised conditional, and it’s the piece of syntax most
 worth getting comfortable with, since it does the work of SQL’s <code>CASE WHEN</code>
