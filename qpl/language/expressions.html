@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c623711.js"></script>
+        <script src="../toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -252,6 +252,34 @@ as you need; the final item with no condition in front of it is the else.</p>
 row by row, which is why it stays fast on large inputs. It’s an ordinary
 expression, so it also works outside a query entirely, including in a scalar
 binding or a function body.</p>
+<h3 id="outside-a-query"><a class="header" href="#outside-a-query">Outside a query</a></h3>
+<p>Outside a <code>select</code> the condition can be a boolean <strong>atom</strong> or a boolean
+<strong>vector</strong>.</p>
+<p>With an atom, only the branch that is taken is evaluated, and the result is
+whatever that branch is. That is what makes conditional recursion work
+(<code>fac: {[n] ?[n&lt;2; 1; n*fac[n-1]]}</code>) and lets a branch be a function call.</p>
+<p>With a vector, the result is elementwise and as long as the condition. Atoms
+broadcast; a vector branch must be exactly as long as the condition, and it is
+a runtime error if not:</p>
+<pre><code class="language-qpl">qpl) ?[1011b; 1; 0]
+</code></pre>
+<pre><code>i64[4]: 1 0 1 1
+</code></pre>
+<pre><code class="language-qpl">qpl) x: 5 6 7 8
+qpl) ?[x&gt;6; x; 0]
+</code></pre>
+<pre><code>i64[4]: 0 0 7 8
+</code></pre>
+<pre><code class="language-qpl">qpl) ?[1011b; 1 2 3; 0]
+'`?[..]` branch has length 3, expected 4 (the length of the condition)
+</code></pre>
+<p>With several pairs the first true condition wins per element, and every
+condition after the first must be boolean and either an atom or the same
+length. A vector conditional has no short-circuit: every branch is evaluated,
+since each element picks its own. Its branches must all be text or all be
+non-text (<code>?[m; 1; "a"]</code> is an error rather than turning the numbers into
+strings), and an all-symbol result stays a symbol vector. <code>while</code> is different:
+its test is always a single boolean atom.</p>
 <h2 id="pattern-matching"><a class="header" href="#pattern-matching">Pattern matching</a></h2>
 <p><code>like</code> tests text against a glob pattern, following
 <a href="https://code.kx.com/q/ref/like/">q’s rules</a>:</p>
@@ -308,12 +336,15 @@ minutes and then starts to feel natural:</p>
 <tr><td><code>&lt;n&gt; diff &lt;col&gt;</code></td><td>the change from <code>n</code> rows back</td></tr>
 <tr><td><code>&lt;n&gt; pctchange &lt;col&gt;</code></td><td>the fractional change from <code>n</code> rows back</td></tr>
 <tr><td><code>&lt;n&gt; round &lt;col&gt;</code></td><td>round to <code>n</code> decimal places</td></tr>
+<tr><td><code>&lt;v&gt; fill &lt;col&gt;</code></td><td>replace nulls with <code>v</code></td></tr>
 </tbody>
 </table>
 </div>
 <p><code>round</code> takes its rounding mode from a session setting rather than from the
 expression, since it’s the sort of thing you’d want to fix once for a whole
 script. <a href="config.html">Config</a> covers it.</p>
+<p>The operand on the right can also be a whole table expression rather than a
+column: <code>"" fill select b from t</code> works the same as <code>"" fill t</code>b`.</p>
 <p>The row-relative verbs in that table — <code>shift</code>, <code>lead</code>, <code>diff</code>, <code>pctchange</code> —
 raise an obvious question: relative to which ordering? On their own they use
 the table’s existing row order. To define the ordering explicitly, and to
@@ -327,9 +358,29 @@ with <code>by</code>; they work the same way anywhere an aggregate makes sense.<
 value, resolving ties to the smallest), <code>skew</code>, <code>kurt</code> (or <code>kurtosis</code>),
 <code>any</code>, <code>all</code>, <code>prod</code> (or <code>product</code>), <code>argmin</code>, <code>argmax</code>, <code>nnull</code> (or
 <code>null_count</code>), and <code>distinct</code> (or <code>n_unique</code>).</p>
+<p><code>distinct</code> does double duty. In front of a column it is a plain alias for
+<code>n_unique</code> and counts the distinct values, so <code>select distinct sym from trades</code>
+gives a single number. In front of a table it deduplicates rows, as described
+in <a href="table-operators.html">Table operators</a>. Which one you get depends on where it
+appears: inside a select list it’s the column verb, at the start of a
+statement it’s the table operator.</p>
+<h2 id="nulls"><a class="header" href="#nulls">Nulls</a></h2>
+<p>Two verbs turn a column into a boolean per row, which is what <code>where</code> wants:</p>
+<pre><code class="language-qpl">select from t where isnull price        / rows with no price
+select count i from t where notnull sym / how many rows have a symbol
+</code></pre>
+<p><code>nnull</code> counts the nulls in a column, and <code>&lt;v&gt; fill &lt;col&gt;</code> replaces them:</p>
+<pre><code class="language-qpl">select sym, 0 fill price from t
+update qty: 0 fill qty from t
+</code></pre>
+<p>To drop whole rows instead, use <code>dropnull</code>, a
+<a href="table-operators.html#dropping-rows-with-nulls">table operator</a>.</p>
+<p>Nulls live in tables. Lists deliberately can’t hold them, so pulling a column
+that contains nulls into a list is an error. Fill or drop them first.</p>
 <p>A few more verbs transform a column without collapsing it, and are listed
 here for completeness since they appear in the same position: <code>abs</code>, <code>neg</code>,
-<code>not</code>, <code>string</code>.</p>
+<code>not</code>. (To turn a column into text, cast it: <code>str$price</code>, covered in
+<a href="casts.html">Casts</a>.)</p>
 <h2 id="cumulative-and-fill-verbs"><a class="header" href="#cumulative-and-fill-verbs">Cumulative and fill verbs</a></h2>
 <p>The last group produces a running result down a column, which means their
 output depends on row order:</p>

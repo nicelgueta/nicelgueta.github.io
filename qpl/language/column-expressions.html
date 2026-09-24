@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c623711.js"></script>
+        <script src="../toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -208,7 +208,7 @@ and the rest of this chapter is about what you can do with them.</p>
 matching list type: <code>IntVec</code>, <code>FloatVec</code>, <code>StrVec</code>, <code>SymVec</code>, <code>BoolVec</code>, and
 one per temporal type. A column whose type has no list equivalent, or which
 contains nulls, will refuse to materialise rather than quietly losing
-information.</p>
+information. Use <code>fill</code> or <code>dropnull</code> first; see <a href="expressions.html#nulls">Nulls</a>.</p>
 <p>A column expression can carry a <code>where</code> of its own, which filters the table’s
 rows before the column is extracted:</p>
 <pre><code class="language-qpl">trades`price where size &gt; 100
@@ -276,7 +276,7 @@ no commas or brackets, in the same spirit as the run-of-symbols form from
 <a href="symbols.html">Symbols</a>.</p>
 <p>Indexing works on anything that produces a list, not just a bound name:</p>
 <pre><code class="language-qpl">sub: trades`price[2 3]       / rows 2 and 3 of the price column
-one: (trades`sym)[0]         / a single symbol
+one: (trades`sym)[0]         / a single value: str "AAPL"
 </code></pre>
 <p>Following q, a parenthesised expression can also be indexed by just putting
 the indices after it: <code>(trades`price) 2 3</code> means the same as
@@ -325,7 +325,7 @@ which:</p>
 <p>Read that as: take the prices of trades bigger than 100 shares, then keep
 only those above 400.</p>
 <h2 id="building-lists-and-tables-from-nothing"><a class="header" href="#building-lists-and-tables-from-nothing">Building lists and tables from nothing</a></h2>
-<p>Two constructors round the chapter off. <code>til</code> generates a range, either from
+<p>A few constructors round the chapter off. <code>til</code> generates a range, either from
 zero or between two bounds:</p>
 <pre><code class="language-qpl">qpl) til 5
 </code></pre>
@@ -333,6 +333,31 @@ zero or between two bounds:</p>
 </code></pre>
 <pre><code class="language-qpl">10 til 15                       / i64[5]: 10 11 12 13 14
 </code></pre>
+<p>Strings can be written in a run too, separated by spaces. Wrap the run in
+parentheses so it stays apart from whatever sits next to it:</p>
+<pre><code class="language-qpl">qpl) ("ab" "cd" "ef")
+</code></pre>
+<pre><code>str[3]: "ab" "cd" "ef"
+</code></pre>
+<p><code>enlist</code> makes a one-element list from any atom. A string counts as one atom,
+so <code>enlist "a"</code> is a <code>str[1]</code>, not a list of characters:</p>
+<pre><code class="language-qpl">qpl) enlist 23
+</code></pre>
+<pre><code>i64[1]: 23
+</code></pre>
+<p><code>?</code> with a count on the left draws random values, <strong>with replacement</strong>. With
+an integer on the right it gives ints from zero up to (not including) that
+number. With a float it gives uniform floats in <code>[0, f)</code>. With a list it
+picks elements from that list, which can be any list at all, including a
+column:</p>
+<pre><code class="language-qpl">3?6                             / i64[3]: e.g. 2 5 4
+5?2.5                           / f64[5], uniform in [0, 2.5)
+2 ? 10 20 30 40                 / two picks from the list
+4?trades`sym                    / four random tickers
+</code></pre>
+<p>Don’t confuse the infix <code>n?x</code> with the prefix <code>?[..]</code> conditional from
+<a href="expressions.html">Expressions</a>: the bracket straight after <code>?</code> is what makes
+it a conditional.</p>
 <p>And <code>zip</code> assembles a table from named lists of equal length:</p>
 <pre><code class="language-qpl">a: til 20
 b: 2 * til 20

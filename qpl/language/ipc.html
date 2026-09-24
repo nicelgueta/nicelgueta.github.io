@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c623711.js"></script>
+        <script src="../toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -225,7 +225,7 @@ could connect, so there has to be a prompt keeping the process alive.</p>
 <p>Every request that arrives is evaluated exactly as though someone had typed
 it at the server’s own prompt. Assignments change the server’s session,
 queries run against its tables. The exception is the <code>\</code>-prefixed commands
-(<code>\d</code>, <code>\l</code>, <code>\1</code>, and <code>\port</code> itself), which are local administration and
+(<code>\d</code>, <code>\l</code>, <code>\i</code>, <code>\1</code>, and <code>\port</code> itself), which are local administration and
 aren’t something a remote caller can trigger.</p>
 <h2 id="connecting-as-a-client"><a class="header" href="#connecting-as-a-client">Connecting as a client</a></h2>
 <p><code>hopen</code> opens a connection. A bare port number connects to <code>127.0.0.1</code>; a
@@ -255,7 +255,9 @@ nothing locally, so the client receives a boolean acknowledgement instead:</p>
 <p>A client that can run arbitrary statements on a server can also modify it, so
 qpl defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
 connection, and the server refuses anything that would write to its session:
-assignments, <code>sink</code>, and <code>\1</code>. Queries of every kind still work.</p>
+assignments, <code>sink</code>, and changing a <a href="config.html"><code>.qpl.cfg</code></a> setting (a bare
+<code>.qpl.cfg</code>, which only prints them, is fine). Queries of every kind still
+work.</p>
 <pre><code class="language-qpl">ro: hopen 5001                          / read-only, the default
 ro dispatch t: select from trades       / rejected by the server
 ro dispatch select from trades          / fine, nothing is written

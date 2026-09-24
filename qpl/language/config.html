@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c623711.js"></script>
+        <script src="../toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -187,7 +187,8 @@ statement. <code>.qpl.cfg</code> sets them, taking one or more <code>key=value</
 </code></pre>
 <p>A bare <code>.qpl.cfg</code> prints the current settings, which is useful when a result
 looks unexpected and you want to check what’s in effect. Both forms work in
-scripts and in the REPL.</p>
+scripts and in the REPL. Over <a href="ipc.html">IPC</a>, only a write handle may change
+settings; a read-only client can still print them.</p>
 <p>The knobs are:</p>
 <div class="table-wrapper">
 <table>

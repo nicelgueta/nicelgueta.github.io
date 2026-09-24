@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c623711.js"></script>
+        <script src="../toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -202,6 +202,8 @@ queries and with each other.</p>
 </code></pre>
 <p>Eight rows in, three out. Note that <code>distinct</code> applies to whole rows, so what
 it does depends on which columns you selected first.</p>
+<p>Inside a select list, <code>distinct</code> is something else: the column verb that counts
+distinct values, an alias for <code>n_unique</code>. See <a href="expressions.html">Expressions</a>.</p>
 <h2 id="limiting"><a class="header" href="#limiting">Limiting</a></h2>
 <p>Taking the first few rows has two spellings that do the same thing. <code>limit</code>
 reads as prose; <code>#</code> is the q-style shorthand:</p>
@@ -237,6 +239,16 @@ on a list:</p>
 <a href="select-update-delete.html">select chapter</a>. Use whichever reads better in
 context; <code>_</code> is handy mid-pipeline, <code>delete</code> when the statement is already a
 query.</p>
+<h2 id="dropping-rows-with-nulls"><a class="header" href="#dropping-rows-with-nulls">Dropping rows with nulls</a></h2>
+<p><code>dropnull</code> is the row-wise counterpart of <code>drop</code>. It takes a list of column
+names as symbols on the left and removes every row that has a null in any of
+them:</p>
+<pre><code class="language-qpl">`price dropnull trades           / one column
+`price`size dropnull trades      / a null in either drops the row
+clean: `price dropnull trades
+</code></pre>
+<p>Nulls in columns you didn’t name are ignored. To keep rows and replace the
+nulls instead, use <a href="expressions.html#nulls"><code>fill</code></a>.</p>
 <h2 id="sorting"><a class="header" href="#sorting">Sorting</a></h2>
 <p>Sorting uses the dict-literal form you met at the end of
 <a href="column-expressions.html">Column expressions &amp; lists</a>: a list of column names,
@@ -271,6 +283,7 @@ you’re sorting something you already have:</p>
 <h2 id="they-compose"><a class="header" href="#they-compose">They compose</a></h2>
 <p>Since each of these takes a table expression and produces one, they stack:</p>
 <pre><code class="language-qpl">`price`size drop distinct select from trades
+`price dropnull `size drop select from trades
 </code></pre>
 <p>Because qpl evaluates right to left, the reading order is the order things
 happen: select from trades, take the distinct rows, then drop two columns.</p>

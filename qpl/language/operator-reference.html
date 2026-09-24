@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c623711.js"></script>
+        <script src="../toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,10 +198,16 @@ explains it.</p>
 <tr><td><code>/</code></td><td>comment to end of line</td><td><a href="comments.html">Comments</a></td></tr>
 <tr><td><code>:</code></td><td>bind a name; also alias a column in a query</td><td><a href="assignment.html">Assignment</a></td></tr>
 <tr><td><code>`x</code></td><td>a symbol</td><td><a href="symbols.html">Symbols</a></td></tr>
-<tr><td><code>?[...]</code></td><td>vectorised conditional</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>?[...]</code> (prefix)</td><td>conditional: vectorised in a select; outside one an atom picks a branch, a vector gives an elementwise result of the same length</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>while[test; s1; ...]</code></td><td>loop: run statements in the current scope while <code>test</code> holds</td><td><a href="control-flow.html">Control flow</a></td></tr>
+<tr><td><code>noop</code></td><td>nothing: prints nothing, can’t be assigned or used as a value</td><td><a href="control-flow.html">Control flow</a></td></tr>
 <tr><td><code>like</code></td><td>glob pattern match</td><td><a href="expressions.html">Expressions</a></td></tr>
 <tr><td><code>round</code></td><td><code>&lt;n&gt; round &lt;col&gt;</code>, mode from <code>.qpl.cfg round_type</code></td><td><a href="expressions.html">Expressions</a></td></tr>
 <tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>fill</code></td><td><code>&lt;v&gt; fill &lt;col&gt;</code> replaces nulls with <code>v</code></td><td><a href="expressions.html#nulls">Expressions</a></td></tr>
+<tr><td><code>isnull</code> <code>notnull</code></td><td>boolean per row: is / isn’t null</td><td><a href="expressions.html#nulls">Expressions</a></td></tr>
+<tr><td><code>dropnull</code></td><td><code>`a`b dropnull &lt;table&gt;</code> drops rows with a null in those columns</td><td><a href="table-operators.html#dropping-rows-with-nulls">Table operators</a></td></tr>
+<tr><td><code>distinct</code></td><td>table: unique rows; column: count of distinct values (<code>n_unique</code>)</td><td><a href="table-operators.html">Table operators</a>, <a href="expressions.html">Expressions</a></td></tr>
 <tr><td><code>over</code></td><td>window: <code>&lt;expr&gt; over `p [order `k asc] [rolling n]</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
 <tr><td><code>rn</code> <code>rank</code> <code>drank</code></td><td>ranking verbs, require <code>order</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
 <tr><td><code>i</code></td><td>virtual row-index column, printed as <code>x</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
@@ -214,11 +220,15 @@ explains it.</p>
 <tr><td><code>_</code></td><td>drop columns, <code>`a`b _ t</code></td><td><a href="table-operators.html">Table operators</a></td></tr>
 <tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element</td><td><a href="select-update-delete.html">select</a>, <a href="column-expressions.html">Column expressions</a></td></tr>
 <tr><td><code>til</code></td><td><code>til n</code> gives <code>0..n-1</code>; <code>lo til hi</code> gives <code>lo..hi-1</code></td><td><a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>enlist</code></td><td><code>enlist x</code> gives the one-element list of the atom <code>x</code> (a string is one atom)</td><td><a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>?</code> (infix)</td><td>roll: <code>n?6</code> gives <code>n</code> random ints below 6, <code>n?2.5</code> uniform floats, <code>n?list</code> random elements; with replacement</td><td><a href="column-expressions.html">Column expressions</a></td></tr>
 <tr><td><code>zip</code></td><td>build a table from a dict of named lists</td><td><a href="column-expressions.html">Column expressions</a></td></tr>
 <tr><td><code>lj</code> <code>ij</code> <code>rj</code></td><td>left / inner / right join</td><td><a href="select-update-delete.html">select</a></td></tr>
 <tr><td><code>{...}</code></td><td>lambda</td><td><a href="functions.html">Functions</a></td></tr>
 <tr><td><code>.qpl.dt</code> <code>.qpl.tm</code> <code>.qpl.ts</code> <code>.qpl.dlta</code></td><td>current date / time / timestamp / timespan, UTC</td><td><a href="temporal-types.html">Temporal types</a></td></tr>
 <tr><td><code>.qpl.cfg</code></td><td>session settings</td><td><a href="config.html">Config</a></td></tr>
+<tr><td><code>.ns.name</code></td><td>a namespaced name: an ordinary binding under a dotted prefix</td><td><a href="imports.html">Scripts, imports &amp; namespaces</a></td></tr>
+<tr><td><code>\l &lt;path&gt;</code> <code>\i "&lt;path&gt;"</code></td><td>run a script flat; import one under <code>.&lt;file-stem&gt;.*</code></td><td><a href="imports.html">Scripts, imports &amp; namespaces</a></td></tr>
 <tr><td><code>hopen</code> <code>`w!hopen</code> <code>dispatch</code> <code>async dispatch</code> <code>await</code></td><td>IPC client (<code>ipc</code> feature, on by default)</td><td><a href="ipc.html">IPC</a></td></tr>
 </tbody>
 </table>

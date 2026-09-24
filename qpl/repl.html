@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-4c623711.js"></script>
+        <script src="toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -192,15 +192,19 @@ beginning with <code>\</code>, that administer the session rather than querying 
 <tbody>
 <tr><td><code>\d &lt;stmt&gt;</code></td><td>disassemble: show the compiled instructions without running them</td></tr>
 <tr><td><code>\l &lt;path&gt;</code></td><td>run a <code>.qpl</code> script inside the current session</td></tr>
+<tr><td><code>\i "&lt;path&gt;"</code></td><td>import a script, namespacing its new bindings under <code>.&lt;file-stem&gt;.*</code></td></tr>
 <tr><td><code>\1 &lt;path&gt;</code></td><td>mirror all output to a file (bare <code>\1</code> stops)</td></tr>
 <tr><td><code>\port &lt;n&gt;</code></td><td>start the IPC listener, if built with that feature</td></tr>
-<tr><td>Ctrl-C</td><td>abandon a half-typed statement, or exit at an empty prompt</td></tr>
+<tr><td>Ctrl-C</td><td>stop the running statement; otherwise abandon a half-typed statement, or exit at an empty prompt</td></tr>
 <tr><td>Ctrl-D</td><td>exit</td></tr>
 </tbody>
 </table>
 </div>
-<p>Two of those are covered elsewhere: <code>\1</code> in <a href="language/logging.html">Logging</a>
-and <code>\port</code> in <a href="language/ipc.html">IPC</a>.</p>
+<p>Three of those are covered elsewhere: <code>\i</code> in
+<a href="language/imports.html">Scripts, imports &amp; namespaces</a>, <code>\1</code> in
+<a href="language/logging.html">Logging</a> and <code>\port</code> in <a href="language/ipc.html">IPC</a>.
+Stopping a running statement is described under
+<a href="language/control-flow.html#stopping-a-loop">Control flow</a>.</p>
 <h2 id="loading-a-script-into-a-live-session"><a class="header" href="#loading-a-script-into-a-live-session">Loading a script into a live session</a></h2>
 <p><code>\l</code> runs a script <em>in the session you already have</em>, rather than starting a
 new process. Anything the script binds is yours afterwards, and anything you
@@ -210,6 +214,9 @@ had already stays put.</p>
 <p>This is the natural companion to the incremental style. Keep the settled part
 of your work in a file, load it, and carry on exploring from there. It also
 pairs with <code>qpl -i script.qpl</code>, which does the same thing at startup.</p>
+<p><code>\l</code> loads the script <em>flat</em>, so its names become your names. For a library
+of helpers you’d rather keep out of the way, <code>\i</code> imports it under a
+namespace instead; see <a href="language/imports.html">Scripts, imports &amp; namespaces</a>.</p>
 <h2 id="seeing-what-a-statement-compiles-to"><a class="header" href="#seeing-what-a-statement-compiles-to">Seeing what a statement compiles to</a></h2>
 <p><code>\d</code> shows the instructions a statement produces, without executing any of
 them. Every query you write is compiled to a short sequence of stack-machine

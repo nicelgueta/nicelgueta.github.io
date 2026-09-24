@@ -8,7 +8,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-4c623711.js"></script>
+        <script src="toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -209,12 +209,13 @@ your understanding against what the language actually did rather than
 against a description of what it should have done.</p>
 <p>The most useful way to read what follows is with that REPL open in another
 window. qpl is a language you learn by typing rather than by studying, and
-the examples are all a single line long precisely so that you can.</p>
+nearly all the examples are a single line long precisely so that you can.</p>
 <h2 id="before-you-start"><a class="header" href="#before-you-start">Before you start</a></h2>
 <p>If you have never used kdb+/q, two conventions will look strange on first
-contact, and both are explained properly when they come up: <code>/</code> starts a
-comment, which is why division is written <code>%</code> rather than <code>/</code>. Neither has
-any deeper meaning, and after an hour you will stop noticing.</p>
+contact, and both are explained properly when they come up. First, <code>/</code>
+starts a comment, which is why division is written <code>%</code> rather than <code>/</code>.
+Second, expressions evaluate right to left, so <code>10 - 3 - 2</code> is <code>9</code>, not <code>5</code>.
+Neither has any deeper meaning, and after an hour you will stop noticing.</p>
 <p>If you <em>have</em> used q, most of your instincts will transfer intact, and the
 <a href="language/operator-reference.html">Operator reference</a> is probably the fastest
 way in.</p>

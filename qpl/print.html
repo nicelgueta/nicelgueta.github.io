@@ -9,7 +9,7 @@
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI query language that compiles to Polars lazy frames.">
+        <meta name="description" content="Quick Polars Language — a kdb+/q-inspired CLI language that compiles to Polars lazy frames.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-61fa9250.js";
+            window.path_to_searchindex_js = "searchindex-2a08ef44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-4c623711.js"></script>
+        <script src="toc-32ebcd95.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,12 +207,13 @@ your understanding against what the language actually did rather than
 against a description of what it should have done.</p>
 <p>The most useful way to read what follows is with that REPL open in another
 window. qpl is a language you learn by typing rather than by studying, and
-the examples are all a single line long precisely so that you can.</p>
+nearly all the examples are a single line long precisely so that you can.</p>
 <h2 id="before-you-start"><a class="header" href="#before-you-start">Before you start</a></h2>
 <p>If you have never used kdb+/q, two conventions will look strange on first
-contact, and both are explained properly when they come up: <code>/</code> starts a
-comment, which is why division is written <code>%</code> rather than <code>/</code>. Neither has
-any deeper meaning, and after an hour you will stop noticing.</p>
+contact, and both are explained properly when they come up. First, <code>/</code>
+starts a comment, which is why division is written <code>%</code> rather than <code>/</code>.
+Second, expressions evaluate right to left, so <code>10 - 3 - 2</code> is <code>9</code>, not <code>5</code>.
+Neither has any deeper meaning, and after an hour you will stop noticing.</p>
 <p>If you <em>have</em> used q, most of your instincts will transfer intact, and the
 <a href="#operator-reference">Operator reference</a> is probably the fastest
 way in.</p>
@@ -611,8 +612,9 @@ like the five above.</p>
 small and cover things you’ll use in literally every statement you write:
 comments, binding names, symbols. From there the book works through the query
 statements themselves, then the expression vocabulary that goes inside them,
-and finally the more specialised corners — lazy pipelines, user-defined
-functions, and talking to another qpl process over a socket.</p>
+and finally the more specialised corners — user-defined functions, lazy
+pipelines, organising code into scripts and namespaced imports, and talking
+to another qpl process over a socket.</p>
 <p>If you’re reading straight through, just carry on. If you’re looking
 something up, the sidebar is the index and
 <a href="#operator-reference">Operator reference</a> at the end lists every operator in
@@ -1184,6 +1186,34 @@ as you need; the final item with no condition in front of it is the else.</p>
 row by row, which is why it stays fast on large inputs. It’s an ordinary
 expression, so it also works outside a query entirely, including in a scalar
 binding or a function body.</p>
+<h3 id="outside-a-query"><a class="header" href="#outside-a-query">Outside a query</a></h3>
+<p>Outside a <code>select</code> the condition can be a boolean <strong>atom</strong> or a boolean
+<strong>vector</strong>.</p>
+<p>With an atom, only the branch that is taken is evaluated, and the result is
+whatever that branch is. That is what makes conditional recursion work
+(<code>fac: {[n] ?[n&lt;2; 1; n*fac[n-1]]}</code>) and lets a branch be a function call.</p>
+<p>With a vector, the result is elementwise and as long as the condition. Atoms
+broadcast; a vector branch must be exactly as long as the condition, and it is
+a runtime error if not:</p>
+<pre><code class="language-qpl">qpl) ?[1011b; 1; 0]
+</code></pre>
+<pre><code>i64[4]: 1 0 1 1
+</code></pre>
+<pre><code class="language-qpl">qpl) x: 5 6 7 8
+qpl) ?[x&gt;6; x; 0]
+</code></pre>
+<pre><code>i64[4]: 0 0 7 8
+</code></pre>
+<pre><code class="language-qpl">qpl) ?[1011b; 1 2 3; 0]
+'`?[..]` branch has length 3, expected 4 (the length of the condition)
+</code></pre>
+<p>With several pairs the first true condition wins per element, and every
+condition after the first must be boolean and either an atom or the same
+length. A vector conditional has no short-circuit: every branch is evaluated,
+since each element picks its own. Its branches must all be text or all be
+non-text (<code>?[m; 1; "a"]</code> is an error rather than turning the numbers into
+strings), and an all-symbol result stays a symbol vector. <code>while</code> is different:
+its test is always a single boolean atom.</p>
 <h2 id="pattern-matching"><a class="header" href="#pattern-matching">Pattern matching</a></h2>
 <p><code>like</code> tests text against a glob pattern, following
 <a href="https://code.kx.com/q/ref/like/">q’s rules</a>:</p>
@@ -1240,12 +1270,15 @@ minutes and then starts to feel natural:</p>
 <tr><td><code>&lt;n&gt; diff &lt;col&gt;</code></td><td>the change from <code>n</code> rows back</td></tr>
 <tr><td><code>&lt;n&gt; pctchange &lt;col&gt;</code></td><td>the fractional change from <code>n</code> rows back</td></tr>
 <tr><td><code>&lt;n&gt; round &lt;col&gt;</code></td><td>round to <code>n</code> decimal places</td></tr>
+<tr><td><code>&lt;v&gt; fill &lt;col&gt;</code></td><td>replace nulls with <code>v</code></td></tr>
 </tbody>
 </table>
 </div>
 <p><code>round</code> takes its rounding mode from a session setting rather than from the
 expression, since it’s the sort of thing you’d want to fix once for a whole
 script. <a href="#config">Config</a> covers it.</p>
+<p>The operand on the right can also be a whole table expression rather than a
+column: <code>"" fill select b from t</code> works the same as <code>"" fill t</code>b`.</p>
 <p>The row-relative verbs in that table — <code>shift</code>, <code>lead</code>, <code>diff</code>, <code>pctchange</code> —
 raise an obvious question: relative to which ordering? On their own they use
 the table’s existing row order. To define the ordering explicitly, and to
@@ -1259,9 +1292,29 @@ with <code>by</code>; they work the same way anywhere an aggregate makes sense.<
 value, resolving ties to the smallest), <code>skew</code>, <code>kurt</code> (or <code>kurtosis</code>),
 <code>any</code>, <code>all</code>, <code>prod</code> (or <code>product</code>), <code>argmin</code>, <code>argmax</code>, <code>nnull</code> (or
 <code>null_count</code>), and <code>distinct</code> (or <code>n_unique</code>).</p>
+<p><code>distinct</code> does double duty. In front of a column it is a plain alias for
+<code>n_unique</code> and counts the distinct values, so <code>select distinct sym from trades</code>
+gives a single number. In front of a table it deduplicates rows, as described
+in <a href="#table-operators">Table operators</a>. Which one you get depends on where it
+appears: inside a select list it’s the column verb, at the start of a
+statement it’s the table operator.</p>
+<h2 id="nulls"><a class="header" href="#nulls">Nulls</a></h2>
+<p>Two verbs turn a column into a boolean per row, which is what <code>where</code> wants:</p>
+<pre><code class="language-qpl">select from t where isnull price        / rows with no price
+select count i from t where notnull sym / how many rows have a symbol
+</code></pre>
+<p><code>nnull</code> counts the nulls in a column, and <code>&lt;v&gt; fill &lt;col&gt;</code> replaces them:</p>
+<pre><code class="language-qpl">select sym, 0 fill price from t
+update qty: 0 fill qty from t
+</code></pre>
+<p>To drop whole rows instead, use <code>dropnull</code>, a
+<a href="#dropping-rows-with-nulls">table operator</a>.</p>
+<p>Nulls live in tables. Lists deliberately can’t hold them, so pulling a column
+that contains nulls into a list is an error. Fill or drop them first.</p>
 <p>A few more verbs transform a column without collapsing it, and are listed
 here for completeness since they appear in the same position: <code>abs</code>, <code>neg</code>,
-<code>not</code>, <code>string</code>.</p>
+<code>not</code>. (To turn a column into text, cast it: <code>str$price</code>, covered in
+<a href="#casts">Casts</a>.)</p>
 <h2 id="cumulative-and-fill-verbs"><a class="header" href="#cumulative-and-fill-verbs">Cumulative and fill verbs</a></h2>
 <p>The last group produces a running result down a column, which means their
 output depends on row order:</p>
@@ -1303,7 +1356,7 @@ and the rest of this chapter is about what you can do with them.</p>
 matching list type: <code>IntVec</code>, <code>FloatVec</code>, <code>StrVec</code>, <code>SymVec</code>, <code>BoolVec</code>, and
 one per temporal type. A column whose type has no list equivalent, or which
 contains nulls, will refuse to materialise rather than quietly losing
-information.</p>
+information. Use <code>fill</code> or <code>dropnull</code> first; see <a href="#nulls">Nulls</a>.</p>
 <p>A column expression can carry a <code>where</code> of its own, which filters the table’s
 rows before the column is extracted:</p>
 <pre><code class="language-qpl">trades`price where size &gt; 100
@@ -1371,7 +1424,7 @@ no commas or brackets, in the same spirit as the run-of-symbols form from
 <a href="#symbols">Symbols</a>.</p>
 <p>Indexing works on anything that produces a list, not just a bound name:</p>
 <pre><code class="language-qpl">sub: trades`price[2 3]       / rows 2 and 3 of the price column
-one: (trades`sym)[0]         / a single symbol
+one: (trades`sym)[0]         / a single value: str "AAPL"
 </code></pre>
 <p>Following q, a parenthesised expression can also be indexed by just putting
 the indices after it: <code>(trades`price) 2 3</code> means the same as
@@ -1420,7 +1473,7 @@ which:</p>
 <p>Read that as: take the prices of trades bigger than 100 shares, then keep
 only those above 400.</p>
 <h2 id="building-lists-and-tables-from-nothing"><a class="header" href="#building-lists-and-tables-from-nothing">Building lists and tables from nothing</a></h2>
-<p>Two constructors round the chapter off. <code>til</code> generates a range, either from
+<p>A few constructors round the chapter off. <code>til</code> generates a range, either from
 zero or between two bounds:</p>
 <pre><code class="language-qpl">qpl) til 5
 </code></pre>
@@ -1428,6 +1481,31 @@ zero or between two bounds:</p>
 </code></pre>
 <pre><code class="language-qpl">10 til 15                       / i64[5]: 10 11 12 13 14
 </code></pre>
+<p>Strings can be written in a run too, separated by spaces. Wrap the run in
+parentheses so it stays apart from whatever sits next to it:</p>
+<pre><code class="language-qpl">qpl) ("ab" "cd" "ef")
+</code></pre>
+<pre><code>str[3]: "ab" "cd" "ef"
+</code></pre>
+<p><code>enlist</code> makes a one-element list from any atom. A string counts as one atom,
+so <code>enlist "a"</code> is a <code>str[1]</code>, not a list of characters:</p>
+<pre><code class="language-qpl">qpl) enlist 23
+</code></pre>
+<pre><code>i64[1]: 23
+</code></pre>
+<p><code>?</code> with a count on the left draws random values, <strong>with replacement</strong>. With
+an integer on the right it gives ints from zero up to (not including) that
+number. With a float it gives uniform floats in <code>[0, f)</code>. With a list it
+picks elements from that list, which can be any list at all, including a
+column:</p>
+<pre><code class="language-qpl">3?6                             / i64[3]: e.g. 2 5 4
+5?2.5                           / f64[5], uniform in [0, 2.5)
+2 ? 10 20 30 40                 / two picks from the list
+4?trades`sym                    / four random tickers
+</code></pre>
+<p>Don’t confuse the infix <code>n?x</code> with the prefix <code>?[..]</code> conditional from
+<a href="#expressions">Expressions</a>: the bracket straight after <code>?</code> is what makes
+it a conditional.</p>
 <p>And <code>zip</code> assembles a table from named lists of equal length:</p>
 <pre><code class="language-qpl">a: til 20
 b: 2 * til 20
@@ -1831,6 +1909,8 @@ queries and with each other.</p>
 </code></pre>
 <p>Eight rows in, three out. Note that <code>distinct</code> applies to whole rows, so what
 it does depends on which columns you selected first.</p>
+<p>Inside a select list, <code>distinct</code> is something else: the column verb that counts
+distinct values, an alias for <code>n_unique</code>. See <a href="#expressions">Expressions</a>.</p>
 <h2 id="limiting"><a class="header" href="#limiting">Limiting</a></h2>
 <p>Taking the first few rows has two spellings that do the same thing. <code>limit</code>
 reads as prose; <code>#</code> is the q-style shorthand:</p>
@@ -1866,6 +1946,16 @@ on a list:</p>
 <a href="#select--update--delete">select chapter</a>. Use whichever reads better in
 context; <code>_</code> is handy mid-pipeline, <code>delete</code> when the statement is already a
 query.</p>
+<h2 id="dropping-rows-with-nulls"><a class="header" href="#dropping-rows-with-nulls">Dropping rows with nulls</a></h2>
+<p><code>dropnull</code> is the row-wise counterpart of <code>drop</code>. It takes a list of column
+names as symbols on the left and removes every row that has a null in any of
+them:</p>
+<pre><code class="language-qpl">`price dropnull trades           / one column
+`price`size dropnull trades      / a null in either drops the row
+clean: `price dropnull trades
+</code></pre>
+<p>Nulls in columns you didn’t name are ignored. To keep rows and replace the
+nulls instead, use <a href="#nulls"><code>fill</code></a>.</p>
 <h2 id="sorting-1"><a class="header" href="#sorting-1">Sorting</a></h2>
 <p>Sorting uses the dict-literal form you met at the end of
 <a href="#column-expressions--lists">Column expressions &amp; lists</a>: a list of column names,
@@ -1900,6 +1990,7 @@ you’re sorting something you already have:</p>
 <h2 id="they-compose"><a class="header" href="#they-compose">They compose</a></h2>
 <p>Since each of these takes a table expression and produces one, they stack:</p>
 <pre><code class="language-qpl">`price`size drop distinct select from trades
+`price dropnull `size drop select from trades
 </code></pre>
 <p>Because qpl evaluates right to left, the reading order is the order things
 happen: select from trades, take the distinct rows, then drop two columns.</p>
@@ -1973,7 +2064,7 @@ anything MSFT did in between.</p>
 <code>ffill</code> and the rest are all far more useful with an explicit ordering than
 without one:</p>
 <pre><code class="language-qpl">select sym, ts, price,
-    prev: lag price over `sym order `ts asc
+    prev: 1 lag price over `sym order `ts asc
     from trades
 </code></pre>
 <p>For a plain aggregate like these, one direction applies to all the ordering
@@ -2113,6 +2204,16 @@ qpl) fac[5]
 </code></pre>
 <pre><code>i64: 120
 </code></pre>
+<p>With an atom condition only the taken branch is evaluated, which is what stops
+the recursion. Pass a boolean <em>vector</em> instead and <code>?[...]</code> is elementwise, so
+the same expression works on a whole list at once (see
+<a href="#outside-a-query">Expressions</a>):</p>
+<pre><code class="language-qpl">qpl) pick: {[m] ?[m; 1; 0]}
+qpl) pick[1011b]
+</code></pre>
+<pre><code>i64[4]: 1 0 1 1
+</code></pre>
+<p>See <a href="#control-flow">Control flow</a> for <code>while</code> loops and <code>noop</code>.</p>
 <h2 id="writing-a-body-across-multiple-lines"><a class="header" href="#writing-a-body-across-multiple-lines">Writing a body across multiple lines</a></h2>
 <p>Semicolons are only needed to fit more than one statement on the same
 physical line. Written across several lines, a body reads like a script —
@@ -2217,6 +2318,102 @@ always followed, and it’s why a function value needs to carry nothing but its
 parameters and its body.</p>
 <p><a href="https://github.com/nicelgueta/qpl/blob/main/examples/functions.qpl">examples/functions.qpl</a>
 in the repository is a runnable script covering all of the above.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="control-flow"><a class="header" href="#control-flow">Control flow</a></h1>
+<p>qpl has one conditional, one loop and one “no-op” value:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th></th></tr>
+</thead>
+<tbody>
+<tr><td><code>?[c1; v1; c2; v2; else]</code></td><td>the conditional — see <a href="#expressions">Expressions</a></td></tr>
+<tr><td><code>while[test; s1; s2; ...]</code></td><td>run statements while a test holds</td></tr>
+<tr><td><code>noop</code></td><td>nothing</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="the-conditional-is-"><a class="header" href="#the-conditional-is-">The conditional is <code>?[..]</code></a></h2>
+<p>There is no <code>if</code>. <code>?[..]</code> already covers it: outside a <code>select</code> an atom
+condition evaluates only the branch that is taken. (A boolean vector gives an
+elementwise result instead — see <a href="#expressions">Expressions</a>.) That is
+what makes recursion work:</p>
+<pre><code class="language-qpl">qpl) fac: {[n] ?[n&lt;2; 1; n*fac[n-1]]}
+qpl) fac[5]
+</code></pre>
+<pre><code>i64: 120
+</code></pre>
+<p>A branch can also be a function call, so it can do things as well as compute
+values:</p>
+<pre><code class="language-qpl">qpl) shout: {[msg] log[msg]; noop}   / noop: see Logging for why
+qpl) ?[n&gt;3; shout["big"]; shout["small"]]
+</code></pre>
+<p>Functions stay pure, though: a call never assigns outer state. Only a plain
+assignment does — at the top level, or in the body of a <code>while</code>.</p>
+<p>With a boolean vector condition the result is elementwise instead, and every
+branch is evaluated. Each vector operand must be exactly as long as the
+condition (a runtime error otherwise), and atoms broadcast:</p>
+<pre><code class="language-qpl">qpl) ?[1011b; 10 20 30 40; 0]
+</code></pre>
+<pre><code>i64[4]: 10 0 30 40
+</code></pre>
+<h2 id="while"><a class="header" href="#while">while</a></h2>
+<p><code>while[test; s1; s2; ...]</code> evaluates <code>test</code> (a boolean atom) before every
+iteration, and while it is true runs the statements in order:</p>
+<pre><code class="language-qpl">qpl) n: 3
+qpl) while[n&gt;0; log[n]; n: n-1]
+3
+2
+1
+</code></pre>
+<p>The statements are ordinary statements, so they can assign, <code>log</code>, or run a
+table query. They run in the <strong>current</strong> scope: at the top level they bind
+globals, inside a function they bind that function’s locals, which are gone
+when it returns:</p>
+<pre><code class="language-qpl">qpl) sumto: {[m] s: 0; while[m&gt;0; s: s+m; m: m-1]; s}
+qpl) sumto[100]
+</code></pre>
+<pre><code>i64: 5050
+</code></pre>
+<p><code>while</code> can be spread over several lines, like any statement with an open
+bracket (in a script, indent the continuation lines as described in
+<a href="#multi-line-statements">Multi-line statements</a>):</p>
+<pre><code class="language-qpl">while[k&lt;=10;
+    total: total+k;
+    k: k+1]
+</code></pre>
+<p>A test that isn’t a boolean atom is an error, as it is for <code>?[..]</code>. There is
+no iteration limit.</p>
+<h3 id="stopping-a-loop"><a class="header" href="#stopping-a-loop">Stopping a loop</a></h3>
+<p>Ctrl-C stops the statement that is running:</p>
+<pre><code>qpl) while[1b; noop]
+^C interrupting... (Ctrl-C again to force quit)
+'interrupted
+qpl)
+</code></pre>
+<p>Assignments made by earlier iterations stay made — there is no rollback. In a
+script the interrupt ends the run (exit code 130); with <code>-i</code> you land in the
+REPL. A second Ctrl-C while a statement is still running exits the process,
+which is the way out of a single Polars query that is too slow to wait for.</p>
+<p>The browser playground has no signals, so an infinite <code>while</code> there hangs the
+tab.</p>
+<h2 id="noop"><a class="header" href="#noop">noop</a></h2>
+<p><code>noop</code> is nothing. It prints nothing, and it is what <code>while</code> evaluates to. A
+<code>?[..]</code> branch or a function can end in it:</p>
+<pre><code class="language-qpl">qpl) ?[n&gt;3; noop; shout["small"]]
+</code></pre>
+<p>Because it is nothing, it can’t be used as a value:</p>
+<pre><code class="language-qpl">qpl) x: noop
+'cannot assign a no-op expression.
+qpl) x: while[0b; 1]
+'cannot assign a no-op expression.
+qpl) 1 + noop
+'cannot use a no-op expression as a value
+</code></pre>
+<p><code>while</code> and <code>noop</code> are only valid outside a <code>select</code> projection.</p>
+<h2 id="reserved-words"><a class="header" href="#reserved-words">Reserved words</a></h2>
+<p><code>while</code> and <code>noop</code> are reserved: <code>while: 3</code> and <code>{[noop] ..}</code> are parse
+errors.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lazy--collect"><a class="header" href="#lazy--collect">lazy / collect</a></h1>
 <p>Everything so far has run the moment you pressed return. For interactive work
@@ -2326,6 +2523,183 @@ when you’re done.</p>
 the same rule applies one indent level in: each line at the body’s own
 baseline indent is a separate statement (no <code>;</code> needed), and a line indented
 <em>further</em> continues the one above, exactly like the script rule above.</p>
+<p><a href="#scripts-imports--namespaces">Scripts, imports &amp; namespaces</a> covers running scripts, and
+pulling one script into another.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="scripts-imports--namespaces"><a class="header" href="#scripts-imports--namespaces">Scripts, imports &amp; namespaces</a></h1>
+<p>Sooner or later the settled parts of a session want to live in a file: the
+<code>load</code> lines you type at the start of every session, a handful of helper
+functions, a few thresholds. This chapter covers the ways qpl runs a script
+and the two ways one script can pull in another. The first shares
+everything; the second tucks the imported names away under a prefix.</p>
+<h2 id="running-a-script"><a class="header" href="#running-a-script">Running a script</a></h2>
+<p>A script is a plain text file of statements, conventionally ending <code>.qpl</code>,
+laid out by the rules in <a href="#multi-line-statements">Multi-line statements</a>. There are
+three ways to run one:</p>
+<pre><code class="language-bash">qpl script.qpl        # run it, print its output, exit
+qpl -i script.qpl     # run it, then stay in the REPL with everything it bound
+</code></pre>
+<pre><code class="language-qpl">qpl) \l script.qpl    / run it inside the session you already have
+</code></pre>
+<p>All three behave the same: each statement runs in turn, exactly as if you
+had typed it at the prompt, and anything it binds persists afterwards. The
+first statement that fails stops the whole script, and the error names the
+file and line:</p>
+<pre><code>'setup.qpl:12: 'undefined name 'trade' (not a variable, table or lazy frame)
+</code></pre>
+<p>Run from the command line, a failed script exits with status 1 (130 if it was
+interrupted with Ctrl-C). Statements that ran before the failure keep their
+effects: there is no rollback.</p>
+<p><code>\l</code> takes a bare path, with no quotes, and works nested inside another
+script as well as at the prompt, so a top-level <code>main.qpl</code> can <code>\l</code> its setup
+file before getting on with the real work.</p>
+<p>Typed at the prompt, a relative path means relative to the directory you
+started qpl in. Written <strong>inside a script</strong>, it means relative to <em>that
+script’s</em> directory, so <code>\l setup.qpl</code> in <code>jobs/main.qpl</code> loads
+<code>jobs/setup.qpl</code> wherever qpl was launched from. (<code>load</code>, <code>sink</code> and <code>\1</code>
+paths stay relative to the starting directory, since they name data rather
+than code.)</p>
+<h2 id="namespaced-names"><a class="header" href="#namespaced-names">Namespaced names</a></h2>
+<p>A name can carry dots: <code>.ns.name</code>, or deeper, <code>.ns.sub.name</code>. This is a
+<strong>namespaced name</strong>, and it is an ordinary variable, table or function
+reference that happens to live under a prefix instead of in the flat
+session scope. Nothing about it is special beyond the spelling:</p>
+<pre><code class="language-qpl">qpl) .cfg.threshold: 150
+qpl) select from trades where size &gt; .cfg.threshold
+qpl) .fx.double: {[x] x*2}
+qpl) .fx.double 21
+</code></pre>
+<pre><code>i64: 42
+</code></pre>
+<p>You’ve already met one namespace: <code>.qpl</code>, which holds the now-functions from
+<a href="#temporal-types">Temporal types</a> and the <code>.qpl.cfg</code> directive from
+<a href="#config">Config</a>. Those particular names are built-ins and can’t be
+rebound, but the namespace isn’t otherwise locked: nothing stops you binding
+<code>.qpl.foo</code>. Leaving <code>.qpl</code> to qpl itself is still good manners.</p>
+<p>Namespaced names are just a convention you can adopt by hand. Where they
+become genuinely useful is in combination with <code>\i</code>.</p>
+<h2 id="importing-with-i"><a class="header" href="#importing-with-i">Importing with <code>\i</code></a></h2>
+<p><code>\l</code> loads a script <em>flat</em>: a helper called <code>clean</code> in the script becomes
+<code>clean</code> in your session. That’s fine for your own setup file, and awkward
+for a library of helpers you’d like to reuse across projects, where a
+helper’s name may well clash with something you’ve already bound.</p>
+<p><code>\i</code> runs a script the same way, except that every table, lazy plan, scalar
+and function it binds at its top level lands under a namespace named after
+the file:</p>
+<pre><code class="language-qpl">/ lib/utils.qpl
+double: {[x] x*2}
+greeting: "hello from utils"
+big: select from trades where size &gt; 200
+</code></pre>
+<pre><code class="language-qpl">qpl) \i "lib/utils.qpl"
+qpl) .utils.double 21
+</code></pre>
+<pre><code>i64: 42
+</code></pre>
+<pre><code class="language-qpl">qpl) log .utils.greeting
+qpl) count .utils.big
+</code></pre>
+<pre><code>hello from utils
+i64: 3
+</code></pre>
+<p>The bare names <code>double</code>, <code>greeting</code> and <code>big</code> never exist. Only the
+namespaced versions do.</p>
+<p>That holds even when your session already has a name the library uses. A
+library line <code>thr: 99</code> binds <code>.utils.thr</code> and leaves your own <code>thr</code> alone;
+<code>trades: select from trades where size &gt; 200</code> reads your <code>trades</code> and binds
+<code>.utils.trades</code>. Inside the script, a bare name means the library’s own
+binding once it has one, and falls back to the session’s otherwise, so the
+script reads naturally from top to bottom. Nothing an import does can
+overwrite a bare name in your session.</p>
+<p>Two details of the syntax:</p>
+<ul>
+<li><strong>The path is a quoted string</strong>, unlike <code>\l</code>’s bare one: <code>\i "lib/utils.qpl"</code>.
+An unquoted path is an error. The namespace is derived from that path, and
+writing it as a string keeps it visually distinct from the namespaced
+identifiers that tend to follow it.</li>
+<li><strong>The namespace is the file’s stem</strong>, cleaned up to be a valid name. Any
+character other than a letter, digit or <code>_</code> becomes <code>_</code>, and a leading
+digit gets an <code>_</code> in front. So <code>utils.qpl</code> gives <code>.utils</code>,
+<code>lib/my-lib.qpl</code> gives <code>.my_lib</code>, and <code>9lives.qpl</code> gives <code>._9lives</code>. The
+directory plays no part, so <code>a/utils.qpl</code> and <code>b/utils.qpl</code> both import
+as <code>.utils</code>, and the second import replaces the first.</li>
+</ul>
+<p>Like <code>\l</code>, <code>\i</code> works typed at the prompt or nested inside another script,
+with the same rule for relative paths: inside a script they’re relative to
+that script. It also works in a script started with <code>qpl script.qpl</code> or
+<code>qpl -i</code>, not just in an interactive session.</p>
+<h2 id="functions-that-call-their-siblings"><a class="header" href="#functions-that-call-their-siblings">Functions that call their siblings</a></h2>
+<p>The import renames a script’s top-level bindings. It doesn’t rewrite the
+<em>bodies</em> of the functions it moves. A library function that calls another
+helper from the same file still says <code>helper</code>, not <code>.utils.helper</code>:</p>
+<pre><code class="language-qpl">/ lib/lg.qpl
+_log: {[lvl,s] log[str$.qpl.ts " " lvl " " s]; noop}
+info: {[s] _log["INFO"; s]}
+warn: {[s] _log["WARN"; s]}
+</code></pre>
+<p>This still works after <code>\i "lib/lg.qpl"</code>. When <code>.lg.info</code> runs, a bare name
+in its body is looked up in its own namespace first (after its parameters
+and locals), so <code>_log</code> resolves to <code>.lg._log</code>, and only then in the session.
+A session name can’t hijack a library’s helper: bind your own <code>_log</code>
+afterwards and <code>.lg.info</code> still calls the library’s. The same rule covers
+scalars and tables the library defines, and it carries through any number of
+levels of sibling-calls-sibling:</p>
+<pre><code class="language-qpl">qpl) \i "lib/lg.qpl"
+qpl) .lg.info["service started"]
+</code></pre>
+<pre><code>2024.03.15D09:30:00.000000000 INFO service started
+</code></pre>
+<p>(<code>_log</code> ends in <code>noop</code> so that each call prints one line rather than echoing
+its message back as a result; see
+<a href="#inside-a-function-body">Logging</a>.)</p>
+<p>Because the namespace comes from the name the function was <em>called through</em>,
+call imported functions by their qualified name. Copying one into a plain
+variable first, <code>f: .lg.info</code>, then calling <code>f[..]</code>, loses the namespace, and
+the unqualified <code>_log</code> inside it no longer resolves.</p>
+<h2 id="imports-that-import"><a class="header" href="#imports-that-import">Imports that import</a></h2>
+<p>A library can <code>\i</code> another library. The nested import’s bindings land under
+their own namespace, and when the outer import finishes, anything that’s
+already namespaced (anything whose name starts with <code>.</code>) is left alone
+rather than prefixed a second time:</p>
+<pre><code class="language-qpl">/ lib/report.qpl
+\i "lg.qpl"          / lib/lg.qpl: relative to this script
+run: {[] .lg.info["report starting"]; select avg price by sym from trades}
+</code></pre>
+<p>After <code>\i "lib/report.qpl"</code> you have <code>.report.run</code> and the <code>.lg.*</code> helpers,
+not <code>.report.lg.info</code>. The same rule means a library can choose its own
+namespace by binding <code>.mylib.x: ...</code> explicitly, and <code>\i</code> won’t touch it.</p>
+<p>A <code>\l</code> inside an imported script is part of the import: whatever the loaded
+file binds lands in the importer’s namespace too.</p>
+<h2 id="re-importing-and-failures"><a class="header" href="#re-importing-and-failures">Re-importing, and failures</a></h2>
+<p>Re-importing a file is a clean reload. The namespace’s previous contents are
+cleared and the script runs again, so an edited helper picks up its new
+definition and a binding you deleted from the library disappears from the
+session. That’s the quickest way to pick up an edit to a library during a
+session. (Anything you bound under that namespace by hand is cleared too.)</p>
+<p>An import is all or nothing. If any statement in the script fails, the
+session’s bindings are put back exactly as they were before the <code>\i</code>: nothing
+half-imported is left behind, and a failed <em>re</em>-import leaves the previous
+version of the library in place. The only things that can’t be undone are
+effects outside the session, such as a <code>sink</code> that already wrote a file, or
+lines already printed.</p>
+<h2 id="things-to-watch"><a class="header" href="#things-to-watch">Things to watch</a></h2>
+<ul>
+<li><strong>Call imported functions by their qualified name.</strong> As described above,
+the namespace comes from the name a function is called through.</li>
+<li><strong>Private isn’t enforced.</strong> An <code>_</code> prefix on a library’s helper names is a
+convention only; <code>.lg._log</code> is as reachable as <code>.lg.info</code>.</li>
+<li><strong>Not everywhere.</strong> Like every <code>\</code> command, <code>\l</code> and <code>\i</code> can’t be sent
+over <a href="#ipc">IPC</a>. They also can’t run in the browser build, which has no
+filesystem to read from.</li>
+</ul>
+<h2 id="a-worked-example"><a class="header" href="#a-worked-example">A worked example</a></h2>
+<p><a href="https://github.com/nicelgueta/qpl/blob/main/examples/namespaces.qpl">examples/namespaces.qpl</a>
+imports
+<a href="https://github.com/nicelgueta/qpl/blob/main/examples/namespace_lib.qpl">examples/namespace_lib.qpl</a>
+and uses a function, a scalar and a table from it. Run it from the repository
+root:</p>
+<pre><code class="language-bash">qpl --load-demo examples/namespaces.qpl
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="logging"><a class="header" href="#logging">Logging</a></h1>
 <p>Tables print themselves. Everything else — a progress note halfway through a
@@ -2369,11 +2743,26 @@ parentheses to stay a call:</p>
 end of the line, so it has no way to stop early if it’s embedded in something
 bigger. <code>log[...]</code> is the same thing scoped with brackets instead, which is
 what makes it usable inside a function body or nested in a larger expression:</p>
-<pre><code class="language-qpl">info: {[s] log[str$.qpl.ts " - INFO " s]}
+<pre><code class="language-qpl">info: {[s] log[str$.qpl.ts " - INFO " s]; noop}
 info["service started"]
 </code></pre>
 <pre><code>2024.03.15D09:30:00.000000000 - INFO service started
 </code></pre>
+<p>The <code>noop</code> at the end matters. <code>log[...]</code> returns the text it wrote as well
+as printing it, and a function returns its last statement’s value. Without
+<code>noop</code>, <code>info</code>’s return value would be that text, and calling <code>info</code> as a
+statement would print it a second time as an ordinary result:</p>
+<pre><code>2024.03.15D09:30:00.000000000 - INFO service started
+str: "2024.03.15D09:30:00.000000000 - INFO service started"
+</code></pre>
+<p>That echo is more than untidy. It goes wherever output goes, so under
+<a href="#teeing-output-to-a-file"><code>\1</code></a> every log line would land in the log file
+twice, once as the message and once as a quoted result. Ending the body with
+<a href="#noop"><code>noop</code></a> makes the function return nothing, and
+nothing prints nothing, so each call writes exactly one line. Do this for
+any function you call only for its logging. (A <code>log[...]</code> standing alone as a
+whole statement never echoes; this is only about <code>log[...]</code> as a function’s
+last statement.)</p>
 <p>Arguments inside the brackets are still space-separated and concatenated
 exactly like the bareword form (a <code>;</code> between them is accepted too, but never
 required) — <code>[...]</code> only marks where the argument list ends, since a function
@@ -2396,7 +2785,8 @@ statement. <code>.qpl.cfg</code> sets them, taking one or more <code>key=value</
 </code></pre>
 <p>A bare <code>.qpl.cfg</code> prints the current settings, which is useful when a result
 looks unexpected and you want to check what’s in effect. Both forms work in
-scripts and in the REPL.</p>
+scripts and in the REPL. Over <a href="#ipc">IPC</a>, only a write handle may change
+settings; a read-only client can still print them.</p>
 <p>The knobs are:</p>
 <div class="table-wrapper">
 <table>
@@ -2482,7 +2872,7 @@ could connect, so there has to be a prompt keeping the process alive.</p>
 <p>Every request that arrives is evaluated exactly as though someone had typed
 it at the server’s own prompt. Assignments change the server’s session,
 queries run against its tables. The exception is the <code>\</code>-prefixed commands
-(<code>\d</code>, <code>\l</code>, <code>\1</code>, and <code>\port</code> itself), which are local administration and
+(<code>\d</code>, <code>\l</code>, <code>\i</code>, <code>\1</code>, and <code>\port</code> itself), which are local administration and
 aren’t something a remote caller can trigger.</p>
 <h2 id="connecting-as-a-client"><a class="header" href="#connecting-as-a-client">Connecting as a client</a></h2>
 <p><code>hopen</code> opens a connection. A bare port number connects to <code>127.0.0.1</code>; a
@@ -2512,7 +2902,9 @@ nothing locally, so the client receives a boolean acknowledgement instead:</p>
 <p>A client that can run arbitrary statements on a server can also modify it, so
 qpl defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
 connection, and the server refuses anything that would write to its session:
-assignments, <code>sink</code>, and <code>\1</code>. Queries of every kind still work.</p>
+assignments, <code>sink</code>, and changing a <a href="#config"><code>.qpl.cfg</code></a> setting (a bare
+<code>.qpl.cfg</code>, which only prints them, is fine). Queries of every kind still
+work.</p>
 <pre><code class="language-qpl">ro: hopen 5001                          / read-only, the default
 ro dispatch t: select from trades       / rejected by the server
 ro dispatch select from trades          / fine, nothing is written
@@ -2544,10 +2936,16 @@ explains it.</p>
 <tr><td><code>/</code></td><td>comment to end of line</td><td><a href="#comments">Comments</a></td></tr>
 <tr><td><code>:</code></td><td>bind a name; also alias a column in a query</td><td><a href="#assignment">Assignment</a></td></tr>
 <tr><td><code>`x</code></td><td>a symbol</td><td><a href="#symbols">Symbols</a></td></tr>
-<tr><td><code>?[...]</code></td><td>vectorised conditional</td><td><a href="#expressions">Expressions</a></td></tr>
+<tr><td><code>?[...]</code> (prefix)</td><td>conditional: vectorised in a select; outside one an atom picks a branch, a vector gives an elementwise result of the same length</td><td><a href="#expressions">Expressions</a></td></tr>
+<tr><td><code>while[test; s1; ...]</code></td><td>loop: run statements in the current scope while <code>test</code> holds</td><td><a href="#control-flow">Control flow</a></td></tr>
+<tr><td><code>noop</code></td><td>nothing: prints nothing, can’t be assigned or used as a value</td><td><a href="#control-flow">Control flow</a></td></tr>
 <tr><td><code>like</code></td><td>glob pattern match</td><td><a href="#expressions">Expressions</a></td></tr>
 <tr><td><code>round</code></td><td><code>&lt;n&gt; round &lt;col&gt;</code>, mode from <code>.qpl.cfg round_type</code></td><td><a href="#expressions">Expressions</a></td></tr>
 <tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs</td><td><a href="#expressions">Expressions</a></td></tr>
+<tr><td><code>fill</code></td><td><code>&lt;v&gt; fill &lt;col&gt;</code> replaces nulls with <code>v</code></td><td><a href="#nulls">Expressions</a></td></tr>
+<tr><td><code>isnull</code> <code>notnull</code></td><td>boolean per row: is / isn’t null</td><td><a href="#nulls">Expressions</a></td></tr>
+<tr><td><code>dropnull</code></td><td><code>`a`b dropnull &lt;table&gt;</code> drops rows with a null in those columns</td><td><a href="#dropping-rows-with-nulls">Table operators</a></td></tr>
+<tr><td><code>distinct</code></td><td>table: unique rows; column: count of distinct values (<code>n_unique</code>)</td><td><a href="#table-operators">Table operators</a>, <a href="#expressions">Expressions</a></td></tr>
 <tr><td><code>over</code></td><td>window: <code>&lt;expr&gt; over `p [order `k asc] [rolling n]</code></td><td><a href="#window-functions">Window functions</a></td></tr>
 <tr><td><code>rn</code> <code>rank</code> <code>drank</code></td><td>ranking verbs, require <code>order</code></td><td><a href="#window-functions">Window functions</a></td></tr>
 <tr><td><code>i</code></td><td>virtual row-index column, printed as <code>x</code></td><td><a href="#window-functions">Window functions</a></td></tr>
@@ -2560,11 +2958,15 @@ explains it.</p>
 <tr><td><code>_</code></td><td>drop columns, <code>`a`b _ t</code></td><td><a href="#table-operators">Table operators</a></td></tr>
 <tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element</td><td><a href="#select--update--delete">select</a>, <a href="#column-expressions--lists">Column expressions</a></td></tr>
 <tr><td><code>til</code></td><td><code>til n</code> gives <code>0..n-1</code>; <code>lo til hi</code> gives <code>lo..hi-1</code></td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
+<tr><td><code>enlist</code></td><td><code>enlist x</code> gives the one-element list of the atom <code>x</code> (a string is one atom)</td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
+<tr><td><code>?</code> (infix)</td><td>roll: <code>n?6</code> gives <code>n</code> random ints below 6, <code>n?2.5</code> uniform floats, <code>n?list</code> random elements; with replacement</td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
 <tr><td><code>zip</code></td><td>build a table from a dict of named lists</td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
 <tr><td><code>lj</code> <code>ij</code> <code>rj</code></td><td>left / inner / right join</td><td><a href="#select--update--delete">select</a></td></tr>
 <tr><td><code>{...}</code></td><td>lambda</td><td><a href="#functions">Functions</a></td></tr>
 <tr><td><code>.qpl.dt</code> <code>.qpl.tm</code> <code>.qpl.ts</code> <code>.qpl.dlta</code></td><td>current date / time / timestamp / timespan, UTC</td><td><a href="#temporal-types">Temporal types</a></td></tr>
 <tr><td><code>.qpl.cfg</code></td><td>session settings</td><td><a href="#config">Config</a></td></tr>
+<tr><td><code>.ns.name</code></td><td>a namespaced name: an ordinary binding under a dotted prefix</td><td><a href="#scripts-imports--namespaces">Scripts, imports &amp; namespaces</a></td></tr>
+<tr><td><code>\l &lt;path&gt;</code> <code>\i "&lt;path&gt;"</code></td><td>run a script flat; import one under <code>.&lt;file-stem&gt;.*</code></td><td><a href="#scripts-imports--namespaces">Scripts, imports &amp; namespaces</a></td></tr>
 <tr><td><code>hopen</code> <code>`w!hopen</code> <code>dispatch</code> <code>async dispatch</code> <code>await</code></td><td>IPC client (<code>ipc</code> feature, on by default)</td><td><a href="#ipc">IPC</a></td></tr>
 </tbody>
 </table>
@@ -2582,15 +2984,19 @@ beginning with <code>\</code>, that administer the session rather than querying 
 <tbody>
 <tr><td><code>\d &lt;stmt&gt;</code></td><td>disassemble: show the compiled instructions without running them</td></tr>
 <tr><td><code>\l &lt;path&gt;</code></td><td>run a <code>.qpl</code> script inside the current session</td></tr>
+<tr><td><code>\i "&lt;path&gt;"</code></td><td>import a script, namespacing its new bindings under <code>.&lt;file-stem&gt;.*</code></td></tr>
 <tr><td><code>\1 &lt;path&gt;</code></td><td>mirror all output to a file (bare <code>\1</code> stops)</td></tr>
 <tr><td><code>\port &lt;n&gt;</code></td><td>start the IPC listener, if built with that feature</td></tr>
-<tr><td>Ctrl-C</td><td>abandon a half-typed statement, or exit at an empty prompt</td></tr>
+<tr><td>Ctrl-C</td><td>stop the running statement; otherwise abandon a half-typed statement, or exit at an empty prompt</td></tr>
 <tr><td>Ctrl-D</td><td>exit</td></tr>
 </tbody>
 </table>
 </div>
-<p>Two of those are covered elsewhere: <code>\1</code> in <a href="#logging">Logging</a>
-and <code>\port</code> in <a href="#ipc">IPC</a>.</p>
+<p>Three of those are covered elsewhere: <code>\i</code> in
+<a href="#scripts-imports--namespaces">Scripts, imports &amp; namespaces</a>, <code>\1</code> in
+<a href="#logging">Logging</a> and <code>\port</code> in <a href="#ipc">IPC</a>.
+Stopping a running statement is described under
+<a href="#stopping-a-loop">Control flow</a>.</p>
 <h2 id="loading-a-script-into-a-live-session"><a class="header" href="#loading-a-script-into-a-live-session">Loading a script into a live session</a></h2>
 <p><code>\l</code> runs a script <em>in the session you already have</em>, rather than starting a
 new process. Anything the script binds is yours afterwards, and anything you
@@ -2600,6 +3006,9 @@ had already stays put.</p>
 <p>This is the natural companion to the incremental style. Keep the settled part
 of your work in a file, load it, and carry on exploring from there. It also
 pairs with <code>qpl -i script.qpl</code>, which does the same thing at startup.</p>
+<p><code>\l</code> loads the script <em>flat</em>, so its names become your names. For a library
+of helpers you’d rather keep out of the way, <code>\i</code> imports it under a
+namespace instead; see <a href="#scripts-imports--namespaces">Scripts, imports &amp; namespaces</a>.</p>
 <h2 id="seeing-what-a-statement-compiles-to"><a class="header" href="#seeing-what-a-statement-compiles-to">Seeing what a statement compiles to</a></h2>
 <p><code>\d</code> shows the instructions a statement produces, without executing any of
 them. Every query you write is compiled to a short sequence of stack-machine
@@ -2680,9 +3089,11 @@ without worrying about the host’s C library.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="roadmap"><a class="header" href="#roadmap">Roadmap</a></h1>
 <p>Two directions, one concrete and one open-ended.</p>
-<p><strong>A WASM build</strong>, so that qpl can run in a browser. That would make it
-possible to try the language, and to run real queries against a modest
-dataset, without installing anything at all.</p>
+<p><strong>A cleaner WASM build.</strong> qpl already runs in the browser (see
+<a href="#try-it-in-a-browser-no-install">Install</a>), but stock Polars
+doesn’t compile for <code>wasm32-unknown-unknown</code>, so the build currently applies
+a small patch to Polars first. The goal is to drop that patch once upstream
+builds for the target unaided.</p>
 <p><strong>More of the language.</strong> The gaps that exist today are called out in the
 chapter each one belongs to rather than collected here, on the grounds that a
 missing feature is most useful to know about while you’re reading about the
