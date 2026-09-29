@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b9e0d3a8.js";
+            window.path_to_searchindex_js = "searchindex-5f8958f8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-90dec209.js"></script>
@@ -181,12 +181,37 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="roadmap"><a class="header" href="#roadmap">Roadmap</a></h1>
-<p>Two directions, one concrete and one open-ended.</p>
+<p>A few directions, some concrete and one open-ended.</p>
 <p><strong>A cleaner WASM build.</strong> qpl already runs in the browser (see
 <a href="install.html#try-it-in-a-browser-no-install">Install</a>), but stock Polars
 doesn’t compile for <code>wasm32-unknown-unknown</code>, so the build currently applies
 a small patch to Polars first. The goal is to drop that patch once upstream
 builds for the target unaided.</p>
+<p><strong>A basic standard library.</strong> A set of commonly needed functions shipped
+with qpl itself, so everyday helpers don’t have to be rewritten in every
+script or passed around as <code>\i</code> imports.</p>
+<p><strong>A read-only mode.</strong> A <code>--read-only</code> CLI flag that turns off every action
+able to change state outside the session. The first to be classed as write
+actions are <code>sink</code> and logging: in a read-only session they fail with a
+runtime error, <code>Cannot perform write action in read-only session</code>, instead of
+running. Queries, bindings and everything else that only reads carry on
+exactly as normal.</p>
+<p><strong>A permissioned Rust extension framework.</strong> qpl is meant to be safe to hand
+to an agent: it can query and reshape data, but it can’t run arbitrary code
+the way a Python session can, so there’s a hard limit on how much damage a
+confused agent can do. Extensions need to keep that property. The plan is to
+let you write native functions in Rust and expose them to qpl with a proc
+macro that declares each one as either a <strong>read</strong> or a <strong>write</strong> action, and
+to have <code>--read-only</code> switch off every write action at once, built-in or
+extension alike. Permissioning then lives in the language itself rather than
+in whatever sandbox happens to be wrapped around it: an agent given a
+read-only qpl session can call anything it likes and still can’t change
+state.</p>
+<p>Extending the same model to Python functions is an option for consideration
+further down the line.</p>
+<p><strong>Deciding on nulls.</strong> Whether null should be a first-class value in the
+language itself, with its own literal and semantics, is still an open design
+question.</p>
 <p><strong>More of the language.</strong> The gaps that exist today are called out in the
 chapter each one belongs to rather than collected here, on the grounds that a
 missing feature is most useful to know about while you’re reading about the
