@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -202,8 +202,12 @@ file and line:</p>
 <pre><code>'setup.qpl:12: 'undefined name 'trade' (not a variable, table or lazy frame)
 </code></pre>
 <p>Run from the command line, a failed script exits with status 1 (130 if it was
-interrupted with Ctrl-C). Statements that ran before the failure keep their
-effects: there is no rollback.</p>
+interrupted with Ctrl-C). Statements that ran before a <em>runtime</em> failure keep
+their effects: there is no rollback. A <em>parse or compile</em> error is different:
+the whole file (and any <code>\l</code>/<code>\i</code> target it reaches, however deeply nested)
+is read and compiled before the first statement runs, so a syntax mistake
+anywhere in the file — even on the very last line — means nothing in it runs
+at all, not even the statements before the mistake.</p>
 <p><code>\l</code> takes a bare path, with no quotes, and works nested inside another
 script as well as at the prompt, so a top-level <code>main.qpl</code> can <code>\l</code> its setup
 file before getting on with the real work.</p>
@@ -258,13 +262,24 @@ i64: 3
 </code></pre>
 <p>The bare names <code>double</code>, <code>greeting</code> and <code>big</code> never exist. Only the
 namespaced versions do.</p>
-<p>That holds even when your session already has a name the library uses. A
-library line <code>thr: 99</code> binds <code>.utils.thr</code> and leaves your own <code>thr</code> alone;
-<code>trades: select from trades where size &gt; 200</code> reads your <code>trades</code> and binds
-<code>.utils.trades</code>. Inside the script, a bare name means the library’s own
-binding once it has one, and falls back to the session’s otherwise, so the
-script reads naturally from top to bottom. Nothing an import does can
-overwrite a bare name in your session.</p>
+<p>That holds even when your session already has a name the library uses: a
+library line <code>thr: 99</code> binds <code>.utils.thr</code> and leaves your own <code>thr</code> alone.
+Nothing an import does can overwrite a bare name in your session.</p>
+<p>The reverse isn’t true, though, and it’s worth being deliberate about:
+<strong>inside the imported script, a bare name it binds anywhere at its own top
+level always means its own namespaced binding — never the session’s — even
+on the statement that defines it.</strong> This is decided once, when the script is
+compiled, by scanning its whole top level for assignment targets; it isn’t a
+“falls back to the session if not yet bound” rule. So a library line like</p>
+<pre><code class="language-qpl">trades: select from trades where size &gt; 200
+</code></pre>
+<p>does <em>not</em> read your session’s <code>trades</code> and bind <code>.utils.trades</code> from it —
+the bare <code>trades</code> on the right already means <code>.utils.trades</code>, which doesn’t
+exist yet at that point in the script, so this fails with an “unknown table”
+error instead. A library that wants to build on the caller’s table needs a
+name of its own for it, e.g. <code>filtered: select from trades where size &gt; 200</code>
+(reading the session’s <code>trades</code>, since <code>trades</code> isn’t one of this script’s
+own top-level bindings, and writing <code>.utils.filtered</code>).</p>
 <p>Two details of the syntax:</p>
 <ul>
 <li><strong>The path is a quoted string</strong>, unlike <code>\l</code>’s bare one: <code>\i "lib/utils.qpl"</code>.
@@ -283,21 +298,24 @@ with the same rule for relative paths: inside a script they’re relative to
 that script. It also works in a script started with <code>qpl script.qpl</code> or
 <code>qpl -i</code>, not just in an interactive session.</p>
 <h2 id="functions-that-call-their-siblings"><a class="header" href="#functions-that-call-their-siblings">Functions that call their siblings</a></h2>
-<p>The import renames a script’s top-level bindings. It doesn’t rewrite the
-<em>bodies</em> of the functions it moves. A library function that calls another
-helper from the same file still says <code>helper</code>, not <code>.utils.helper</code>:</p>
+<p>You don’t have to write the namespace into a library’s own source. A
+library function that calls another helper from the same file just says
+<code>helper</code>, not <code>.utils.helper</code>:</p>
 <pre><code class="language-qpl">/ lib/lg.qpl
 _log: {[lvl,s] log[str$.qpl.ts " " lvl " " s]; noop}
 info: {[s] _log["INFO"; s]}
 warn: {[s] _log["WARN"; s]}
 </code></pre>
-<p>This still works after <code>\i "lib/lg.qpl"</code>. When <code>.lg.info</code> runs, a bare name
-in its body is looked up in its own namespace first (after its parameters
-and locals), so <code>_log</code> resolves to <code>.lg._log</code>, and only then in the session.
-A session name can’t hijack a library’s helper: bind your own <code>_log</code>
-afterwards and <code>.lg.info</code> still calls the library’s. The same rule covers
-scalars and tables the library defines, and it carries through any number of
-levels of sibling-calls-sibling:</p>
+<p>This still works after <code>\i "lib/lg.qpl"</code>. The qualification happens once,
+when <code>lib/lg.qpl</code> is <em>compiled</em>: every bare reference to one of the file’s
+own top-level names, anywhere in the file including inside a function body
+(as long as it isn’t shadowed by that function’s own parameters/locals), is
+rewritten to the qualified form before the function’s body is ever compiled
+to bytecode. So <code>_log</code> inside <code>info</code>’s body is baked in as <code>.lg._log</code>, not
+looked up dynamically each call — a session name can’t hijack a library’s
+helper (bind your own <code>_log</code> afterwards and <code>.lg.info</code> still calls the
+library’s), and the same rule covers scalars and tables the library defines,
+and carries through any number of levels of sibling-calls-sibling:</p>
 <pre><code class="language-qpl">qpl) \i "lib/lg.qpl"
 qpl) .lg.info["service started"]
 </code></pre>
@@ -306,10 +324,10 @@ qpl) .lg.info["service started"]
 <p>(<code>_log</code> ends in <code>noop</code> so that each call prints one line rather than echoing
 its message back as a result; see
 <a href="logging.html#inside-a-function-body">Logging</a>.)</p>
-<p>Because the namespace comes from the name the function was <em>called through</em>,
-call imported functions by their qualified name. Copying one into a plain
-variable first, <code>f: .lg.info</code>, then calling <code>f[..]</code>, loses the namespace, and
-the unqualified <code>_log</code> inside it no longer resolves.</p>
+<p>Because the qualification is baked into the function’s compiled body, not
+looked up again at call time, this survives being copied around: <code>f: .lg.info</code>
+then calling <code>f[..]</code> still resolves <code>_log</code> to <code>.lg._log</code>, the same as calling
+<code>.lg.info[..]</code> directly.</p>
 <h2 id="imports-that-import"><a class="header" href="#imports-that-import">Imports that import</a></h2>
 <p>A library can <code>\i</code> another library. The nested import’s bindings land under
 their own namespace, and when the outer import finishes, anything that’s
@@ -338,8 +356,13 @@ effects outside the session, such as a <code>sink</code> that already wrote a fi
 lines already printed.</p>
 <h2 id="things-to-watch"><a class="header" href="#things-to-watch">Things to watch</a></h2>
 <ul>
-<li><strong>Call imported functions by their qualified name.</strong> As described above,
-the namespace comes from the name a function is called through.</li>
+<li><strong>A library can’t read a session value under the name it means to define.</strong>
+Since qualification is decided once, at compile time, from the whole file’s
+top level, a bare name the file binds <em>anywhere</em> at its top level always
+means its own namespaced binding throughout the file — including in the
+very statement that defines it. <code>t: select from t where ...</code> in a library
+can’t read the caller’s <code>t</code>; give the result a name the library doesn’t
+otherwise bind.</li>
 <li><strong>Private isn’t enforced.</strong> An <code>_</code> prefix on a library’s helper names is a
 convention only; <code>.lg._log</code> is as reachable as <code>.lg.info</code>.</li>
 <li><strong>Not everywhere.</strong> Like every <code>\</code> command, <code>\l</code> and <code>\i</code> can’t be sent

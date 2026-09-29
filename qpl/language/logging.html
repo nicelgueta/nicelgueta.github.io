@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -206,10 +206,10 @@ the form:</p>
 </code></pre>
 <p>A bare <code>log</code> prints an empty line.</p>
 <p><code>log</code> is the only thing that writes to stdout. kdb spells this <code>1 x</code>, after
-the Unix stdout file descriptor, and qpl used to accept that too — but a
-statement beginning with a digit is genuinely ambiguous, since <code>1 + 1</code> is
-also a perfectly good expression, and the shorthand caused more confusion
-than it saved keystrokes. It’s gone.</p>
+the Unix stdout file descriptor, but qpl doesn’t: a statement beginning with
+a digit is genuinely ambiguous, since <code>1 + 1</code> is also a perfectly good
+expression, and the shorthand would cause more confusion than it saves
+keystrokes.</p>
 <h2 id="a-parsing-note"><a class="header" href="#a-parsing-note">A parsing note</a></h2>
 <p>At the top level, putting two things next to each other separates them into
 two items to be printed, rather than applying one to the other. That matters

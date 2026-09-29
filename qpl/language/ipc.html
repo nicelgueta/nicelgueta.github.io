@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -219,9 +219,20 @@ want to restart.</li>
 qpl) \port 5001        / start serving
 qpl) \port             / stop
 </code></pre>
-<p>This only works in the interactive REPL, which is why the example uses
-<code>qpl -i</code>. A script on its own exits as soon as it finishes, before anything
-could connect, so there has to be a prompt keeping the process alive.</p>
+<p><code>\port</code> is an ordinary statement, so it works just as well inside a script.
+A script that opens a port doesn’t exit when it reaches its last line. It
+carries on serving, still reading statements from the terminal, until stdin
+closes (Ctrl-D). That makes a server a one-file affair:</p>
+<pre><code class="language-qpl">/ server.qpl — run with: qpl server.qpl
+trades: load "data/trades.parquet"
+\port 5001
+</code></pre>
+<p>While a port is open, typed statements are still accepted alongside
+incoming requests. The prompt changes to show the address being served,
+<code>qpl [127.0.0.1:5001])</code>, and there’s no line editing (history, arrow keys).
+Because the process lives exactly as long as stdin does, a
+server started with stdin redirected from <code>/dev/null</code>, as a background job
+often is, exits straight away. Give it a stdin that stays open instead.</p>
 <p>Every request that arrives is evaluated exactly as though someone had typed
 it at the server’s own prompt. Assignments change the server’s session,
 queries run against its tables. The exception is the <code>\</code>-prefixed commands
@@ -255,9 +266,9 @@ nothing locally, so the client receives a boolean acknowledgement instead:</p>
 <p>A client that can run arbitrary statements on a server can also modify it, so
 qpl defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
 connection, and the server refuses anything that would write to its session:
-assignments, <code>sink</code>, and changing a <a href="config.html"><code>.qpl.cfg</code></a> setting (a bare
-<code>.qpl.cfg</code>, which only prints them, is fine). Queries of every kind still
-work.</p>
+assignments, <code>sink</code>, and changing a <a href="config.html"><code>.qpl.cfg</code></a> setting. Queries
+of every kind still work. (A bare <code>.qpl.cfg</code> is allowed too, but it prints
+the settings on the <em>server’s</em> console. The client just gets <code>true</code> back.)</p>
 <pre><code class="language-qpl">ro: hopen 5001                          / read-only, the default
 ro dispatch t: select from trades       / rejected by the server
 ro dispatch select from trades          / fine, nothing is written

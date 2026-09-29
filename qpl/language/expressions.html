@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -211,8 +211,8 @@ works the same way in every context:</p>
 </code></pre>
 <h2 id="a-word-about-evaluation-order"><a class="header" href="#a-word-about-evaluation-order">A word about evaluation order</a></h2>
 <p>This is worth internalising early, because it applies to every expression in
-the language, not just the operators above: qpl evaluates right to left,
-following q, rather than the left-to-right order most languages use. With <code>+</code>
+the language, not just the operators above: qpl evaluates right to left
+(an idea borrowed from q) rather than the left-to-right order most languages use. With <code>+</code>
 or <code>*</code> that’s invisible, but with anything that doesn’t commute it changes the
 answer.</p>
 <p><code>10 - 3 - 2</code> doesn’t give <code>5</code>; reading right to left, <code>3 - 2</code> happens first,
@@ -281,8 +281,8 @@ non-text (<code>?[m; 1; "a"]</code> is an error rather than turning the numbers 
 strings), and an all-symbol result stays a symbol vector. <code>while</code> is different:
 its test is always a single boolean atom.</p>
 <h2 id="pattern-matching"><a class="header" href="#pattern-matching">Pattern matching</a></h2>
-<p><code>like</code> tests text against a glob pattern, following
-<a href="https://code.kx.com/q/ref/like/">q’s rules</a>:</p>
+<p><code>like</code> tests text against a glob pattern, using the same syntax as
+<a href="https://code.kx.com/q/ref/like/">q’s <code>like</code></a>:</p>
 <pre><code class="language-qpl">qpl) select sym, price from trades where sym like "A*"
 </code></pre>
 <pre><code>shape: (3, 2)
@@ -307,9 +307,9 @@ select from trades where not sym like "AAPL"         / negated with `not`
 <p>To match a literal <code>*</code>, <code>?</code>, <code>[</code> or <code>]</code>, put it in a one-character class of
 its own: <code>[*]</code>, <code>[?]</code>, <code>[[]</code>, <code>[]]</code>. Glob syntax has no backslash escape.</p>
 <h2 id="verbs-that-take-a-parameter"><a class="header" href="#verbs-that-take-a-parameter">Verbs that take a parameter</a></h2>
-<p>A family of operations needs a parameter as well as a column. In q these are
-written with the parameter on the <em>left</em>, which reads oddly for about five
-minutes and then starts to feel natural:</p>
+<p>A family of operations needs a parameter as well as a column. As in q, these
+are written with the parameter on the <em>left</em>, which reads oddly for about
+five minutes and then starts to feel natural:</p>
 <pre><code class="language-qpl">qpl) select p95: 0.95 quantile price by sym from trades
 </code></pre>
 <pre><code>shape: (3, 2)
@@ -387,7 +387,7 @@ output depends on row order:</p>
 <p><code>cumsum</code>, <code>cummax</code>, <code>cummin</code>, <code>cumprod</code>, <code>cumcount</code>, plus <code>ffill</code> and <code>bfill</code>
 for carrying values forward or backward over nulls.</p>
 <p>Like the row-relative verbs above, these are at their most useful with <code>over</code>
-and an explicit ordering, which the <a href="window-functions.html">next chapter but one</a>
+and an explicit ordering, which <a href="window-functions.html">Window functions</a>
 covers. On their own they run down the table in its current order.</p>
 <h2 id="casting"><a class="header" href="#casting">Casting</a></h2>
 <p>One operator is missing from this chapter deliberately: <code>$</code>, which converts

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,9 +181,9 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="temporal-types"><a class="header" href="#temporal-types">Temporal types</a></h1>
-<p>Dates and times in qpl follow kdb+/q, which means they are written as
-literals directly in the language rather than parsed from strings. If you’ve
-used q this will be entirely familiar. If you haven’t, the notation to get
+<p>Dates and times in qpl borrow their notation from kdb+/q: they are written
+as literals directly in the language rather than parsed from strings. If you’ve
+used q the notation will look familiar. If you haven’t, the notation to get
 used to is that dates use dots rather than dashes, and a <code>D</code> separates the
 date part of a timestamp from the time part.</p>
 <pre><code class="language-qpl">qpl) d: 2024.03.15
@@ -209,12 +209,18 @@ qpl) d
 </table>
 </div>
 <p>The right-hand column isn’t trivia. Each of these really is an integer
-underneath, counting from the epoch shown, and you can see that number with a
-cast:</p>
+underneath, counting in the unit shown, and for most of them you can see that
+number with a cast:</p>
 <pre><code class="language-qpl">qpl) int$2024.03.15
 </code></pre>
 <pre><code>i64: 8840
 </code></pre>
+<p>Two don’t quite line up with the table. A <code>time</code> steps in milliseconds when
+you do arithmetic on it, but it’s stored to the nanosecond, so
+<code>int$12:30:00.000</code> gives <code>45000000000000</code> rather than <code>45000000</code>. And a
+timestamp cast to an integer counts from the Unix epoch by default, not from
+<code>2000.01.01</code>. <a href="#raw-integers-and-the-epoch">Raw integers and the epoch</a>, at
+the end of this chapter, explains why and how to change it.</p>
 <p>The last two rows deserve a distinction: a <strong>timestamp</strong> is a point in time,
 whereas a <strong>timespan</strong> is a length of time. They look similar because both
 use the <code>D</code>, but <code>2024.03.15D09:30:00.000000000</code> is half past nine that
@@ -261,9 +267,11 @@ conversion:</p>
 </code></pre>
 <pre><code>timestamp: 2024.03.15D00:00:00.000000000
 </code></pre>
-<p>For parsing text, q’s single-character type codes also work, applied to a
+<p>For parsing text, single-character type codes (borrowed from q) also work, applied to a
 string: <code>"p"</code> for timestamp, <code>"d"</code> date, <code>"t"</code> time, <code>"m"</code> month, <code>"u"</code>
-minute, <code>"v"</code> second, <code>"n"</code> timespan.</p>
+minute, <code>"v"</code> second, <code>"n"</code> timespan. The string is read as the literal it
+spells, so a month needs its trailing <code>m</code>: <code>"m"$"2024.03m"</code> works, while
+<code>"m"$"2024.03"</code> is an error.</p>
 <pre><code class="language-qpl">qpl) "p"$"2024.03.15D12:30:00"
 </code></pre>
 <pre><code>timestamp: 2024.03.15D12:30:00.000000000
@@ -288,7 +296,7 @@ having to say which you have:</p>
 <tr><th>Cast</th><th>Produces</th></tr>
 </thead>
 <tbody>
-<tr><td><code>`date$s</code> / <code>`month$s</code></td><td>a <code>Date</code> column</td></tr>
+<tr><td><code>`date$s</code> / <code>`month$s</code></td><td>a <code>Date</code> column (<code>`month$</code> doesn’t truncate to the first of the month)</td></tr>
 <tr><td><code>`timestamp$s</code> or <code>"p"$s</code></td><td>a <code>Datetime</code> column, keeping the time</td></tr>
 <tr><td><code>`time$s</code> or <code>"t"$s</code></td><td>a <code>Time</code> column</td></tr>
 </tbody>
@@ -346,7 +354,7 @@ expect:</p>
 </code></pre>
 <pre><code>timestamp: 2023.11.14D22:13:20.000000000
 </code></pre>
-<p>If you’re coming from kdb and want that boundary to use the type’s own
+<p>If you want that boundary to use the type’s own
 internal epoch (<code>2000.01.01</code>) instead, set the
 <a href="config.html">config</a> knob <code>useqepoch</code>:</p>
 <pre><code class="language-qpl">.qpl.cfg useqepoch=true
@@ -355,7 +363,7 @@ internal epoch (<code>2000.01.01</code>) instead, set the
 <p>It moves only the raw-integer casts in both directions. Literals, arithmetic
 and display are unaffected either way.</p>
 <h2 id="not-there-yet"><a class="header" href="#not-there-yet">Not there yet</a></h2>
-<p>A few things q users reach for by reflex aren’t implemented. Rather than let
+<p>A few temporal operations aren’t implemented yet. Rather than let
 you find out by trial and error: <code>xbar</code> bucketing, the <code>within</code> operator,
 the <code>.minute</code> and <code>.date</code> unit accessors, and arithmetic between a temporal
 <strong>column</strong> and an integer. That last one is the only real limitation in

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -278,7 +278,7 @@ no commas or brackets, in the same spirit as the run-of-symbols form from
 <pre><code class="language-qpl">sub: trades`price[2 3]       / rows 2 and 3 of the price column
 one: (trades`sym)[0]         / a single value: str "AAPL"
 </code></pre>
-<p>Following q, a parenthesised expression can also be indexed by just putting
+<p>A parenthesised expression can also be indexed by just putting
 the indices after it: <code>(trades`price) 2 3</code> means the same as
 <code>(trades`price)[2 3]</code>.</p>
 <p>One limitation to note: the <code>where</code> in <code>trades\</code>price where size &gt; 100<code>filters the *table's* rows by any of its columns, before the one column is extracted. Once a list is bound to a name, that particular form is gone — a bound list has no other columns left to filter by, so</code>size<code>is no longer in scope. (A list still has a</code>where` of its own after that point, just a different one —

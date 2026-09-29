@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-32ebcd95.js"></script>
+        <script src="toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,8 +181,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="qpl--quick-polars-language"><a class="header" href="#qpl--quick-polars-language">qpl — Quick Polars Language</a></h1>
-<p>qpl is a language with two rather different parents. The syntax is
-borrowed from kdb+/q, which means it is terse to the point of looking
+<p>qpl is a language with two rather different influences. The syntax is
+inspired by kdb+/q, which means it is terse to the point of looking
 cryptic until it suddenly doesn’t. The engine underneath is
 <a href="https://pola.rs">Polars</a>, which means the queries you write run at a speed
 competitive with DuckDB. Nothing else is involved: qpl ships as a single
@@ -191,6 +191,12 @@ up.</p>
 <p>The result is a language you can type a real query into faster than you could
 describe that query to somebody else, and which will then chew through a
 parquet file considerably larger than the memory on the machine.</p>
+<p>It’s worth being clear up front about what “inspired by” means. qpl borrows
+a handful of ideas from q: terse right-to-left expressions, <code>select … by … from</code> queries, dotted date and time literals. It is not q, not a q dialect,
+and not trying to be compatible with kdb+. Underneath the familiar-looking
+surface it is a quite different language, with its own type system, its own
+execution model built around lazy Polars plans, and some syntax
+that q doesn’t have - as well as missing a lot of syntax and features that q does have.</p>
 <h2 id="how-this-book-is-arranged"><a class="header" href="#how-this-book-is-arranged">How this book is arranged</a></h2>
 <p>This book is written to be read straight through the first time. Each chapter
 assumes the ones before it and nothing after it, so if a piece of syntax
@@ -216,9 +222,11 @@ contact, and both are explained properly when they come up. First, <code>/</code
 starts a comment, which is why division is written <code>%</code> rather than <code>/</code>.
 Second, expressions evaluate right to left, so <code>10 - 3 - 2</code> is <code>9</code>, not <code>5</code>.
 Neither has any deeper meaning, and after an hour you will stop noticing.</p>
-<p>If you <em>have</em> used q, most of your instincts will transfer intact, and the
-<a href="language/operator-reference.html">Operator reference</a> is probably the fastest
-way in.</p>
+<p>If you <em>have</em> used q, some of your instincts will carry over, but don’t lean
+on them too hard: plenty of things that look alike behave differently, and
+q code won’t generally run unchanged. The
+<a href="language/operator-reference.html">Operator reference</a> is the fastest way to
+see where qpl differs.</p>
 <h2 id="elsewhere"><a class="header" href="#elsewhere">Elsewhere</a></h2>
 <p>There’s a <a href="https://github.com/nicelgueta/qpl/tree/main/tools/vscode">VSCode extension</a>
 with syntax highlighting and a Ctrl+Enter REPL, which sends the current line

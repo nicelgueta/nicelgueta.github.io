@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -214,9 +214,11 @@ and thrown away everything else.</p>
 possible:</p>
 <pre><code class="language-qpl">select sym, gap: (max price over `sym) - price from trades
 </code></pre>
-<p>The parentheses there are load-bearing. <code>over</code> binds more tightly than <code>-</code>,
-so without them the expression would be read as partitioning by
-<code>(`sym) - price</code>, which is nonsense.</p>
+<p>The parentheses are there for the reader rather than the parser. Leave them
+out and qpl still reads <code>max price over `sym - price</code> the same way, but
+with right-to-left evaluation in the back of your mind it’s easy to misread
+it as partitioning by <code>`sym - price</code>. The brackets make the grouping
+impossible to mistake.</p>
 <h2 id="ordering-within-a-partition"><a class="header" href="#ordering-within-a-partition">Ordering within a partition</a></h2>
 <p>Some questions need the rows of a partition to be in a defined order before
 they can be answered at all. “The previous price” and “the running total”
@@ -327,7 +329,7 @@ nulls in the result.</p>
 <p>Rolling works with <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, <code>std</code>, <code>var</code> and <code>median</code>.</p>
 <h2 id="the-row-number-column"><a class="header" href="#the-row-number-column">The row number column</a></h2>
 <p>One last piece fits naturally here. <code>i</code> is a virtual column holding the row
-index, available in any query without existing in the table. Following q, it
+index, available in any query without existing in the table. As in q, it
 comes out named <code>x</code>:</p>
 <pre><code class="language-qpl">qpl) select i, sym from trades
 </code></pre>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a08ef44.js";
+            window.path_to_searchindex_js = "../searchindex-b9e0d3a8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-32ebcd95.js"></script>
+        <script src="../toc-90dec209.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -266,6 +266,9 @@ including pattern matching on text.</p>
 </code></pre>
 <p>Read it out loud and it’s the statement: select the average price, by sym,
 from trades. The grouping key appears once, not twice as SQL requires.</p>
+<p>The groups come out in no guaranteed order, and running the same query twice
+can list them differently. When the order matters, say so with <code>order</code>
+(below).</p>
 <p>Aggregates combine with everything else, and naming the output is usually
 worth it:</p>
 <pre><code class="language-qpl">qpl) select total: sum size by sym from trades where side = "sell"
@@ -430,9 +433,9 @@ missing from the result:</p>
 │ MSFT ┆ 414.8 ┆ 200  │
 └──────┴───────┴──────┘
 </code></pre>
-<p>One statement does one or the other, never both, since removing rows and
-removing columns are different enough operations that combining them would
-only be confusing.</p>
+<p>Give it both and it does both: <code>delete `ts from trades where size &lt; 100</code>
+drops the two small trades <em>and</em> the <code>ts</code> column. That’s legal, but two
+statements usually say what you mean more clearly.</p>
 <h2 id="where-this-is-heading"><a class="header" href="#where-this-is-heading">Where this is heading</a></h2>
 <p>You can now express most of what a day’s work needs. The chapters that follow
 fill in the pieces these statements are built from: how to get data in and
