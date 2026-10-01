@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -209,6 +209,10 @@ matching list type: <code>IntVec</code>, <code>FloatVec</code>, <code>StrVec</co
 one per temporal type. A column whose type has no list equivalent, or which
 contains nulls, will refuse to materialise rather than quietly losing
 information. Use <code>fill</code> or <code>dropnull</code> first; see <a href="expressions.html#nulls">Nulls</a>.</p>
+<p><code>ByteVec</code> is the one list type with no atomic counterpart: there’s no byte
+scalar, so indexing a <code>ByteVec</code> gives a plain int. It’s what
+<a href="files.html#read0-and-read1-text-and-bytes"><code>read1</code></a> returns, not something a
+column materialises into.</p>
 <p>A column expression can carry a <code>where</code> of its own, which filters the table’s
 rows before the column is extracted:</p>
 <pre><code class="language-qpl">trades`price where size &gt; 100
@@ -324,6 +328,47 @@ which:</p>
 </code></pre>
 <p>Read that as: take the prices of trades bigger than 100 shares, then keep
 only those above 400.</p>
+<h2 id="keywords-on-lists"><a class="header" href="#keywords-on-lists">Keywords on lists</a></h2>
+<p>A keyword that works in a query also works on a plain list, with the same
+spelling and argument order:</p>
+<pre><code class="language-qpl">qpl) asc 3 1 4 1 5
+qpl) desc 3 1 4 1 5
+qpl) distinct 1 1 2 2 3 1
+</code></pre>
+<pre><code>i64[5]: 1 1 3 4 5
+i64[5]: 5 4 3 1 1
+i64[3]: 1 2 3
+</code></pre>
+<p><code>asc</code>/<code>desc</code> sort the list; <code>distinct</code> keeps the unique elements in
+first-seen order (unlike the query verb <code>distinct col</code>, which counts distinct
+values — <code>n_unique</code> is the count of a list).</p>
+<p><code>limit</code>/<code>#</code>, <code>drop</code>/<code>_</code> and <code>dropnull</code> mirror their table forms:</p>
+<pre><code class="language-qpl">2 limit 1 2 3 4 5                / i64[2]: 1 2, same as 2#1 2 3 4 5
+-2 limit 1 2 3 4 5                / i64[2]: 4 5, from the end
+3 drop 1 2 3 4 5                  / i64[2]: 4 5, drops the first 3
+-3 drop 1 2 3 4 5                  / i64[2]: 1 2, drops the last 3
+3 _ 1 2 3 4 5                     / same as `drop`
+</code></pre>
+<p>A single string is an atom, so <code>#</code>/<code>limit</code> take characters instead of
+elements, clamped when the count exceeds the string’s length:</p>
+<pre><code class="language-qpl">qpl) 3#"hello"
+qpl) -3#"hello"
+</code></pre>
+<pre><code>str: "hel"
+str: "llo"
+</code></pre>
+<p>A string <em>list</em> still takes elements: <code>2#("abc" "de" "f")</code> is <code>"abc" "de"</code>.</p>
+<p><code>where</code> on its own (not the postfix form above) gives the indices of the true
+values, as an int list:</p>
+<pre><code class="language-qpl">qpl) where 10110b
+</code></pre>
+<pre><code>i64[3]: 0 2 3
+</code></pre>
+<p><code>quantile</code>/<code>pctl</code> collapse to a scalar, the same as any other reducer:</p>
+<pre><code class="language-qpl">qpl) 0.5 quantile 3 1 4 1 5
+</code></pre>
+<pre><code>f64: 3
+</code></pre>
 <h2 id="building-lists-and-tables-from-nothing"><a class="header" href="#building-lists-and-tables-from-nothing">Building lists and tables from nothing</a></h2>
 <p>A few constructors round the chapter off. <code>til</code> generates a range, either from
 zero or between two bounds:</p>

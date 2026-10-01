@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -250,7 +250,22 @@ table can’t be taken at all.</p>
 when a <code>Vm</code> starts. It also defines <code>NativeId</code>, the short list of
 primitives (<code>\l</code>, <code>\i</code>, <code>\port</code>, <code>.qpl.cfg</code> and a few others) that the
 compiler calls <em>by id</em> rather than by name, so no binding can ever get in
-their way.</p>
+their way. Every entry in the table carries the <code>Effect</code> it may have, which
+the VM checks before calling it.</p>
+<p><strong><code>ext</code></strong> is the Rust extension API: the <code>Native</code> trait that
+<code>#[qpl::native]</code> (from the <code>qpl-macros</code> crate) implements, <code>Extension</code> and
+<code>Vm::register</code>, and the <code>FromValue</code>/<code>IntoValue</code> conversions. An extension
+function becomes an ordinary entry in the <code>native</code> table, so the VM calls and
+authorizes it exactly like a builtin. <strong><code>cli</code></strong> is the whole <code>qpl</code> command
+line as a library function, <code>cli::run(extensions)</code>, so a binary with
+extensions gets the same front-end as <code>main.rs</code>; see
+<a href="../extensions.html">Rust extensions</a>.</p>
+<p><strong><code>permission</code></strong> defines <code>Effect</code>, the class of change an action makes:
+<code>Read</code> (session data only), <code>IRead</code> (reads outside the session, or changes
+the session’s own bindings and settings) or <code>Write</code> (anything outside the
+session). <code>Vm::authorize</code> refuses an action whose effect the session or the
+current IPC request doesn’t permit; see
+<a href="../language/read-only.html">Read-only sessions</a>.</p>
 <p><strong><code>temporal</code></strong> handles everything calendar-related: parsing q-style date
 and time literals, formatting them back, the <code>.qpl.dt</code>/<code>.qpl.tm</code>-style “now”
 functions, and the arithmetic between qpl’s 2000-based epoch and the

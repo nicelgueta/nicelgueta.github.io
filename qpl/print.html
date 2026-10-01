@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-90dec209.js"></script>
+        <script src="toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -189,6 +189,13 @@ up.</p>
 <p>The result is a language you can type a real query into faster than you could
 describe that query to somebody else, and which will then chew through a
 parquet file considerably larger than the memory on the machine.</p>
+<p>It’s also a language you can safely hand to an AI agent, and that is a design
+goal, not a side effect. Everything in the language has a permission, read or
+write, and every session is read-only unless it’s started with <code>-w</code>. A
+read-only session can run any qpl it’s given, but it can’t write to disk or
+change anything outside itself, and nothing it runs can change that. The safety guarantee lives in the language rather than in
+a sandbox wrapped around it. <a href="#read-only-sessions">Read-only sessions</a>
+covers it in full.</p>
 <p>It’s worth being clear up front about what “inspired by” means. qpl borrows
 a handful of ideas from q: terse right-to-left expressions, <code>select … by … from</code> queries, dotted date and time literals. It is not q, not a q dialect,
 and not trying to be compatible with kdb+. Underneath the familiar-looking
@@ -253,10 +260,35 @@ than just writing the query, assuming the language lets me write it quickly.</p>
 <p>That “assuming” is the whole project. I wanted something concise enough to
 type without really thinking about it, which behaves like a scripting
 language when I need it to, treats queries as first-class syntax rather than
-strings, and still runs at a speed in the same league as DuckDB. A pleasant
-side effect is that a language like that is also easy for an LLM agent to
-drive, and difficult for one to do much damage with, sandboxed or not.</p>
+strings, and still runs at a speed in the same league as DuckDB.</p>
 <p>Ambitious? Well. Quite.</p>
+<h2 id="safe-to-hand-to-an-agent"><a class="header" href="#safe-to-hand-to-an-agent">Safe to hand to an agent</a></h2>
+<p>A language like that turns out to suit LLM agents as much as people. It’s
+terse, so queries cost few tokens. It gives an error straight away rather
+than a wrong answer later. And it runs fast enough that an agent can explore
+a dataset one small query at a time, the same way a person at the REPL
+would.</p>
+<p>What matters more is what an agent <em>can’t</em> do with it. Handing an agent
+Python or a shell to work with data also hands it the ability to delete
+files, overwrite the data it was meant to be reading, or install whatever it
+likes. So the safety has to come from a container or permissions layer
+wrapped around the interpreter, which the language itself knows nothing
+about and which has to be set up again for every deployment.</p>
+<p>qpl draws that line inside the language. An agent can run any qpl it likes,
+but there’s no <code>exec</code>, no shell-out and no package import, so everything it
+does goes through qpl’s own actions, and every one of those has a permission:
+read or write. A session is read-only unless it’s started with <code>-w</code>, and a
+read-only session refuses every write for the life of the process: no
+<code>sink</code>, no log file, no write handle to another server. Nothing the agent
+types, loads or dispatches can change that. The agent still gets the whole
+language to reason with (bindings, functions, loops, lazy plans), and only
+loses the ability to leave a mark on anything outside the session. Because
+writing takes an explicit flag, an agent harness can forbid it with a single
+rule.</p>
+<p>That makes the permissions part of the language rather than something
+bolted on around it, and it’s the property that everything qpl adds later
+has to preserve. <a href="#read-only-sessions">Read-only sessions</a> has the
+details.</p>
 <h2 id="standing-on-polars"><a class="header" href="#standing-on-polars">Standing on Polars</a></h2>
 <p>Writing a DuckDB-grade query engine solo isn’t a realistic weekend project,
 so I didn’t. Polars does that part.</p>
@@ -329,7 +361,7 @@ land.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="install"><a class="header" href="#install">Install</a></h1>
 <p>If you already have a Rust toolchain, building from source is one command:</p>
-<pre><code class="language-bash">cargo install --path .
+<pre><code class="language-bash">cargo install --path qpl-cli
 </code></pre>
 <p>Be warned that Polars is a large crate and a cold build takes a few minutes.
 If you’d rather not wait, or don’t have Rust installed at all, there are
@@ -345,7 +377,7 @@ into a container, a CI job, or a colleague’s laptop as easily as <code>jq</cod
 <p>qpl can act as a client and server, so that one qpl process can query the
 tables held in another running one. That’s built in by default. If you don’t
 want the two extra dependencies it pulls in (<code>tokio</code>, <code>zeromq</code>), drop it:</p>
-<pre><code class="language-bash">cargo install --path . --no-default-features
+<pre><code class="language-bash">cargo install --path qpl-cli --no-default-features
 </code></pre>
 <p>Nothing about that is a dead end, since you can rebuild with the feature
 whenever the need shows up. <a href="#ipc">IPC</a> covers what it does, near
@@ -480,9 +512,16 @@ wanting to project.</p>
 <h2 id="getting-it-out-again"><a class="header" href="#getting-it-out-again">Getting it out again</a></h2>
 <p>Finally, write it somewhere:</p>
 <pre><code class="language-qpl">qpl) t sink "big.parquet"          / write it out
+'Cannot perform write action in read-only session: sink (start qpl with -w to allow writes)
 </code></pre>
-<p><code>sink</code> streams a table to a file, choosing the format from the extension.
-There’s no separate “materialise, then save” step to perform.</p>
+<p>That’s deliberate. Every qpl session is read-only unless you ask otherwise,
+so nothing you (or an agent) run in it can write to disk by accident; see
+<a href="#read-only-sessions">Read-only sessions</a>. Start qpl with <code>-w</code> to allow
+writes:</p>
+<pre><code class="language-bash">qpl -w --load-demo
+</code></pre>
+<p>and the same <code>sink</code> streams the table to a file, choosing the format from the
+extension. There’s no separate “materialise, then save” step to perform.</p>
 <p>That trailing <code>/ write it out</code> is a comment. <code>/</code> comments out everything to
 the end of the line, and it’s used throughout this book to annotate examples.
 It is also why division in qpl is written <code>%</code> instead of <code>/</code>, which is
@@ -504,6 +543,7 @@ qpl -c '&lt;command&gt;'  # run one ad hoc command and exit, like `python -c`
 qpl -C script.qpl   # compile to script.qplc (add -o to redirect); doesn't run it
 qpl script.qplc     # run a compiled script — no lexing/parsing/compiling
 qpl -d script.qplc  # print a compiled (or source) script's bytecode; doesn't run it
+qpl -w ...          # any of the running forms, with write permission (`sink`, `\1 &lt;path&gt;`)
 </code></pre>
 <p><code>-i</code> is the one worth remembering. It’s how you’d load your real tables from
 a setup script and then explore interactively, rather than retyping the same
@@ -1092,7 +1132,9 @@ the alternative, where <code>load</code> is deferred until something actually ne
 rows; the syntax is a single extra word and nothing else about this chapter
 changes.</p>
 <h2 id="sink"><a class="header" href="#sink">sink</a></h2>
-<p><code>sink</code> goes the other way, streaming a table out to a file:</p>
+<p><code>sink</code> goes the other way, streaming a table out to a file. It’s a write
+action, so it needs a session started with <code>qpl -w</code>; see
+<a href="#read-only-sessions">Read-only sessions</a>.</p>
 <pre><code class="language-qpl">trades sink "summary.parquet"
 </code></pre>
 <p>Its left-hand side is a table expression too, so you don’t have to store a
@@ -1133,6 +1175,36 @@ name:</p>
 <p>Because <code>cols</code> reads only the schema, it stays cheap no matter how large the
 underlying data is, and it works on deferred pipelines that haven’t read a
 single row yet.</p>
+<h2 id="read0-and-read1-text-and-bytes"><a class="header" href="#read0-and-read1-text-and-bytes">read0 and read1: text and bytes</a></h2>
+<p><code>load</code>/<code>sink</code> are for tabular data. <code>read0</code>, <code>read1</code>, <code>write0</code> and <code>write1</code>
+are the line- and byte-level equivalents, for anything else on disk.</p>
+<p><code>read0</code> reads a file as text and returns its lines as a string list, split
+on <code>\n</code> with a trailing <code>\r</code> stripped from each line (so CRLF files read the
+same as LF ones). A final trailing newline doesn’t produce a trailing empty
+element:</p>
+<pre><code class="language-qpl">read0 "notes.txt"
+</code></pre>
+<p><code>read1</code> reads the same file as raw bytes, returned as a <code>ByteVec</code> — a byte
+list with no scalar counterpart. It prints as <code>0x</code> followed by the lowercase
+hex of every byte (<code>byte[5]: 0x68656c6c6f</code>), and indexing one gives a plain
+int, since there’s no byte scalar to index into:</p>
+<pre><code class="language-qpl">read1 "notes.txt"
+(read1 "notes.txt")[0]
+</code></pre>
+<p>Both take an optional byte range, kdb-style: <code>read0[p; off; len]</code> reads
+<code>len</code> bytes starting at byte <code>off</code>, then splits the result into lines (or
+bytes, for <code>read1</code>); <code>read0[p; off]</code> reads from <code>off</code> to the end of the
+file. An offset or length past the end of the file is clamped rather than
+erroring. <code>read0</code> requires the bytes it reads to be valid UTF-8.</p>
+<p><code>write0</code> and <code>write1</code> go the other way, and need a session started with
+<code>qpl -w</code> (see <a href="#read-only-sessions">Read-only sessions</a>):</p>
+<pre><code class="language-qpl">("line one" "line two") write0 "notes.txt"
+read1 "notes.txt" write1 "copy.bin"
+</code></pre>
+<p><code>write0</code> takes a string list (or a single string, written as one line) and
+writes each element followed by <code>\n</code>, truncating the file first. <code>write1</code>
+takes a <code>ByteVec</code>, or an int list whose values are all 0-255, and writes the
+raw bytes, also truncating first. Neither prints anything.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="expressions"><a class="header" href="#expressions">Expressions</a></h1>
 <p>The last few chapters covered the shape of a statement: which clauses exist
@@ -1377,6 +1449,10 @@ matching list type: <code>IntVec</code>, <code>FloatVec</code>, <code>StrVec</co
 one per temporal type. A column whose type has no list equivalent, or which
 contains nulls, will refuse to materialise rather than quietly losing
 information. Use <code>fill</code> or <code>dropnull</code> first; see <a href="#nulls">Nulls</a>.</p>
+<p><code>ByteVec</code> is the one list type with no atomic counterpart: there’s no byte
+scalar, so indexing a <code>ByteVec</code> gives a plain int. It’s what
+<a href="#read0-and-read1-text-and-bytes"><code>read1</code></a> returns, not something a
+column materialises into.</p>
 <p>A column expression can carry a <code>where</code> of its own, which filters the table’s
 rows before the column is extracted:</p>
 <pre><code class="language-qpl">trades`price where size &gt; 100
@@ -1492,6 +1568,47 @@ which:</p>
 </code></pre>
 <p>Read that as: take the prices of trades bigger than 100 shares, then keep
 only those above 400.</p>
+<h2 id="keywords-on-lists"><a class="header" href="#keywords-on-lists">Keywords on lists</a></h2>
+<p>A keyword that works in a query also works on a plain list, with the same
+spelling and argument order:</p>
+<pre><code class="language-qpl">qpl) asc 3 1 4 1 5
+qpl) desc 3 1 4 1 5
+qpl) distinct 1 1 2 2 3 1
+</code></pre>
+<pre><code>i64[5]: 1 1 3 4 5
+i64[5]: 5 4 3 1 1
+i64[3]: 1 2 3
+</code></pre>
+<p><code>asc</code>/<code>desc</code> sort the list; <code>distinct</code> keeps the unique elements in
+first-seen order (unlike the query verb <code>distinct col</code>, which counts distinct
+values — <code>n_unique</code> is the count of a list).</p>
+<p><code>limit</code>/<code>#</code>, <code>drop</code>/<code>_</code> and <code>dropnull</code> mirror their table forms:</p>
+<pre><code class="language-qpl">2 limit 1 2 3 4 5                / i64[2]: 1 2, same as 2#1 2 3 4 5
+-2 limit 1 2 3 4 5                / i64[2]: 4 5, from the end
+3 drop 1 2 3 4 5                  / i64[2]: 4 5, drops the first 3
+-3 drop 1 2 3 4 5                  / i64[2]: 1 2, drops the last 3
+3 _ 1 2 3 4 5                     / same as `drop`
+</code></pre>
+<p>A single string is an atom, so <code>#</code>/<code>limit</code> take characters instead of
+elements, clamped when the count exceeds the string’s length:</p>
+<pre><code class="language-qpl">qpl) 3#"hello"
+qpl) -3#"hello"
+</code></pre>
+<pre><code>str: "hel"
+str: "llo"
+</code></pre>
+<p>A string <em>list</em> still takes elements: <code>2#("abc" "de" "f")</code> is <code>"abc" "de"</code>.</p>
+<p><code>where</code> on its own (not the postfix form above) gives the indices of the true
+values, as an int list:</p>
+<pre><code class="language-qpl">qpl) where 10110b
+</code></pre>
+<pre><code>i64[3]: 0 2 3
+</code></pre>
+<p><code>quantile</code>/<code>pctl</code> collapse to a scalar, the same as any other reducer:</p>
+<pre><code class="language-qpl">qpl) 0.5 quantile 3 1 4 1 5
+</code></pre>
+<pre><code>f64: 3
+</code></pre>
 <h2 id="building-lists-and-tables-from-nothing"><a class="header" href="#building-lists-and-tables-from-nothing">Building lists and tables from nothing</a></h2>
 <p>A few constructors round the chapter off. <code>til</code> generates a range, either from
 zero or between two bounds:</p>
@@ -1938,6 +2055,8 @@ queries and with each other.</p>
 it does depends on which columns you selected first.</p>
 <p>Inside a select list, <code>distinct</code> is something else: the column verb that counts
 distinct values, an alias for <code>n_unique</code>. See <a href="#expressions">Expressions</a>.</p>
+<p><code>distinct</code> on a plain list gives its unique elements instead of a count — see
+<a href="#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="limiting"><a class="header" href="#limiting">Limiting</a></h2>
 <p>Taking the first few rows has two spellings that do the same thing. <code>limit</code>
 reads as prose; <code>#</code> is the q-style shorthand:</p>
@@ -1964,6 +2083,8 @@ table, and in both cases it means “the first n”.</p>
 on a list:</p>
 <pre><code class="language-qpl">qpl) -3 limit trades      / identical to -3#trades
 </code></pre>
+<p><code>limit</code>/<code>#</code> on a plain list take the first (or, negative, last) <code>n</code>
+elements — see <a href="#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="dropping-columns"><a class="header" href="#dropping-columns">Dropping columns</a></h2>
 <p>Also two spellings, <code>drop</code> and <code>_</code>, taking a list of column names as symbols:</p>
 <pre><code class="language-qpl">`price`size drop select from trades
@@ -1973,6 +2094,9 @@ on a list:</p>
 <a href="#select--update--delete">select chapter</a>. Use whichever reads better in
 context; <code>_</code> is handy mid-pipeline, <code>delete</code> when the statement is already a
 query.</p>
+<p>An int on the left instead of a symbol list means something else again:
+<code>3 drop xs</code>/<code>3 _ xs</code> drops the first 3 <em>elements</em> of a list — see
+<a href="#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="dropping-rows-with-nulls"><a class="header" href="#dropping-rows-with-nulls">Dropping rows with nulls</a></h2>
 <p><code>dropnull</code> is the row-wise counterpart of <code>drop</code>. It takes a list of column
 names as symbols on the left and removes every row that has a null in any of
@@ -1983,6 +2107,8 @@ clean: `price dropnull trades
 </code></pre>
 <p>Nulls in columns you didn’t name are ignored. To keep rows and replace the
 nulls instead, use <a href="#nulls"><code>fill</code></a>.</p>
+<p><code>dropnull xs</code> (no symbol, one list) drops the nulls from the list itself —
+see <a href="#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="sorting-1"><a class="header" href="#sorting-1">Sorting</a></h2>
 <p>Sorting uses the dict-literal form you met at the end of
 <a href="#column-expressions--lists">Column expressions &amp; lists</a>: a list of column names,
@@ -2821,7 +2947,9 @@ required) — <code>[...]</code> only marks where the argument list ends, since 
 body can’t rely on “the rest of the line” the way a REPL line can.</p>
 <h2 id="teeing-output-to-a-file"><a class="header" href="#teeing-output-to-a-file">Teeing output to a file</a></h2>
 <p><code>\1 &lt;path&gt;</code> mirrors everything printed — log lines and query results alike —
-into a file as well as the terminal. A bare <code>\1</code> stops it. This works in
+into a file as well as the terminal. A bare <code>\1</code> stops it. Writing the file
+is a write action, so it needs a session started with <code>qpl -w</code>; see
+<a href="#read-only-sessions">Read-only sessions</a>. This works in
 scripts and in the REPL:</p>
 <pre><code class="language-qpl">\1 run.log
 select from trades where size &gt; 100
@@ -2963,15 +3091,18 @@ nothing locally, so the client receives a boolean acknowledgement instead:</p>
 <pre><code class="language-qpl">conn dispatch t: select from u
 </code></pre>
 <h2 id="read-and-write-handles"><a class="header" href="#read-and-write-handles">Read and write handles</a></h2>
-<p>A client that can run arbitrary statements on a server can also modify it, so
-qpl defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
-connection, and the server refuses anything that would write to its session:
-assignments, <code>sink</code>, and changing a <a href="#config"><code>.qpl.cfg</code></a> setting. Queries
-of every kind still work. (A bare <code>.qpl.cfg</code> is allowed too, but it prints
-the settings on the <em>server’s</em> console. The client just gets <code>true</code> back.)</p>
+<p>A client that can run arbitrary statements on a server can also modify it, or
+read things the server can see that it shouldn’t have to expose, so qpl
+defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
+connection, and the server refuses anything beyond a plain read: <code>load</code>,
+<code>read0</code>/<code>read1</code>, assignments, changing a <a href="#config"><code>.qpl.cfg</code></a> setting,
+and <code>sink</code>/<code>write0</code>/<code>write1</code>. Queries of every kind still work. (A bare
+<code>.qpl.cfg</code> is allowed too, but it prints the settings on the <em>server’s</em>
+console. The client just gets <code>true</code> back.)</p>
 <pre><code class="language-qpl">ro: hopen 5001                          / read-only, the default
 ro dispatch t: select from trades       / rejected by the server
-ro dispatch select from trades          / fine, nothing is written
+ro dispatch select from load "f"        / rejected: load is refused too
+ro dispatch select from trades          / fine, nothing is read or written
 </code></pre>
 <p>When you do want write access, ask for it explicitly at connection time:</p>
 <pre><code class="language-qpl">rw: `w!hopen 5001                       / a write handle
@@ -2981,6 +3112,121 @@ rw dispatch t: select from trades       / allowed
 server on every request over that connection. It applies only to statements
 arriving over a socket, never to what the person sitting at the server’s own
 prompt types.</p>
+<p>A read handle also can’t open a write handle to another server
+(<code>ro dispatch `w!hopen 5002</code> is refused), so it can’t use the server to
+reach one. The server’s own session permission applies on top: unless it was
+started with <code>qpl -w</code>, it’s <a href="#read-only-sessions">read-only</a> and refuses <code>sink</code> even
+over a write handle.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="read-only-sessions"><a class="header" href="#read-only-sessions">Read-only sessions</a></h1>
+<p>Read-only sessions are one of qpl’s defining features, and the main reason
+it’s a good language to give an AI agent. An agent can write and run any qpl
+it likes, but everything it does goes through qpl’s own actions, and in a
+read-only session none of those actions can write to disk or change anything
+outside the session. Nothing run in the session can lift that restriction.</p>
+<p>The guarantee is enforced by the language’s own VM, not by a container or
+permissions layer around it. So it goes wherever qpl goes: a laptop, a CI
+job, or a server shared by a team of agents.</p>
+<h2 id="read-iread-and-write"><a class="header" href="#read-iread-and-write">Read, iread and write</a></h2>
+<p>Everything in the language has a permission, and there are three of them:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Permission</th><th>Allows</th><th>Examples</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>read</strong></td><td>reads session data only</td><td>queries, maths, functions, <code>log</code>, <code>.qpl.dt</code>, <code>hopen</code>, <code>dispatch</code>, <code>await</code></td></tr>
+<tr><td><strong>iread</strong></td><td>reads outside the session, or changes the session</td><td><code>load</code>, <code>read0</code>, <code>read1</code>, assignment, <code>.qpl.cfg</code></td></tr>
+<tr><td><strong>write</strong></td><td>anything</td><td><code>sink</code>, <code>write0</code>, <code>write1</code>, <code>\1 &lt;path&gt;</code> (the stdout log), <code>`w!hopen</code> (a write handle to another server)</td></tr>
+</tbody>
+</table>
+</div>
+<p>Every session allows <code>read</code> and <code>iread</code>; only <code>write</code> needs <code>-w</code> (below).
+<code>iread</code> matters over IPC: a read-only connection refuses it as well as
+<code>write</code> — see <a href="#read-only-servers">Read-only servers</a> and <a href="#ipc">IPC</a>.
+The <code>\</code> commands (<code>\l</code>, <code>\i</code>, <code>\d</code>, <code>\port</code>, <code>\1</code>) are local only, and a
+server refuses them over any connection.</p>
+<p>Functions added by a <a href="#rust-extensions">Rust extension</a> declare one of the
+three as well, and are treated exactly like the built-in actions above.</p>
+<p>A session has a permission too. It’s <strong>read</strong> unless qpl is started with
+<code>-w</code> (<code>--write</code>), in which case it’s <strong>write</strong>:</p>
+<pre><code class="language-bash">qpl                      # a read-only REPL
+qpl script.qpl           # a read-only script
+qpl -w script.qpl        # a script that may write
+qpl -w --load-demo       # a REPL that may write
+</code></pre>
+<p>That works the same way for every way of running qpl: the REPL, a script,
+<code>-i</code>, <code>-c</code>, and a compiled <code>.qplc</code> file. The permission is fixed when the
+session starts. No statement can change it, so whatever a read-only session
+is given to run, it stays read-only until it exits.</p>
+<p>Binding names, defining functions and changing settings are all <code>iread</code>
+actions because they only change the session itself, and that state
+disappears when the session ends. A write action changes something that
+outlives the session.</p>
+<p>A write in a read-only session fails with a runtime error that names it:</p>
+<pre><code class="language-qpl">qpl) t: select from trades where sym = `AAPL
+qpl) t sink "aapl.parquet"
+'Cannot perform write action in read-only session: sink (start qpl with -w to allow writes)
+</code></pre>
+<p>The check runs when the action is reached, not when the statement is
+parsed. A function that sinks can be defined in a read-only session, and
+calling it fails at the <code>sink</code>. So neither a function, a <code>\l</code>-loaded script
+nor a compiled <code>.qplc</code> file can get round it.</p>
+<h2 id="giving-qpl-to-an-agent"><a class="header" href="#giving-qpl-to-an-agent">Giving qpl to an agent</a></h2>
+<p>The simplest agent tool is one query per call:</p>
+<pre><code class="language-bash">qpl -c "$QUERY"
+</code></pre>
+<p>The query’s output comes back on stdout, and a refused action or a bad query
+comes back on stderr with a non-zero exit code, which is everything a tool
+call needs. To give the agent some data to start from, begin the command with
+<code>\l setup.qpl</code>, a script that loads the tables.</p>
+<p>For a longer investigation, where reloading the data on every call would be
+wasteful, keep one session running and let the agent query it over IPC:</p>
+<pre><code class="language-bash">qpl -i setup.qpl     # setup.qpl loads the tables, then `\port 5001`
+</code></pre>
+<p>Either way the agent gets the whole language to work with, and the only thing
+it can’t do is leave a mark outside the session.</p>
+<h2 id="enforcing-it-from-the-agents-side"><a class="header" href="#enforcing-it-from-the-agents-side">Enforcing it from the agent’s side</a></h2>
+<p>Because writing needs an explicit flag, an agent harness only has to stop the
+agent passing it. In <a href="https://code.claude.com/docs/en/permissions">Claude Code</a>,
+for example, a project’s <code>.claude/settings.json</code> can let the agent run qpl
+without asking while denying it write permission:</p>
+<pre><code class="language-json">{
+  "permissions": {
+    "allow": ["Bash(qpl *)"],
+    "deny": ["Bash(qpl *-w*)", "Bash(qpl *-iw*)", "Bash(qpl *--write*)"]
+  }
+}
+</code></pre>
+<p>Claude Code checks deny rules before allow rules, and applies them to each
+part of a compound command (<code>a &amp;&amp; b</code>, <code>$(...)</code> and so on), so any qpl command
+that asks for write permission is refused, however it’s combined. <code>-iw</code>
+needs its own rule because short flags can be combined, and <code>-i</code> is the only
+one that can come before <code>-w</code>. A deny rule can also over-match, for instance
+on a <code>-c</code> query that happens to contain <code>-w</code>. That errs on the safe side: the
+command is refused rather than run.</p>
+<p>These rules match the text of the command Claude writes, so they’re a
+guardrail rather than a hard boundary. Claude Code’s own documentation says
+as much: a command run through <code>sh -c</code> or by another path isn’t matched. When
+the guarantee has to hold against a determined agent, back it up at the
+operating-system level. Run the agent as a user that can’t write where it
+matters, or use Claude Code’s <a href="https://code.claude.com/docs/en/sandboxing">sandbox</a>.</p>
+<h2 id="read-only-servers"><a class="header" href="#read-only-servers">Read-only servers</a></h2>
+<p>A read-only session can still open a <a href="#ipc"><code>\port</code></a>. The session’s
+permission applies to every request it serves, on top of the per-connection
+one. Over a read handle, clients can only query — <code>load</code>, <code>read0</code> and
+<code>read1</code> are refused, so a remote client can’t have the server read a file
+for it, only query tables that are already loaded. Over a <code>`w!hopen</code>
+handle, they can also <code>load</code>/<code>read0</code>/<code>read1</code>, assign and change settings,
+but <code>sink</code>/<code>write0</code>/<code>write1</code> are still refused. A server whose clients
+should be able to write has to be started with <code>-w</code>.</p>
+<h2 id="what-it-doesnt-cover"><a class="header" href="#what-it-doesnt-cover">What it doesn’t cover</a></h2>
+<p>Read-only mode stops a local session changing things. It doesn’t limit what
+the session itself can <em>see</em>: <code>load</code> and <code>\l</code> can read any file the qpl
+process can, and <code>hopen</code> can connect to any server it can reach. It also
+doesn’t cap how much CPU or memory a query uses. So run the process as a
+user that can only read the data the agent should see, and put the usual
+resource limits around it, just as you would for any other process.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="operator-reference"><a class="header" href="#operator-reference">Operator reference</a></h1>
 <p>Every operator in the language on one page, for when you know what you want
@@ -3005,11 +3251,12 @@ explains it.</p>
 <tr><td><code>noop</code></td><td>nothing: prints nothing, can’t be assigned or used as a value</td><td><a href="#control-flow">Control flow</a></td></tr>
 <tr><td><code>like</code></td><td>glob pattern match</td><td><a href="#expressions">Expressions</a></td></tr>
 <tr><td><code>round</code></td><td><code>&lt;n&gt; round &lt;col&gt;</code>, mode from <code>.qpl.cfg round_type</code></td><td><a href="#expressions">Expressions</a></td></tr>
-<tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs</td><td><a href="#expressions">Expressions</a></td></tr>
+<tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs; <code>quantile</code>/<code>pctl</code> collapse to a scalar on a list, like any reducer</td><td><a href="#expressions">Expressions</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>fill</code></td><td><code>&lt;v&gt; fill &lt;col&gt;</code> replaces nulls with <code>v</code></td><td><a href="#nulls">Expressions</a></td></tr>
 <tr><td><code>isnull</code> <code>notnull</code></td><td>boolean per row: is / isn’t null</td><td><a href="#nulls">Expressions</a></td></tr>
-<tr><td><code>dropnull</code></td><td><code>`a`b dropnull &lt;table&gt;</code> drops rows with a null in those columns</td><td><a href="#dropping-rows-with-nulls">Table operators</a></td></tr>
-<tr><td><code>distinct</code></td><td>table: unique rows; column: count of distinct values (<code>n_unique</code>)</td><td><a href="#table-operators">Table operators</a>, <a href="#expressions">Expressions</a></td></tr>
+<tr><td><code>dropnull</code></td><td><code>`a`b dropnull &lt;table&gt;</code> drops rows with a null in those columns; <code>dropnull xs</code> drops the nulls from a list</td><td><a href="#dropping-rows-with-nulls">Table operators</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
+<tr><td><code>distinct</code></td><td>table: unique rows; column: count of distinct values (<code>n_unique</code>); list: the unique elements, first-seen order</td><td><a href="#table-operators">Table operators</a>, <a href="#expressions">Expressions</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
+<tr><td><code>asc</code> <code>desc</code></td><td>sort: <code>`col!01b</code> table sort direction, window <code>order</code>; on a list, sorts it</td><td><a href="#sorting-1">Table operators</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>over</code></td><td>window: <code>&lt;expr&gt; over `p [order `k asc] [rolling n]</code></td><td><a href="#window-functions">Window functions</a></td></tr>
 <tr><td><code>rn</code> <code>rank</code> <code>drank</code></td><td>ranking verbs, require <code>order</code></td><td><a href="#window-functions">Window functions</a></td></tr>
 <tr><td><code>i</code></td><td>virtual row-index column, printed as <code>x</code></td><td><a href="#window-functions">Window functions</a></td></tr>
@@ -3017,10 +3264,10 @@ explains it.</p>
 <tr><td><code>`$x</code></td><td>intern a string as a symbol; in a query, cast to categorical</td><td><a href="#symbols">Symbols</a>, <a href="#categoricals--enums">Categoricals &amp; enums</a></td></tr>
 <tr><td><code>::</code></td><td>enum cast, <code>lvl::`$x</code></td><td><a href="#categoricals--enums">Categoricals &amp; enums</a></td></tr>
 <tr><td><code>!</code></td><td>dict literal; sort map <code>`col!01b</code>; <code>u8!`$x</code> code width</td><td><a href="#column-expressions--lists">Column expressions</a>, <a href="#table-operators">Table operators</a></td></tr>
-<tr><td><code>#</code></td><td>first n rows of a table; take from a list (<code>3#l</code>, <code>-3#l</code>)</td><td><a href="#table-operators">Table operators</a>, <a href="#column-expressions--lists">Column expressions</a></td></tr>
+<tr><td><code>#</code> <code>limit</code></td><td>first n rows of a table (<code>limit</code> reads as prose); take from a list (<code>3#l</code>, <code>-3#l</code>, <code>3 limit l</code>); on a single string, characters, not elements</td><td><a href="#table-operators">Table operators</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>[...]</code></td><td>index into a list (<code>l[0]</code>, <code>l[1 2 3]</code>); call a function</td><td><a href="#column-expressions--lists">Column expressions</a>, <a href="#functions">Functions</a></td></tr>
-<tr><td><code>_</code></td><td>drop columns, <code>`a`b _ t</code></td><td><a href="#table-operators">Table operators</a></td></tr>
-<tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element</td><td><a href="#select--update--delete">select</a>, <a href="#column-expressions--lists">Column expressions</a></td></tr>
+<tr><td><code>_</code> <code>drop</code></td><td>drop columns, <code>`a`b _ t</code>; on a list, drop the first/last <code>n</code> elements (<code>3 drop l</code>, <code>3 _ l</code>)</td><td><a href="#table-operators">Table operators</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
+<tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element; prefix <code>where bs</code> gives the indices of the true values</td><td><a href="#select--update--delete">select</a>, <a href="#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>til</code></td><td><code>til n</code> gives <code>0..n-1</code>; <code>lo til hi</code> gives <code>lo..hi-1</code></td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
 <tr><td><code>enlist</code></td><td><code>enlist x</code> gives the one-element list of the atom <code>x</code> (a string is one atom)</td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
 <tr><td><code>?</code> (infix)</td><td>roll: <code>n?6</code> gives <code>n</code> random ints below 6, <code>n?2.5</code> uniform floats, <code>n?list</code> random elements; with replacement</td><td><a href="#column-expressions--lists">Column expressions</a></td></tr>
@@ -3035,6 +3282,136 @@ explains it.</p>
 </tbody>
 </table>
 </div>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="standard-library"><a class="header" href="#standard-library">Standard library</a></h1>
+<p><code>.std</code> is qpl’s standard library: string, list, filesystem and environment
+helpers that ship with every build (<code>qpl-std</code>), registered before any user
+<a href="#rust-extensions">Rust extension</a> so a user extension can never claim the
+<code>std</code> namespace. It’s built entirely on the public extension API — no access
+to VM internals — so it also serves as that API’s reference example.</p>
+<p>The guiding rule is that a keyword or verb that already works on a value
+(<code>asc</code>, <code>desc</code>, <code>distinct</code>, <code>where</code>, <code>#</code>/<code>limit</code>, <code>drop</code>/<code>_</code>, <code>dropnull</code>,
+<code>quantile</code>) stays in the core language, with the same spelling it has in a
+query. <code>.std</code> holds only operations with no keyword of their own. A path,
+string or list is always the first argument; a string argument also accepts
+a symbol. Errors come back as <code>.std.&lt;namespace&gt;.&lt;function&gt;: &lt;message&gt;</code>.</p>
+<h2 id="stdstr"><a class="header" href="#stdstr"><code>.std.str</code></a></h2>
+<p>Every function is <strong>read</strong>. <code>s</code> is a string, a symbol, or a list of either;
+a list is processed element by element and gives a list back. Positions and
+lengths count characters, not bytes.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Function</th><th>Result</th><th>Semantics</th></tr>
+</thead>
+<tbody>
+<tr><td><code>startswith[s; p]</code></td><td>bool</td><td>literal prefix match</td></tr>
+<tr><td><code>endswith[s; p]</code></td><td>bool</td><td>literal suffix match</td></tr>
+<tr><td><code>contains[s; p]</code></td><td>bool</td><td>literal substring match — no glob or regex</td></tr>
+<tr><td><code>slice[s; start; end]</code></td><td>string</td><td><code>end</code> exclusive; negative indices count from the end; out-of-range is clamped</td></tr>
+<tr><td><code>take[s; n]</code></td><td>string</td><td>first <code>n</code> characters, or the last <code>n</code> if <code>n</code> is negative; out-of-range is clamped</td></tr>
+<tr><td><code>rv[s]</code></td><td>string</td><td>reversed</td></tr>
+<tr><td><code>l[s]</code></td><td>string</td><td>lowercase (Unicode)</td></tr>
+<tr><td><code>u[s]</code></td><td>string</td><td>uppercase (Unicode)</td></tr>
+<tr><td><code>len[s]</code></td><td>int</td><td>character count (<code>count s</code> is 1, since a string is an atom)</td></tr>
+<tr><td><code>trim[s]</code></td><td>string</td><td>whitespace stripped from both ends</td></tr>
+<tr><td><code>split[s; sep]</code></td><td>string list</td><td><code>s</code> must be a single string, not a list</td></tr>
+<tr><td><code>join[xs; sep]</code></td><td>string</td><td>joins a string list</td></tr>
+<tr><td><code>replace[s; a; b]</code></td><td>string</td><td>every literal occurrence of <code>a</code> replaced with <code>b</code></td></tr>
+<tr><td><code>find[s; p]</code></td><td>int</td><td>character index of the first literal match, or <code>-1</code></td></tr>
+<tr><td><code>rfind[s; p]</code></td><td>string</td><td>the first substring matching regex <code>p</code>, or <code>""</code> if none match</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-q">.std.str.slice["hello"; 1; 4]           / "ell"
+.std.str.take["hello"; -2]              / "lo"
+.std.str.startswith[("ab"; "ba"); "a"] / 10b
+.std.str.split["a,b,c"; ","]           / ("a";"b";"c")
+.std.str.rfind["room 12b"; "\\d+"]      / "12"
+</code></pre>
+<h2 id="stdarr"><a class="header" href="#stdarr"><code>.std.arr</code></a></h2>
+<p>Every function is <strong>read</strong>. <code>xs</code> is any list; a result keeps its list’s kind
+(a <code>DateVec</code> argument gives back a <code>DateVec</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Function</th><th>Result</th><th>Semantics</th></tr>
+</thead>
+<tbody>
+<tr><td><code>rv[xs]</code></td><td>list</td><td>reversed</td></tr>
+<tr><td><code>iasc[xs]</code></td><td>int list</td><td>ascending sort order, as indices</td></tr>
+<tr><td><code>idesc[xs]</code></td><td>int list</td><td>descending sort order, as indices</td></tr>
+<tr><td><code>has[xs; x]</code></td><td>bool</td><td>whether <code>x</code> is in <code>xs</code>; <code>x</code> must match <code>xs</code>’s element type</td></tr>
+<tr><td><code>find[xs; x]</code></td><td>int</td><td>first index of <code>x</code>, or <code>-1</code></td></tr>
+<tr><td><code>findall[xs; x]</code></td><td>int list</td><td>every index of <code>x</code></td></tr>
+<tr><td><code>dedup[xs]</code></td><td>list</td><td>removes consecutive repeats only — unlike <code>distinct</code>, which removes every repeat</td></tr>
+<tr><td><code>rotate[xs; n]</code></td><td>list</td><td>rotated left by <code>n</code>; negative <code>n</code> rotates right</td></tr>
+<tr><td><code>cat[xs; ys]</code></td><td>list</td><td><code>ys</code> appended to <code>xs</code>; both must be the same kind</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-q">.std.arr.rotate[1 2 3 4; 1]    / 2 3 4 1
+.std.arr.dedup 1 1 2 2 1 3     / 1 2 1 3
+.std.arr.find[10 20 30; 20]   / 1
+</code></pre>
+<h2 id="stdfs"><a class="header" href="#stdfs"><code>.std.fs</code></a></h2>
+<p>Outside the browser only (the <code>os</code> feature, on by default). <code>parent</code>,
+<code>join</code>, <code>name</code> and <code>ext</code> are lexical (<strong>read</strong>) and never touch the
+filesystem; every other read is <strong>iread</strong> (refused over a read-only IPC
+handle); every mutation is <strong>write</strong> (refused in a read-only session). There
+is no <code>cd</code>: it would change process-wide state that <code>load</code> and <code>\l</code> depend
+on.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Function</th><th>Effect</th><th>Result</th><th>Semantics</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mkdir[p]</code></td><td>write</td><td>—</td><td><code>create_dir_all</code>; running it twice is harmless</td></tr>
+<tr><td><code>exists[p]</code></td><td>iread</td><td>bool</td><td></td></tr>
+<tr><td><code>isdir[p]</code></td><td>iread</td><td>bool</td><td><code>false</code> if the path doesn’t exist</td></tr>
+<tr><td><code>isfile[p]</code></td><td>iread</td><td>bool</td><td><code>false</code> if the path doesn’t exist</td></tr>
+<tr><td><code>abspath[p]</code></td><td>iread</td><td>string</td><td>lexical: the path needn’t exist, and symlinks aren’t resolved</td></tr>
+<tr><td><code>parent[p]</code></td><td>read</td><td>string</td><td><code>"a"</code> -&gt; <code>"."</code>, <code>"/"</code> -&gt; <code>"/"</code></td></tr>
+<tr><td><code>ls[p]</code></td><td>iread</td><td>string list</td><td>entry names, sorted</td></tr>
+<tr><td><code>size[p]</code></td><td>iread</td><td>int</td><td>bytes</td></tr>
+<tr><td><code>mtime[p]</code></td><td>iread</td><td>timestamp</td><td></td></tr>
+<tr><td><code>join[a; b]</code></td><td>read</td><td>string</td><td>path join</td></tr>
+<tr><td><code>name[p]</code></td><td>read</td><td>string</td><td>final path component</td></tr>
+<tr><td><code>ext[p]</code></td><td>read</td><td>string</td><td>extension without the dot, or <code>""</code></td></tr>
+<tr><td><code>cwd</code></td><td>iread</td><td>string</td><td>no arguments</td></tr>
+<tr><td><code>rm[p]</code></td><td>write</td><td>—</td><td>a file or an empty directory; never recursive</td></tr>
+<tr><td><code>mv[a; b]</code></td><td>write</td><td>—</td><td>rename or move</td></tr>
+<tr><td><code>cp[a; b]</code></td><td>write</td><td>—</td><td>files only</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-q">.std.fs.exists "Cargo.toml"     / true
+.std.fs.join["a"; "b.txt"]      / "a/b.txt"
+.std.fs.mkdir "scratch"         / refused without -w
+</code></pre>
+<h2 id="stdenv"><a class="header" href="#stdenv"><code>.std.env</code></a></h2>
+<p>Outside the browser only (the <code>os</code> feature). <code>r</code>, <code>has</code> and <code>all</code> check an
+in-process overlay first, then the real process environment; <code>s</code> writes only
+to that overlay, never to the process environment — an environment variable
+is set from outside the process, so a read-only session must not be able to
+override one, and child processes and Polars never see an overlay value.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Function</th><th>Effect</th><th>Result</th><th>Semantics</th></tr>
+</thead>
+<tbody>
+<tr><td><code>r[k]</code></td><td>iread</td><td>string</td><td>the overlay, then the environment; <code>""</code> when unset</td></tr>
+<tr><td><code>s[k; v]</code></td><td>write</td><td>—</td><td>writes to the overlay only</td></tr>
+<tr><td><code>has[k]</code></td><td>iread</td><td>bool</td><td></td></tr>
+<tr><td><code>all</code></td><td>iread</td><td>table</td><td>columns <code>name</code>, <code>value</code>; overlay entries win; sorted by name</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-q">.std.env.r "HOME"
+.std.env.s["MY_FLAG"; "1"]   / refused without -w; never touches the real environment
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="repl"><a class="header" href="#repl">REPL</a></h1>
 <p>You’ve been using the REPL since the Quickstart. This chapter covers the
@@ -3115,6 +3492,202 @@ right-to-left evaluation described in <a href="#casts">Casts</a> is a common
 culprit, and <code>\d</code> is the fastest way to confirm it.</p>
 <p><a href="#architecture">Architecture</a> says a little more about where those
 instructions come from and what runs them.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="rust-extensions"><a class="header" href="#rust-extensions">Rust extensions</a></h1>
+<p>qpl can be extended with native functions written in Rust. An extension
+function is an ordinary Rust function with one attribute on it, and the
+attribute’s one required argument is its permission:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[qpl::native(read)]
+fn km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -&gt; f64 {
+    // great-circle distance
+}
+
+#[qpl::native(write)]
+fn note(path: String, text: String) -&gt; std::io::Result&lt;()&gt; {
+    // append a line to a file
+}
+<span class="boring">}</span></code></pre>
+<p>The permission is one of <code>read</code>, <code>iread</code> or <code>write</code> — the same three every
+built-in action has (see <a href="#read-only-sessions">Read-only sessions</a>). A
+<code>read</code> function can be called from any session, including over a read-only
+IPC handle. An <code>iread</code> function is refused over a read-only IPC handle, but
+allowed in any local session, read-only or not. A <code>write</code> function is
+refused in a read-only session, just as <code>sink</code> is, with the same error. The
+VM checks the permission before every call, so an extension can’t widen what
+an agent in a read-only session is able to do, however it’s called. Leaving
+the permission out is a compile error.</p>
+<h2 id="a-qpl-binary-with-extensions"><a class="header" href="#a-qpl-binary-with-extensions">A qpl binary with extensions</a></h2>
+<p>Extensions are linked in when qpl is compiled, not loaded at run time. Rust
+has no stable ABI for loading them safely. An extension is a small Rust crate
+that builds its own <code>qpl</code> binary with its functions added:</p>
+<pre><code class="language-toml"># Cargo.toml
+[dependencies]
+qpl = { git = "https://github.com/nicelgueta/qpl" }
+qpl-cli = { git = "https://github.com/nicelgueta/qpl" }
+</code></pre>
+<pre class="playground"><code class="language-rust">// src/main.rs
+#[qpl::native(read)]
+fn km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -&gt; f64 {
+    let (p1, p2) = (lat1.to_radians(), lat2.to_radians());
+    let dl = (lon2 - lon1).to_radians();
+    let a = ((p2 - p1) / 2.0).sin().powi(2) + p1.cos() * p2.cos() * (dl / 2.0).sin().powi(2);
+    6371.0 * 2.0 * a.sqrt().asin()
+}
+
+fn main() {
+    let geo = qpl::ext::Extension::new("geo").with::&lt;km&gt;();
+    qpl_cli::run(vec![geo]);
+}</code></pre>
+<p><code>qpl_cli::run</code> is the whole <code>qpl</code> command line, the same one the stock
+binary uses. So the result takes every flag <code>qpl</code> does, including <code>-w</code>, and
+behaves identically apart from the new functions:</p>
+<pre><code class="language-bash">cargo build --release
+./target/release/geo-qpl -c '.geo.km[51.51;-0.13;40.71;-74.01]'
+</code></pre>
+<p>The qpl repository has two complete versions of this in <code>qpl-cli/examples/</code>:
+<code>extension.rs</code> is the one above plus a write function. <code>extension_toolkit.rs</code>
+registers two extensions with several functions each, covering every kind of
+argument and result: lists in and out, a table in and out, a lazy plan, a
+function with no arguments, a renamed function, and errors from a <code>Result</code>.</p>
+<pre><code class="language-bash">cargo run -p qpl-cli --example extension -- -c '.geo.km[51.51;-0.13;40.71;-74.01]'
+cargo run -p qpl-cli --example extension_toolkit -- --load-demo -c '.stats.top[trades; `price; 3]'
+</code></pre>
+<p>An extension with several functions chains <code>with</code> once per function, and a
+binary can register as many extensions as it likes:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let stats = Extension::new("stats")
+    .with::&lt;mean&gt;()
+    .with::&lt;zscore&gt;()
+    .with::&lt;top_n&gt;();
+let files = Extension::new("files").with::&lt;exists&gt;().with::&lt;append&gt;();
+qpl_cli::run(vec![stats, files]);
+<span class="boring">}</span></code></pre>
+<p>One namespace can mix read and write functions. Each function’s own
+permission is what counts: in a read-only session <code>.files.exists</code> works and
+<code>.files.append</code> is refused.</p>
+<h2 id="calling-them"><a class="header" href="#calling-them">Calling them</a></h2>
+<p>An extension’s functions live under its namespace: <code>Extension::new("geo")</code>
+makes <code>km</code> available as <code>.geo.km</code>. They’re called like any other function:</p>
+<pre><code class="language-qpl">qpl) .geo.km[51.51;-0.13;40.71;-74.01]
+f64: 5570.444571708345
+qpl) d: .geo.km[51.51;-0.13;40.71;-74.01]
+</code></pre>
+<p>Like qpl’s own <code>.qpl.*</code> builtins, an extension function can’t be rebound, so
+a script can’t replace it with something else. A function that takes no
+arguments is called by naming it, the same way <code>.qpl.dt</code> is. The namespace
+<code>qpl</code> is reserved, and registering two functions under the same name fails.</p>
+<p>Extension functions work on values: scalars, lists and whole tables. Like
+user-defined functions, they can’t be called inside a <code>select</code> projection. To
+work on a column, take a list or a table.</p>
+<h2 id="dotted-namespaces-and-ownership"><a class="header" href="#dotted-namespaces-and-ownership">Dotted namespaces and ownership</a></h2>
+<p><code>Extension::new</code> accepts a dotted namespace (<code>"std.fs"</code>), so a crate can
+group several extensions under a shared root: <code>.std.fs.exists</code>,
+<code>.std.env.r</code>, and so on. Each dot-separated segment is validated like any
+other identifier; an empty segment is rejected.</p>
+<p>The first extension registered under a root (<code>std</code>, here) owns it. A second
+extension registering under the same root is refused unless it declares the
+same owner with <code>Extension::owner</code>, which defaults to the extension’s own
+namespace:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let str_ext = Extension::new("std.str").owner("qpl-std").with::&lt;upper&gt;();
+let arr_ext = Extension::new("std.arr").owner("qpl-std").with::&lt;rv&gt;();
+vm.register(str_ext)?;
+vm.register(arr_ext)?; // same owner, same root: allowed
+<span class="boring">}</span></code></pre>
+<p>Without an explicit owner, two unrelated extensions can’t collide on a root
+by accident — each is refused the other’s namespace unless they opt in by
+naming the same owner.</p>
+<h2 id="string-arguments"><a class="header" href="#string-arguments">String arguments</a></h2>
+<p><code>ext::StrArg</code> accepts either a string/symbol scalar or a string/symbol list,
+so one function handles both:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[qpl::native(read)]
+fn shout(s: StrArg) -&gt; Value {
+    s.map(str::to_uppercase)
+}
+<span class="boring">}</span></code></pre>
+<p><code>StrArg::map</code> applies an elementwise transform and returns the matching
+shape: a scalar for a scalar argument, a string list for a list argument
+(nulls pass through unchanged).</p>
+<h2 id="preserving-a-lists-kind"><a class="header" href="#preserving-a-lists-kind">Preserving a list’s kind</a></h2>
+<p>A function that transforms a whole list without changing its element type
+uses <code>Value::map_vec</code>, which rewraps the result in the same vector variant:
+a <code>DateVec</code> argument comes back as a <code>DateVec</code>, not a plain list:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[qpl::native(read)]
+fn rv(xs: Value) -&gt; Result&lt;Value, String&gt; {
+    xs.map_vec(|s| Ok(s.reverse()))
+}
+<span class="boring">}</span></code></pre>
+<p><code>map_vec</code> errors if the argument isn’t a list.</p>
+<h2 id="arguments-and-results"><a class="header" href="#arguments-and-results">Arguments and results</a></h2>
+<p>Parameters and return values convert to and from qpl values by type:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rust type</th><th>qpl value</th></tr>
+</thead>
+<tbody>
+<tr><td><code>i64</code></td><td>int</td></tr>
+<tr><td><code>f64</code></td><td>float (an int is accepted as an argument)</td></tr>
+<tr><td><code>bool</code></td><td>bool</td></tr>
+<tr><td><code>String</code></td><td>string, or a symbol as an argument</td></tr>
+<tr><td><code>Vec&lt;i64&gt;</code>, <code>Vec&lt;f64&gt;</code>, <code>Vec&lt;bool&gt;</code>, <code>Vec&lt;String&gt;</code></td><td>a list of that type</td></tr>
+<tr><td><code>Vec&lt;u8&gt;</code></td><td>a <code>ByteVec</code>, as an argument also an int list whose values are all 0-255</td></tr>
+<tr><td><code>Series</code></td><td>any list, as an argument</td></tr>
+<tr><td><code>qpl::ext::StrArg</code></td><td>a string/symbol or a list of either, as an argument</td></tr>
+<tr><td><code>DataFrame</code></td><td>a table (a lazy argument is collected first)</td></tr>
+<tr><td><code>LazyFrame</code></td><td>a table, kept lazy</td></tr>
+<tr><td><code>qpl::ast::Value</code></td><td>any value, unconverted</td></tr>
+</tbody>
+</table>
+</div>
+<p>Arguments are passed by value, so a parameter takes an owned type (<code>String</code>,
+not <code>&amp;str</code>).</p>
+<p>Take the Polars types from <code>qpl::ext::polars</code> (<code>use qpl::ext::polars::prelude::*;</code>) rather than adding your own <code>polars</code>
+dependency. They have to be the exact version qpl is built against, and a
+separate dependency can easily resolve to a different one.</p>
+<p>A function can also return <code>()</code>, in which case it prints nothing, or a
+<code>Result</code> of any of the above whose error implements <code>Display</code>. An <code>Err</code>
+becomes an ordinary qpl runtime error, prefixed with the function’s name:</p>
+<pre><code class="language-qpl">qpl) .geo.note["/no/such/dir/notes.txt"; "hi"]
+'.geo.note: No such file or directory (os error 2)
+</code></pre>
+<p>An argument of the wrong type is reported the same way, naming the argument:</p>
+<pre><code class="language-qpl">qpl) .geo.km["x";0;0;0]
+'.geo.km: argument 1: expected a float, got a string
+</code></pre>
+<p><code>name = "..."</code> in the attribute changes the name the function has in qpl,
+for when the Rust name doesn’t suit: <code>#[qpl::native(read, name = "dist")]</code>.</p>
+<h2 id="choosing-read-iread-or-write"><a class="header" href="#choosing-read-iread-or-write">Choosing read, iread or write</a></h2>
+<p>Declare a function <code>write</code> if it changes anything that outlives the session:
+it writes a file, sends a message, changes a database, or makes a request
+that changes state somewhere else.</p>
+<p>Declare it <code>iread</code> if it only reads, but reads something outside the
+session: a file’s contents, an environment variable, a network request. A
+read-only IPC handle shouldn’t be able to make the server read arbitrary
+files or secrets on its behalf, so <code>iread</code> keeps that reachable locally
+(and over a write handle) while a read-only connection can’t trigger it.</p>
+<p>Everything else — a function that only looks at the arguments it’s given —
+is <code>read</code>.</p>
+<p>The attribute is a declaration, and qpl can’t check the function body
+against it. A function declared <code>read</code> that reads a file or writes to disk
+anyway breaks the guarantee for every session it’s linked into. Extensions
+are trusted code, so review them the way you’d review anything else that
+goes into the binary you give an agent.</p>
+<h2 id="other-hosts"><a class="header" href="#other-hosts">Other hosts</a></h2>
+<p>A program that embeds qpl without its command line can register extensions
+on a session directly, with <code>Vm::register(extension)</code>, before it runs
+anything. The rules are the same.</p>
+<p>A <a href="#compiled-artifacts">compiled <code>.qplc</code> file</a> refers to
+extension functions by name, so it runs on any binary that has the same
+extensions registered.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture"><a class="header" href="#architecture">Architecture</a></h1>
 <p>Most of this book is about what qpl does. This part is about how it does it,
@@ -3319,7 +3892,22 @@ table can’t be taken at all.</p>
 when a <code>Vm</code> starts. It also defines <code>NativeId</code>, the short list of
 primitives (<code>\l</code>, <code>\i</code>, <code>\port</code>, <code>.qpl.cfg</code> and a few others) that the
 compiler calls <em>by id</em> rather than by name, so no binding can ever get in
-their way.</p>
+their way. Every entry in the table carries the <code>Effect</code> it may have, which
+the VM checks before calling it.</p>
+<p><strong><code>ext</code></strong> is the Rust extension API: the <code>Native</code> trait that
+<code>#[qpl::native]</code> (from the <code>qpl-macros</code> crate) implements, <code>Extension</code> and
+<code>Vm::register</code>, and the <code>FromValue</code>/<code>IntoValue</code> conversions. An extension
+function becomes an ordinary entry in the <code>native</code> table, so the VM calls and
+authorizes it exactly like a builtin. <strong><code>cli</code></strong> is the whole <code>qpl</code> command
+line as a library function, <code>cli::run(extensions)</code>, so a binary with
+extensions gets the same front-end as <code>main.rs</code>; see
+<a href="#rust-extensions">Rust extensions</a>.</p>
+<p><strong><code>permission</code></strong> defines <code>Effect</code>, the class of change an action makes:
+<code>Read</code> (session data only), <code>IRead</code> (reads outside the session, or changes
+the session’s own bindings and settings) or <code>Write</code> (anything outside the
+session). <code>Vm::authorize</code> refuses an action whose effect the session or the
+current IPC request doesn’t permit; see
+<a href="#read-only-sessions">Read-only sessions</a>.</p>
 <p><strong><code>temporal</code></strong> handles everything calendar-related: parsing q-style date
 and time literals, formatting them back, the <code>.qpl.dt</code>/<code>.qpl.tm</code>-style “now”
 functions, and the arithmetic between qpl’s 2000-based epoch and the
@@ -3674,10 +4262,12 @@ allowed to write.</p>
 the handle. Plain <code>hopen</code> gives a read-only handle, and <code>`w!hopen</code> (which
 comes out of the parser as <code>whopen</code>) asks for a write handle. The mode rides
 along as a single tag byte in front of each request. While the server
-evaluates that request it holds the mode on the <code>Vm</code>, and anything that
-would change the session (an assignment, <code>sink</code>, <code>.qpl.cfg</code>, <code>\1</code>) checks
-it and refuses on a read-only handle. Input typed at the server’s own
-prompt is never restricted.</p>
+evaluates that request it holds the mode on the <code>Vm</code>. <code>Vm::authorize</code>
+refuses anything whose <code>permission::Effect</code> isn’t <code>Read</code> (an assignment,
+<code>sink</code>, <code>.qpl.cfg</code>, <code>\1</code>, <code>whopen</code>) on a read-only handle. The same check
+enforces a read-only session (any session not started with <code>qpl -w</code>),
+which refuses <code>Effect::Write</code> from every source. Input typed at the server’s own prompt is only subject to the
+session’s restriction.</p>
 <h2 id="the-client-side"><a class="header" href="#the-client-side">The client side</a></h2>
 <p><code>hopen</code>, <code>whopen</code> and <code>await</code> are ordinary natives, found through the same
 last-resort name lookup as <code>til</code>. <code>&lt;conn&gt; dispatch &lt;cmd&gt;</code> (and its <code>async</code>
@@ -3722,31 +4312,23 @@ without worrying about the host’s C library.</p>
 doesn’t compile for <code>wasm32-unknown-unknown</code>, so the build currently applies
 a small patch to Polars first. The goal is to drop that patch once upstream
 builds for the target unaided.</p>
-<p><strong>A basic standard library.</strong> A set of commonly needed functions shipped
-with qpl itself, so everyday helpers don’t have to be rewritten in every
-script or passed around as <code>\i</code> imports.</p>
-<p><strong>A read-only mode.</strong> A <code>--read-only</code> CLI flag that turns off every action
-able to change state outside the session. The first to be classed as write
-actions are <code>sink</code> and logging: in a read-only session they fail with a
-runtime error, <code>Cannot perform write action in read-only session</code>, instead of
-running. Queries, bindings and everything else that only reads carry on
-exactly as normal.</p>
-<p><strong>A permissioned Rust extension framework.</strong> qpl is meant to be safe to hand
-to an agent: it can query and reshape data, but it can’t run arbitrary code
-the way a Python session can, so there’s a hard limit on how much damage a
-confused agent can do. Extensions need to keep that property. The plan is to
-let you write native functions in Rust and expose them to qpl with a proc
-macro that declares each one as either a <strong>read</strong> or a <strong>write</strong> action, and
-to have <code>--read-only</code> switch off every write action at once, built-in or
-extension alike. Permissioning then lives in the language itself rather than
-in whatever sandbox happens to be wrapped around it: an agent given a
-read-only qpl session can call anything it likes and still can’t change
-state.</p>
-<p>Extending the same model to Python functions is an option for consideration
-further down the line.</p>
+<p><strong>Python extensions.</strong> <a href="#rust-extensions">Rust extensions</a> declare a read or
+write permission that every session enforces. Extending the same model to
+Python functions is an option for consideration further down the line.</p>
+<p><strong>Extension functions inside queries.</strong> <a href="#rust-extensions">Rust extensions</a>
+work on values, so they can’t be called inside a <code>select</code> projection. Polars
+has its own framework for running Rust functions over whole columns; building
+on it would let an extension function take columns in a query and run as part
+of the lazy plan.</p>
 <p><strong>Deciding on nulls.</strong> Whether null should be a first-class value in the
 language itself, with its own literal and semantics, is still an open design
 question.</p>
+<p><strong>Float list literals.</strong> Ints, strings and symbols can be written directly
+as lists (<code>1 2 3</code>, <code>("a" "b")</code>, <code>`x`y</code>), but floats can’t: <code>1.5 2.5</code> is a
+parse error. For now a float list comes from a table column
+(<code>trades`price</code>) or a computation, and an int list works wherever a float
+list is expected. Writing one directly should work the same way as it does
+for the other types.</p>
 <p><strong>More of the language.</strong> The gaps that exist today are called out in the
 chapter each one belongs to rather than collected here, on the grounds that a
 missing feature is most useful to know about while you’re reading about the

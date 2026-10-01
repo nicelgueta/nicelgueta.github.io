@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -203,11 +203,12 @@ explains it.</p>
 <tr><td><code>noop</code></td><td>nothing: prints nothing, can’t be assigned or used as a value</td><td><a href="control-flow.html">Control flow</a></td></tr>
 <tr><td><code>like</code></td><td>glob pattern match</td><td><a href="expressions.html">Expressions</a></td></tr>
 <tr><td><code>round</code></td><td><code>&lt;n&gt; round &lt;col&gt;</code>, mode from <code>.qpl.cfg round_type</code></td><td><a href="expressions.html">Expressions</a></td></tr>
-<tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs</td><td><a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>quantile</code> <code>shift</code> <code>lag</code> <code>lead</code> <code>diff</code> <code>pctchange</code></td><td>parameter-on-the-left verbs; <code>quantile</code>/<code>pctl</code> collapse to a scalar on a list, like any reducer</td><td><a href="expressions.html">Expressions</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>fill</code></td><td><code>&lt;v&gt; fill &lt;col&gt;</code> replaces nulls with <code>v</code></td><td><a href="expressions.html#nulls">Expressions</a></td></tr>
 <tr><td><code>isnull</code> <code>notnull</code></td><td>boolean per row: is / isn’t null</td><td><a href="expressions.html#nulls">Expressions</a></td></tr>
-<tr><td><code>dropnull</code></td><td><code>`a`b dropnull &lt;table&gt;</code> drops rows with a null in those columns</td><td><a href="table-operators.html#dropping-rows-with-nulls">Table operators</a></td></tr>
-<tr><td><code>distinct</code></td><td>table: unique rows; column: count of distinct values (<code>n_unique</code>)</td><td><a href="table-operators.html">Table operators</a>, <a href="expressions.html">Expressions</a></td></tr>
+<tr><td><code>dropnull</code></td><td><code>`a`b dropnull &lt;table&gt;</code> drops rows with a null in those columns; <code>dropnull xs</code> drops the nulls from a list</td><td><a href="table-operators.html#dropping-rows-with-nulls">Table operators</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
+<tr><td><code>distinct</code></td><td>table: unique rows; column: count of distinct values (<code>n_unique</code>); list: the unique elements, first-seen order</td><td><a href="table-operators.html">Table operators</a>, <a href="expressions.html">Expressions</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
+<tr><td><code>asc</code> <code>desc</code></td><td>sort: <code>`col!01b</code> table sort direction, window <code>order</code>; on a list, sorts it</td><td><a href="table-operators.html#sorting">Table operators</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>over</code></td><td>window: <code>&lt;expr&gt; over `p [order `k asc] [rolling n]</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
 <tr><td><code>rn</code> <code>rank</code> <code>drank</code></td><td>ranking verbs, require <code>order</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
 <tr><td><code>i</code></td><td>virtual row-index column, printed as <code>x</code></td><td><a href="window-functions.html">Window functions</a></td></tr>
@@ -215,10 +216,10 @@ explains it.</p>
 <tr><td><code>`$x</code></td><td>intern a string as a symbol; in a query, cast to categorical</td><td><a href="symbols.html">Symbols</a>, <a href="categoricals-enums.html">Categoricals &amp; enums</a></td></tr>
 <tr><td><code>::</code></td><td>enum cast, <code>lvl::`$x</code></td><td><a href="categoricals-enums.html">Categoricals &amp; enums</a></td></tr>
 <tr><td><code>!</code></td><td>dict literal; sort map <code>`col!01b</code>; <code>u8!`$x</code> code width</td><td><a href="column-expressions.html">Column expressions</a>, <a href="table-operators.html">Table operators</a></td></tr>
-<tr><td><code>#</code></td><td>first n rows of a table; take from a list (<code>3#l</code>, <code>-3#l</code>)</td><td><a href="table-operators.html">Table operators</a>, <a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>#</code> <code>limit</code></td><td>first n rows of a table (<code>limit</code> reads as prose); take from a list (<code>3#l</code>, <code>-3#l</code>, <code>3 limit l</code>); on a single string, characters, not elements</td><td><a href="table-operators.html">Table operators</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>[...]</code></td><td>index into a list (<code>l[0]</code>, <code>l[1 2 3]</code>); call a function</td><td><a href="column-expressions.html">Column expressions</a>, <a href="functions.html">Functions</a></td></tr>
-<tr><td><code>_</code></td><td>drop columns, <code>`a`b _ t</code></td><td><a href="table-operators.html">Table operators</a></td></tr>
-<tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element</td><td><a href="select-update-delete.html">select</a>, <a href="column-expressions.html">Column expressions</a></td></tr>
+<tr><td><code>_</code> <code>drop</code></td><td>drop columns, <code>`a`b _ t</code>; on a list, drop the first/last <code>n</code> elements (<code>3 drop l</code>, <code>3 _ l</code>)</td><td><a href="table-operators.html">Table operators</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
+<tr><td><code>where</code></td><td>filter rows in a query; filter a list elementwise, where <code>x</code> is the element; prefix <code>where bs</code> gives the indices of the true values</td><td><a href="select-update-delete.html">select</a>, <a href="column-expressions.html#keywords-on-lists">Column expressions</a></td></tr>
 <tr><td><code>til</code></td><td><code>til n</code> gives <code>0..n-1</code>; <code>lo til hi</code> gives <code>lo..hi-1</code></td><td><a href="column-expressions.html">Column expressions</a></td></tr>
 <tr><td><code>enlist</code></td><td><code>enlist x</code> gives the one-element list of the atom <code>x</code> (a string is one atom)</td><td><a href="column-expressions.html">Column expressions</a></td></tr>
 <tr><td><code>?</code> (infix)</td><td>roll: <code>n?6</code> gives <code>n</code> random ints below 6, <code>n?2.5</code> uniform floats, <code>n?list</code> random elements; with replacement</td><td><a href="column-expressions.html">Column expressions</a></td></tr>
@@ -238,11 +239,11 @@ explains it.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../language/ipc.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../language/read-only.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../repl.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/stdlib.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -252,11 +253,11 @@ explains it.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../language/ipc.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../language/read-only.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../repl.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/stdlib.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

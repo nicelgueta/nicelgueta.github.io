@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -248,7 +248,9 @@ required) — <code>[...]</code> only marks where the argument list ends, since 
 body can’t rely on “the rest of the line” the way a REPL line can.</p>
 <h2 id="teeing-output-to-a-file"><a class="header" href="#teeing-output-to-a-file">Teeing output to a file</a></h2>
 <p><code>\1 &lt;path&gt;</code> mirrors everything printed — log lines and query results alike —
-into a file as well as the terminal. A bare <code>\1</code> stops it. This works in
+into a file as well as the terminal. A bare <code>\1</code> stops it. Writing the file
+is a write action, so it needs a session started with <code>qpl -w</code>; see
+<a href="read-only.html">Read-only sessions</a>. This works in
 scripts and in the REPL:</p>
 <pre><code class="language-qpl">\1 run.log
 select from trades where size &gt; 100

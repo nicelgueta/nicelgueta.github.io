@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-90dec209.js"></script>
+        <script src="toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -283,9 +283,16 @@ wanting to project.</p>
 <h2 id="getting-it-out-again"><a class="header" href="#getting-it-out-again">Getting it out again</a></h2>
 <p>Finally, write it somewhere:</p>
 <pre><code class="language-qpl">qpl) t sink "big.parquet"          / write it out
+'Cannot perform write action in read-only session: sink (start qpl with -w to allow writes)
 </code></pre>
-<p><code>sink</code> streams a table to a file, choosing the format from the extension.
-There’s no separate “materialise, then save” step to perform.</p>
+<p>That’s deliberate. Every qpl session is read-only unless you ask otherwise,
+so nothing you (or an agent) run in it can write to disk by accident; see
+<a href="language/read-only.html">Read-only sessions</a>. Start qpl with <code>-w</code> to allow
+writes:</p>
+<pre><code class="language-bash">qpl -w --load-demo
+</code></pre>
+<p>and the same <code>sink</code> streams the table to a file, choosing the format from the
+extension. There’s no separate “materialise, then save” step to perform.</p>
 <p>That trailing <code>/ write it out</code> is a comment. <code>/</code> comments out everything to
 the end of the line, and it’s used throughout this book to annotate examples.
 It is also why division in qpl is written <code>%</code> instead of <code>/</code>, which is
@@ -307,6 +314,7 @@ qpl -c '&lt;command&gt;'  # run one ad hoc command and exit, like `python -c`
 qpl -C script.qpl   # compile to script.qplc (add -o to redirect); doesn't run it
 qpl script.qplc     # run a compiled script — no lexing/parsing/compiling
 qpl -d script.qplc  # print a compiled (or source) script's bytecode; doesn't run it
+qpl -w ...          # any of the running forms, with write permission (`sink`, `\1 &lt;path&gt;`)
 </code></pre>
 <p><code>-i</code> is the one worth remembering. It’s how you’d load your real tables from
 a setup script and then explore interactively, rather than retyping the same

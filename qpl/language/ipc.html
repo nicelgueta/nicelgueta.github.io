@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -263,15 +263,18 @@ nothing locally, so the client receives a boolean acknowledgement instead:</p>
 <pre><code class="language-qpl">conn dispatch t: select from u
 </code></pre>
 <h2 id="read-and-write-handles"><a class="header" href="#read-and-write-handles">Read and write handles</a></h2>
-<p>A client that can run arbitrary statements on a server can also modify it, so
-qpl defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
-connection, and the server refuses anything that would write to its session:
-assignments, <code>sink</code>, and changing a <a href="config.html"><code>.qpl.cfg</code></a> setting. Queries
-of every kind still work. (A bare <code>.qpl.cfg</code> is allowed too, but it prints
-the settings on the <em>server’s</em> console. The client just gets <code>true</code> back.)</p>
+<p>A client that can run arbitrary statements on a server can also modify it, or
+read things the server can see that it shouldn’t have to expose, so qpl
+defaults to the cautious option. A bare <code>hopen</code> gives a <strong>read-only</strong>
+connection, and the server refuses anything beyond a plain read: <code>load</code>,
+<code>read0</code>/<code>read1</code>, assignments, changing a <a href="config.html"><code>.qpl.cfg</code></a> setting,
+and <code>sink</code>/<code>write0</code>/<code>write1</code>. Queries of every kind still work. (A bare
+<code>.qpl.cfg</code> is allowed too, but it prints the settings on the <em>server’s</em>
+console. The client just gets <code>true</code> back.)</p>
 <pre><code class="language-qpl">ro: hopen 5001                          / read-only, the default
 ro dispatch t: select from trades       / rejected by the server
-ro dispatch select from trades          / fine, nothing is written
+ro dispatch select from load "f"        / rejected: load is refused too
+ro dispatch select from trades          / fine, nothing is read or written
 </code></pre>
 <p>When you do want write access, ask for it explicitly at connection time:</p>
 <pre><code class="language-qpl">rw: `w!hopen 5001                       / a write handle
@@ -281,6 +284,11 @@ rw dispatch t: select from trades       / allowed
 server on every request over that connection. It applies only to statements
 arriving over a socket, never to what the person sitting at the server’s own
 prompt types.</p>
+<p>A read handle also can’t open a write handle to another server
+(<code>ro dispatch `w!hopen 5002</code> is refused), so it can’t use the server to
+reach one. The server’s own session permission applies on top: unless it was
+started with <code>qpl -w</code>, it’s <a href="read-only.html">read-only</a> and refuses <code>sink</code> even
+over a write handle.</p>
 
                     </main>
 
@@ -290,7 +298,7 @@ prompt types.</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../language/operator-reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../language/read-only.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -304,7 +312,7 @@ prompt types.</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../language/operator-reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../language/read-only.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-90dec209.js"></script>
+        <script src="toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,7 +182,7 @@
                     <main>
                         <h1 id="install"><a class="header" href="#install">Install</a></h1>
 <p>If you already have a Rust toolchain, building from source is one command:</p>
-<pre><code class="language-bash">cargo install --path .
+<pre><code class="language-bash">cargo install --path qpl-cli
 </code></pre>
 <p>Be warned that Polars is a large crate and a cold build takes a few minutes.
 If you’d rather not wait, or don’t have Rust installed at all, there are
@@ -198,7 +198,7 @@ into a container, a CI job, or a colleague’s laptop as easily as <code>jq</cod
 <p>qpl can act as a client and server, so that one qpl process can query the
 tables held in another running one. That’s built in by default. If you don’t
 want the two extra dependencies it pulls in (<code>tokio</code>, <code>zeromq</code>), drop it:</p>
-<pre><code class="language-bash">cargo install --path . --no-default-features
+<pre><code class="language-bash">cargo install --path qpl-cli --no-default-features
 </code></pre>
 <p>Nothing about that is a dead end, since you can rebuild with the feature
 whenever the need shows up. <a href="language/ipc.html">IPC</a> covers what it does, near

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -204,6 +204,8 @@ queries and with each other.</p>
 it does depends on which columns you selected first.</p>
 <p>Inside a select list, <code>distinct</code> is something else: the column verb that counts
 distinct values, an alias for <code>n_unique</code>. See <a href="expressions.html">Expressions</a>.</p>
+<p><code>distinct</code> on a plain list gives its unique elements instead of a count — see
+<a href="column-expressions.html#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="limiting"><a class="header" href="#limiting">Limiting</a></h2>
 <p>Taking the first few rows has two spellings that do the same thing. <code>limit</code>
 reads as prose; <code>#</code> is the q-style shorthand:</p>
@@ -230,6 +232,8 @@ table, and in both cases it means “the first n”.</p>
 on a list:</p>
 <pre><code class="language-qpl">qpl) -3 limit trades      / identical to -3#trades
 </code></pre>
+<p><code>limit</code>/<code>#</code> on a plain list take the first (or, negative, last) <code>n</code>
+elements — see <a href="column-expressions.html#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="dropping-columns"><a class="header" href="#dropping-columns">Dropping columns</a></h2>
 <p>Also two spellings, <code>drop</code> and <code>_</code>, taking a list of column names as symbols:</p>
 <pre><code class="language-qpl">`price`size drop select from trades
@@ -239,6 +243,9 @@ on a list:</p>
 <a href="select-update-delete.html">select chapter</a>. Use whichever reads better in
 context; <code>_</code> is handy mid-pipeline, <code>delete</code> when the statement is already a
 query.</p>
+<p>An int on the left instead of a symbol list means something else again:
+<code>3 drop xs</code>/<code>3 _ xs</code> drops the first 3 <em>elements</em> of a list — see
+<a href="column-expressions.html#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="dropping-rows-with-nulls"><a class="header" href="#dropping-rows-with-nulls">Dropping rows with nulls</a></h2>
 <p><code>dropnull</code> is the row-wise counterpart of <code>drop</code>. It takes a list of column
 names as symbols on the left and removes every row that has a null in any of
@@ -249,6 +256,8 @@ clean: `price dropnull trades
 </code></pre>
 <p>Nulls in columns you didn’t name are ignored. To keep rows and replace the
 nulls instead, use <a href="expressions.html#nulls"><code>fill</code></a>.</p>
+<p><code>dropnull xs</code> (no symbol, one list) drops the nulls from the list itself —
+see <a href="column-expressions.html#keywords-on-lists">Keywords on lists</a>.</p>
 <h2 id="sorting"><a class="header" href="#sorting">Sorting</a></h2>
 <p>Sorting uses the dict-literal form you met at the end of
 <a href="column-expressions.html">Column expressions &amp; lists</a>: a list of column names,

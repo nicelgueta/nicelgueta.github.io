@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -206,7 +206,9 @@ the alternative, where <code>load</code> is deferred until something actually ne
 rows; the syntax is a single extra word and nothing else about this chapter
 changes.</p>
 <h2 id="sink"><a class="header" href="#sink">sink</a></h2>
-<p><code>sink</code> goes the other way, streaming a table out to a file:</p>
+<p><code>sink</code> goes the other way, streaming a table out to a file. It’s a write
+action, so it needs a session started with <code>qpl -w</code>; see
+<a href="read-only.html">Read-only sessions</a>.</p>
 <pre><code class="language-qpl">trades sink "summary.parquet"
 </code></pre>
 <p>Its left-hand side is a table expression too, so you don’t have to store a
@@ -247,6 +249,36 @@ name:</p>
 <p>Because <code>cols</code> reads only the schema, it stays cheap no matter how large the
 underlying data is, and it works on deferred pipelines that haven’t read a
 single row yet.</p>
+<h2 id="read0-and-read1-text-and-bytes"><a class="header" href="#read0-and-read1-text-and-bytes">read0 and read1: text and bytes</a></h2>
+<p><code>load</code>/<code>sink</code> are for tabular data. <code>read0</code>, <code>read1</code>, <code>write0</code> and <code>write1</code>
+are the line- and byte-level equivalents, for anything else on disk.</p>
+<p><code>read0</code> reads a file as text and returns its lines as a string list, split
+on <code>\n</code> with a trailing <code>\r</code> stripped from each line (so CRLF files read the
+same as LF ones). A final trailing newline doesn’t produce a trailing empty
+element:</p>
+<pre><code class="language-qpl">read0 "notes.txt"
+</code></pre>
+<p><code>read1</code> reads the same file as raw bytes, returned as a <code>ByteVec</code> — a byte
+list with no scalar counterpart. It prints as <code>0x</code> followed by the lowercase
+hex of every byte (<code>byte[5]: 0x68656c6c6f</code>), and indexing one gives a plain
+int, since there’s no byte scalar to index into:</p>
+<pre><code class="language-qpl">read1 "notes.txt"
+(read1 "notes.txt")[0]
+</code></pre>
+<p>Both take an optional byte range, kdb-style: <code>read0[p; off; len]</code> reads
+<code>len</code> bytes starting at byte <code>off</code>, then splits the result into lines (or
+bytes, for <code>read1</code>); <code>read0[p; off]</code> reads from <code>off</code> to the end of the
+file. An offset or length past the end of the file is clamped rather than
+erroring. <code>read0</code> requires the bytes it reads to be valid UTF-8.</p>
+<p><code>write0</code> and <code>write1</code> go the other way, and need a session started with
+<code>qpl -w</code> (see <a href="read-only.html">Read-only sessions</a>):</p>
+<pre><code class="language-qpl">("line one" "line two") write0 "notes.txt"
+read1 "notes.txt" write1 "copy.bin"
+</code></pre>
+<p><code>write0</code> takes a string list (or a single string, written as one line) and
+writes each element followed by <code>\n</code>, truncating the file first. <code>write1</code>
+takes a <code>ByteVec</code>, or an int list whose values are all 0-255, and writes the
+raw bytes, also truncating first. Neither prints anything.</p>
 
                     </main>
 

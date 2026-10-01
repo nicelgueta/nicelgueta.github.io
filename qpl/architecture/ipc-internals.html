@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5f8958f8.js";
+            window.path_to_searchindex_js = "../searchindex-22d2ef1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-90dec209.js"></script>
+        <script src="../toc-06c48cef.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -238,10 +238,12 @@ allowed to write.</p>
 the handle. Plain <code>hopen</code> gives a read-only handle, and <code>`w!hopen</code> (which
 comes out of the parser as <code>whopen</code>) asks for a write handle. The mode rides
 along as a single tag byte in front of each request. While the server
-evaluates that request it holds the mode on the <code>Vm</code>, and anything that
-would change the session (an assignment, <code>sink</code>, <code>.qpl.cfg</code>, <code>\1</code>) checks
-it and refuses on a read-only handle. Input typed at the server’s own
-prompt is never restricted.</p>
+evaluates that request it holds the mode on the <code>Vm</code>. <code>Vm::authorize</code>
+refuses anything whose <code>permission::Effect</code> isn’t <code>Read</code> (an assignment,
+<code>sink</code>, <code>.qpl.cfg</code>, <code>\1</code>, <code>whopen</code>) on a read-only handle. The same check
+enforces a read-only session (any session not started with <code>qpl -w</code>),
+which refuses <code>Effect::Write</code> from every source. Input typed at the server’s own prompt is only subject to the
+session’s restriction.</p>
 <h2 id="the-client-side"><a class="header" href="#the-client-side">The client side</a></h2>
 <p><code>hopen</code>, <code>whopen</code> and <code>await</code> are ordinary natives, found through the same
 last-resort name lookup as <code>til</code>. <code>&lt;conn&gt; dispatch &lt;cmd&gt;</code> (and its <code>async</code>
